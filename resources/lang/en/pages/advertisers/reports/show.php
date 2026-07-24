@@ -1,0 +1,78 @@
+<?php
+
+return [
+    'content' => [
+        'title' => 'Report #<strong>:id</strong> Inquiry',
+        'back' => 'Back',
+        'ban' => 'Ban Advertiser',
+        'solve' => 'Solve',
+        'advertiser_id' => 'Advertiser #',
+        'user_type' => 'User Type',
+        'user_id' => 'User #',
+        'user_name' => 'User Name',
+        'content' => 'Content',
+        'status' => 'Status: ',
+        'solved' => 'Solved',
+        'unsolved' => 'Unsolved',
+        'datatable' => [
+            'advertiser_id' => 'Advertiser #',
+            'user_type' => 'User Type',
+            'user_id' => 'User #',
+            'user_name' => 'User Name',
+            'type' => 'Type',
+            'types' => [
+                'Sexually Inappropriate' => 'Sexually Inappropriate',
+                'Abusive Content' => 'Abusive Content',
+                'Misleading or Scam' => 'Misleading or Scam',
+                'Offensive' => 'Offensive',
+                'Violence' => 'Violence',
+                'Prohibited Content' => 'Prohibited Content',
+                'Spam' => 'Spam',
+                'False News' => 'False News',
+                'Other' => 'Other',
+            ],
+            'reason' => 'Reason',
+            'created_at' => 'Created At',
+            'reports_count' => 'Reports Count',
+            'guest' => 'Guest',
+        ],
+    ],
+    'modal' => [
+        'delete' => [
+            'title' => 'Ban Advertiser',
+            'content' => 'Are you sure you want to ban this advertiser related to these reports?',
+            'submit' => 'Delete',
+            'cancel' => 'Cancel',
+        ],
+        'solve' => [
+            'title' => 'Solve Report',
+            'content' => 'Are you sure you want to set these reports as solved?',
+            'submit' => 'Submit',
+            'cancel' => 'Cancel',
+        ],
+        'show' => [
+            'title' => 'Show More',
+            'close' => 'Close',
+            'content' => [
+                'advertiser_id' => 'Advertiser ID: ',
+                'type' => 'Type: ',
+                'types' => [
+                    'Sexually Inappropriate' => 'Sexually Inappropriate',
+                    'Abusive Content' => 'Abusive Content',
+                    'Misleading or Scam' => 'Misleading or Scam',
+                    'Offensive' => 'Offensive',
+                    'Violence' => 'Violence',
+                    'Prohibited Content' => 'Prohibited Content',
+                    'Spam' => 'Spam',
+                    'False News' => 'False News',
+                    'Other' => 'Other',
+                ],
+                'user_type' => 'User Type: ',
+                'user_id' => 'User ID: ',
+                'user_name' => 'User Name: ',
+                'reason' => 'Reason: ',
+                'created_at' => 'Reported At: ',
+            ],
+        ],
+    ]
+];

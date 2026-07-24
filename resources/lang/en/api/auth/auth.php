@@ -1,0 +1,21 @@
+<?php
+return [
+    'something-wrong' => 'Something went wrong, Try again later.',
+    'banned-account' => 'Sorry, this account is banned! Please contact the support.',
+    'wrong-credentials' => 'Please, check your credentials.',
+    'wrong-credentials-social' => "This social account isn't linked to any account, Please click on register to create your account and link it.",
+    'maintenance' => 'The system is under maintenance. Please try again later.',
+    'activation-sent' => 'The activation code has been sent to your mobile number',
+    'reset-activation-sent' => 'Activation code has been sent to your mobile.',
+    'invalid-verification' => 'The verification code is invalid!',
+    'invalid-activation' => 'The activation code is invalid!',
+    'valid-activation' => 'Valid activation code.',
+    'no-user' => "The user doesn't exist!",
+    'wrong-uid' => "Wrong UID",
+    'password-updated' => 'Your password has been updated.',
+    'account-closed' => "Sorry, You can't take this action because your account is closed!",
+    'account-banned' => "Sorry, You can't take this action because this account you're trying to reach is banned",
+    'account-inactive' => "Sorry, You can't take this action because this account you're trying to reach is inactive",
+    'business-disabled' => "This BusinessType is inactive, Please choose another business type",
+    'profile-uncompleted' => "Sorry, You can't take this action because your account is uncompleted",
+];

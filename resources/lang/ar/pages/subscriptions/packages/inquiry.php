@@ -1,0 +1,60 @@
+<?php
+
+return [
+    'breadcrumb' => [
+        'title' => 'عرض خطط الإشتراك',
+        'home' => 'الصفحة الرئيسية',
+        'subscriptions' => 'الإشتراكات',
+        'packages' => 'الخطط',
+        'page' => 'عرض',
+    ],
+    'content' => [
+        'title' => 'عرض خطط الإشتراك',
+    ],
+    'datatable' => [
+        'product_id' => 'رقم المنتج',
+        'name_en' => 'الإسم باللغه الإنجليزية',
+        'name_ar' => 'الإسم باللغة العربية',
+        'maximum_posts' => 'عدد المنشورات',
+        'maximum_offers' => 'عدد العروض',
+        'maximum_points' => 'عدد انلقاط',
+        'description_en' => 'الوصف باللغه الإنجليزية',
+        'description_ar' => 'الوصف باللغة العربية',
+        'specifications_en' => 'المواصفات باللغه الإنجليزية',
+        'specifications_ar' => 'المواصفات باللغة العربية',
+        'price' => 'السعر',
+        'old_price' => 'السعر قبل التخفيض',
+        'purchase_count' => 'عدد مرات الشراء',
+        'duration' => 'المده',
+        'duration_types' => [
+            'minutely' => 'دقيقة',
+            'hourly' => 'ساعة',
+            'daily' => 'يومياً',
+            'weekly' => 'إسبوعياً',
+            'monthly' => 'شهرياً',
+            'two_months' => 'شهرين',
+            'three_months' => 'ثلاثة شهور',
+            'six_months' => 'ستة شهور',
+            'yearly' => 'سنوياً',
+        ],
+        'currency' => 'العملة',
+        'currencies' => [
+            'SAR' => 'ريال سعودي',
+            'USD' => 'دولار أمريكي',
+            'EGP' => 'جنيه مصري',
+            'KWD' => 'دينار كويتي',
+            'AED' => 'درهم إماراتي',
+        ],
+        'is_visible' => 'مرئية',
+        'is_active' => 'نشط',
+        'is_trial' => 'تجريبية',
+    ],
+    'modal' => [
+        'delete' => [
+            'title' => 'حذف الخطط',
+            'content' => 'هل أنت متأكد أنك تريد حذف هذه الخطط؟',
+            'submit' => 'حذف',
+            'cancel' => 'إلغاء',
+        ],
+    ],
+];

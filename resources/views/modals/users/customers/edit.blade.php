@@ -1,0 +1,326 @@
+<!-- Edit Items Confirmation Modal -->
+<x-form-modal wire:model="showEditModal" type="edit" wire="update({{$user['id'] ?? null}})">
+    <x-slot name="title">
+        {{ $editModalTexts['title'] }}
+    </x-slot>
+    <form wire:submit.prevent="update({{$user['id'] ?? null}})">
+        <x-slot name="content">
+            <div class="form-group">
+                <label for="name">{{__('pages/customers/index.modal.edit.inputs.name')}}</label>
+                <input type="text" class="form-control @error('user.name') is-invalid @enderror" id="name" name="name"
+                       wire:model.defer="user.name"
+                >
+                @error('user.name')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="email">{{__('pages/customers/index.modal.edit.inputs.email')}}</label>
+                <input type="email" class="form-control @error('user.email') is-invalid @enderror" id="email"
+                       name="email" wire:model.defer="user.email"
+                >
+                @error('user.email')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="mobile">{{__('pages/customers/index.modal.edit.inputs.mobile')}}</label>
+                <input dir="ltr" type="text" class="form-control{{app()->getLocale() === 'ar' ? ' text-left' : ''}} @error('user.mobile') is-invalid @enderror" id="mobile"
+                       name="mobile" wire:model.defer="user.mobile"
+                >
+                @error('user.mobile')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="username">{{__('pages/customers/index.modal.edit.inputs.username')}}</label>
+                <input class="form-control @error('user.username') is-invalid @enderror" id="username" name="username"
+                       wire:model.defer="user.username"
+                >
+                @error('user.username')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="password">{{__('pages/customers/index.modal.edit.inputs.password')}}</label>
+                <input class="form-control" id="password" name="password" wire:model.defer="user.password"
+                >
+                <div
+                    class="text-danger small">{{__('pages/customers/index.modal.edit.inputs.placeholders.password')}}</div>
+            </div>
+            <div class="form-group">
+                <label for="bio">{{__('pages/customers/index.modal.edit.inputs.bio')}}</label>
+                <textarea class="form-control" id="bio" name="bio" wire:model.defer="user.bio"></textarea>
+            </div>
+            <div class="form-group"
+                 x-data="{ isUploading: false, progress: 0, isUploaded: false }"
+                 x-on:livewire-upload-start="isUploading = true; isUploaded = false;"
+                 x-on:livewire-upload-finish="isUploading = false; isUploaded = true;"
+                 x-on:livewire-upload-error="isUploading = false; isUploaded = false;"
+                 x-on:livewire-upload-progress="progress = $event.detail.progress">
+                <label for="new_image">{{__('pages/customers/index.modal.edit.inputs.image')}}</label>
+                <input type="file" wire:model.defer="user.new_image" class="form-control h-auto" id="new_image">
+                <!-- Progress Bar -->
+                <div x-show="isUploading">
+                    <progress max="100" x-bind:value="progress"></progress>
+                </div>
+                @error('user.new_image') <span class="error">{{ $message }}</span> @enderror
+                @isset($user['new_image'])
+                    <img alt="{{$user['new_image']}}" class="img-fluid mt-2" width="240"
+                         src="{{ $user['new_image']->temporaryUrl() }}">
+                @endisset
+            </div>
+            <div class="form-group" wire:ignore
+                 x-on:change-country.window="country_code = $event.detail.country_code, city_id = $event.detail.city_id;
+                 $('#country_code').select2({
+                        placeholder: '{{__('pages/customers/index.modal.edit.inputs.placeholders.country')}}',
+                        cache: true
+                    }).val(country_code).change();
+                    $dispatch('cities', {country_code: (country_code !== 'none') ? country_code : null});
+                    $dispatch('select-city', {country_code: (country_code !== 'none') ? country_code : null});
+                    axios.get('{{route('admin.country.cities')}}', {
+                        params: {
+                            country_code: country_code,
+                        }
+                    }).then(function (response) {
+                        $('#city_id').children('option').remove();
+                        $('#city_id').select2({
+                            placeholder: '{{__('pages/customers/index.modal.edit.inputs.placeholders.city')}}',
+                            data: response.data,
+                        }).val(city_id).change();
+                    });
+                    "
+                 x-data="{country_code: @entangle('country_code').defer, countries: {{json_encode($countries)}},}"
+                 x-init="$nextTick(() => {
+                 select2 = $('#country_code').select2({
+                        placeholder: '{{__('pages/customers/index.modal.edit.inputs.placeholders.country')}}',
+                        cache: true
+                    }).val(country_code).change();
+                    select2.on('select2:select', (event) => {
+                        country_code = event.target.value;
+                        $dispatch('cities', {country_code: (country_code !== 'none') ? country_code : null})
+                        $dispatch('select-city', {country_code: (country_code !== 'none') ? country_code : null})
+                    });
+                })">
+                <label for="country_code">{{__('pages/customers/index.modal.edit.inputs.country')}}</label>
+                <select x-model="country_code" x-cloak
+                        data-placeholder="{{__('pages/customers/index.modal.edit.inputs.placeholders.country')}}"
+                        id="country_code"
+                        x-ref="country_code"
+                        x-bind:value="country_code"
+                        class="form-control @error('user.country_code') is-invalid @enderror"
+                        wire:model.defer="country_code">
+                    <option></option>
+                    @foreach ($countries as $country)
+                        <option @if($country['id'] == $country_code) selected
+                                @endif  value="{{$country['id']}}">{{$country['value']}}</option>
+                    @endforeach
+                </select>
+                @error('user.country_code')
+                <div class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </div>
+                @enderror
+            </div>
+            <div x-subscribe="country_code"  wire:ignore
+                 x-data="{add: false, country_code: null}"
+                 x-on:cities.window="country_code = $event.detail.country_code"
+                 x-init="country_code = null">
+                <template x-if="country_code">
+                    <div class="form-group" x-data="{city_id: @entangle('user.city_id').defer}"
+                         x-init="$nextTick(() => {
+                        $('#city_id').select2().on('select2:select', (event) => {
+                            city_id = $('#city_id').val();
+                        })
+                    })">
+                        <label for="city_id">{{__('pages/advertisers/index.modal.edit.inputs.city')}}</label>
+                        <select x-cloak x-model="city_id" name="city_id"
+                                data-placeholder="{{__('pages/customers/index.modal.edit.inputs.placeholders.city')}}"
+                                id="city_id"
+                                class="form-control select2 @error('user.city_id') is-invalid @enderror"
+                                x-ref="city_id"
+                                x-bind:value="city_id">
+                            <option></option>
+                        </select>
+                        @error('user.city_id')
+                        <div class="invalid-feedback d-block" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </div>
+                        @enderror
+                    </div>
+                </template>
+            </div>
+            <div class="form-group">
+                <label for="language">{{__('pages/customers/index.modal.edit.inputs.language')}}</label>
+                <select class="form-control @error('user.language_code') is-invalid @enderror"
+                        wire:model.defer="user.language_code"
+                        id="language">
+                    <option
+                        value="none">{{__('pages/customers/index.modal.edit.inputs.placeholders.language')}}</option>
+                    @foreach($languages as $index => $language)
+                        <option value="{{$index}}">{{$language}}</option>
+                    @endforeach
+                </select>
+                @error('user.language_code')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="contact_number">{{__('pages/customers/index.modal.edit.inputs.contact_number')}}</label>
+                <input dir="ltr" class="form-control{{app()->getLocale() === 'ar' ? ' text-left' : ''}} @error('user.contact_number') is-invalid @enderror" id="contact_number"
+                       name="contact_number"
+                       wire:model.defer="user.contact_number"
+                >
+                @error('user.contact_number')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="whatsapp_number">{{__('pages/customers/index.modal.edit.inputs.whatsapp_number')}}</label>
+                <input dir="ltr" class="form-control{{app()->getLocale() === 'ar' ? ' text-left' : ''}} @error('user.whatsapp_number') is-invalid @enderror" id="whatsapp_number"
+                       name="whatsapp_number"
+                       wire:model.defer="user.whatsapp_number"
+                >
+                @error('user.whatsapp_number')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="facebook_url">{{__('pages/customers/index.modal.edit.inputs.facebook_url')}}</label>
+                <input class="form-control @error('user.facebook_url') is-invalid @enderror" id="facebook_url"
+                       name="facebook_url"
+                       wire:model.defer="user.facebook_url"
+                >
+                @error('user.facebook_url')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="twitter_url">{{__('pages/customers/index.modal.edit.inputs.twitter_url')}}</label>
+                <input class="form-control @error('user.twitter_url') is-invalid @enderror" id="twitter_url"
+                       name="twitter_url"
+                       wire:model.defer="user.twitter_url"
+                >
+                @error('user.twitter_url')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="website_url">{{__('pages/customers/index.modal.edit.inputs.website_url')}}</label>
+                <input class="form-control @error('user.website_url') is-invalid @enderror" id="website_url"
+                       name="website_url"
+                       wire:model.defer="user.website_url"
+                >
+                @error('user.website_url')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="status">{{__('pages/customers/index.modal.edit.inputs.status')}}</label>
+                <x-select wire:model.defer="user.status"
+                          :options="['active' => __('pages/customers/index.modal.edit.inputs.status_options.active'), 'inactive' => __('pages/customers/index.modal.edit.inputs.status_options.inactive'), 'banned' => __('pages/customers/index.modal.edit.inputs.status_options.banned')]"
+                          id="status"></x-select>
+                @error('user.status')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label
+                    for="accepted_send_notification">{{__('pages/customers/index.modal.edit.inputs.accepted_send_notification')}}</label>
+                <x-select wire:model.defer="user.is_accepted_send_notifications"
+                          :options="[1 => __('pages/customers/index.modal.edit.inputs.boolean.yes'), 0 => __('pages/customers/index.modal.edit.inputs.boolean.no')]"
+                          id="accepted_send_notification"></x-select>
+                @error('user.is_accepted_send_notifications')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="email_verified">{{__('pages/customers/index.modal.edit.inputs.email_verified')}}</label>
+                <select class="form-control" id="email_verified" wire:model.defer="user.email_verified_at">
+                    <option value="1">{{__('pages/customers/index.modal.edit.inputs.boolean.yes')}}</option>
+                    <option value="0">{{__('pages/customers/index.modal.edit.inputs.boolean.no')}}</option>
+                </select>
+                @error('user.email_verified_at')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+            <div class="form-group">
+                <label for="mobile_verified">{{__('pages/customers/index.modal.edit.inputs.mobile_verified')}}</label>
+                <select class="form-control" id="mobile_verified" wire:model.defer="user.mobile_verified_at">
+                    <option value="1">{{__('pages/customers/index.modal.edit.inputs.boolean.yes')}}</option>
+                    <option value="0">{{__('pages/customers/index.modal.edit.inputs.boolean.no')}}</option>
+                </select>
+                @error('user.mobile_verified_at')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+        </x-slot>
+
+        <x-slot name="footer">
+            <x-secondary-button wire:click="closeEditModal" wire:loading.attr="disabled">
+                {{ $editModalTexts['cancel'] }}
+            </x-secondary-button>
+
+            <x-primary-button wire:loading.attr="disabled" type="submit">
+                {{ $editModalTexts['submit'] }}
+            </x-primary-button>
+        </x-slot>
+    </form>
+</x-form-modal>
+<!-- /Edit Items Confirmation Modal -->
+
+@push('scripts')
+    <script type="text/javascript">
+        $("#country").change(function () {
+            let selectedCountry = $(this).children("option:selected").val();
+            window.livewire.emit('setCountry', selectedCountry);
+        });
+
+        //add event listener to refresh file input
+        window.addEventListener('clearFileInput', () => {
+            $('#new_image').val(null);
+        });
+
+        window.addEventListener('select-city', (el) => {
+            axios.get('{{route('admin.country.cities')}}', {
+                params: {
+                    country_code: el.detail.country_code,
+                }
+            }).then(function (response) {
+                $('#city_id').children('option').remove();
+                $('#city_id').select2({
+                    placeholder: '{{__('pages/customers/index.modal.edit.inputs.placeholders.city')}}',
+                    data: response.data,
+                }).val('').change();
+            })
+        });
+    </script>
+@endpush

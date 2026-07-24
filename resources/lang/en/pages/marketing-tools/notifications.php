@@ -1,0 +1,36 @@
+<?php
+return [
+    'breadcrumb' => [
+        'title' => 'Send Notifications',
+        'home' => 'Home',
+        'marketing-tools' => 'Marketing Tools',
+        'page' => 'Send Notifications',
+    ],
+    'content' => [
+        'title' => 'Send Notifications',
+        'recipients' => 'Recipients Type: ',
+        'all-users' => 'All Customers and Advertisers',
+        'all-advertisers' => 'All Advertisers',
+        'all-customers' => 'All Customers',
+        'specific-advertisers' => 'Specific Advertisers',
+        'specific-customers' => 'Specific Customers',
+        'advertisers' => 'Advertisers: ',
+        'customers' => 'Customers: ',
+        'subject' => 'Title [AR]',
+        'body' => 'Content [AR]',
+        'subject_en' => 'Title [EN]',
+        'body_en' => 'Content [EN]',
+        'image' => 'Image url',
+        'submit' => 'Submit form',
+    ],
+    'errors' => [
+        'all_users' => 'There is no user have device token.',
+        'all_advertisers' => 'There is no advertisers have device token.',
+        'all_customers' => 'There is no customers have device token.',
+        'specific_advertisers' => "The selected advertisers doesn't have device tokens.",
+        'specific_customers' => "The selected customer doesn't have device tokens.",
+        'no-advertisers' => 'There is no advertisers selected',
+        'no-customers' => 'There is no customers selected',
+    ],
+    'name' => 'Notifications',
+];

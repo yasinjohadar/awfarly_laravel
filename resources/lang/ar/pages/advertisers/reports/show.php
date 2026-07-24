@@ -1,0 +1,78 @@
+<?php
+
+return [
+    'content' => [
+        'title' => 'عرض بلاغ #<strong>:id</strong>',
+        'back' => 'رجوع',
+        'ban' => 'حظر المعلن',
+        'solve' => 'إصلاح',
+        'advertiser_id' => 'معلن #',
+        'user_type' => 'نوع المستخدم',
+        'user_id' => 'مستخدم #',
+        'user_name' => 'إسم المعرف',
+        'content' => 'المضمون',
+        'status' => 'الحالة: ',
+        'solved' => 'تم حلها',
+        'unsolved' => 'لم يتم حلها',
+        'datatable' => [
+            'advertiser_id' => 'معلن #',
+            'user_type' => 'نوع المستخدم',
+            'user_id' => 'مستخدم #',
+            'user_name' => 'إسم المعرف',
+            'type' => 'النوع',
+            'types' => [
+                'Sexually Inappropriate' => 'محتوي غير لائق جنسيًا',
+                'Abusive Content' => 'محتوي مسئ',
+                'Misleading or Scam' => 'محتوي تضليلي او احتيالي',
+                'Offensive' => 'محتوي عدواني',
+                'Violence' => 'محتوي عنيف',
+                'Prohibited Content' => 'محتوي محظور',
+                'Spam' => 'محتوي مزعج',
+                'False News' => 'محتوي يتضمن أخبار كاذبه',
+                'Other' => 'اخرى',
+            ],
+            'reason' => 'السبب',
+            'created_at' => 'أنشئ في',
+            'reports_count' => 'عدد البلاغات',
+            'guest' => 'زائر',
+        ],
+    ],
+    'modal' => [
+        'delete' => [
+            'title' => 'حظر المعلن',
+            'content' => 'هل أنت متأكد انك تريد حظر المعلن التابع لهذه البلاغات؟',
+            'submit' => 'حظر',
+            'cancel' => 'إلغاء',
+        ],
+        'solve' => [
+            'title' => 'حدد كبلاغات تم حلها',
+            'content' => 'هل أنت متأكد أنك تريد تحديد هذه البلاغات كبلاغات تم حلها؟',
+            'submit' => 'موافق',
+            'cancel' => 'إلغاء',
+        ],
+        'show' => [
+            'title' => 'عرض المزيد',
+            'close' => 'إغلاق',
+            'content' => [
+                'advertiser_id' => 'معلن رقم: ',
+                'type' => 'النوع',
+                'types' => [
+                    'Sexually Inappropriate' => 'محتوي غير لائق جنسيًا',
+                    'Abusive Content' => 'محتوي مسئ',
+                    'Misleading or Scam' => 'محتوي تضليلي او احتيالي',
+                    'Offensive' => 'محتوي عدواني',
+                    'Violence' => 'محتوي عنيف',
+                    'Prohibited Content' => 'محتوي محظور',
+                    'Spam' => 'محتوي مزعج',
+                    'False News' => 'محتوي يتضمن أخبار كاذبه',
+                    'Other' => 'اخرى',
+                ],
+                'user_type' => 'نوع المستخدم: ',
+                'user_id' => 'رقم المستخدم',
+                'user_name' => 'إسم المعرف',
+                'reason' => 'السبب: ',
+                'created_at' => 'تم الإبلاغ في: ',
+            ],
+        ],
+    ]
+];

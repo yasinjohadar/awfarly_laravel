@@ -1,0 +1,52 @@
+<?php
+
+return [
+    'content' => [
+        'title' => 'Offer #<strong>:id</strong> Inquiry',
+        'back' => 'Back',
+        'user_id' => 'Advertiser #',
+        'user_name' => 'Advertiser Name',
+        'category' => 'Category',
+        'content' => 'Content',
+        'sale_percentage' => 'Sale Percentage',
+        'advertisement_url' => 'Advertisement URL',
+        'expires_at' => 'Expires At',
+        'expires_in' => 'Expires In (days)',
+        'deleted_at' => 'Deleted At',
+        'status' => 'Status',
+        'rate' => 'Rate',
+        'likes_count' => 'Likes',
+        'views_count' => 'Views',
+        'comments_count' => 'Comments',
+        'media' => 'Media',
+        'save' => 'Save',
+    ],
+    'modal' => [
+        'edit' => [
+            'title' => 'Edit Offers',
+            'inputs' => [
+                'category' => 'Select Category',
+                'content' => 'Content',
+                'sale_percentage' => 'Sale Percentage',
+                'advertisement_url' => 'Advertisement URL',
+                'expires_in' => 'Expires In (days)',
+                'status' => 'Status',
+                'rate' => 'Rate',
+                'pending' => 'Pending',
+                'approved' => 'Approved',
+                'views_count' => 'Views Count',
+                'likes_count' => 'Likes Count',
+                'comments_count' => 'Comments Count',
+                'media' => 'Media',
+            ],
+            'submit' => 'Save changes',
+            'cancel' => 'Cancel',
+        ],
+        'delete' => [
+            'title' => 'Delete Media item',
+            'content' => 'Are you sure you want to delete this Media item?',
+            'submit' => 'Delete',
+            'cancel' => 'Cancel',
+        ],
+    ]
+];

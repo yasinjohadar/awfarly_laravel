@@ -1,0 +1,33 @@
+/node_modules
+/public/hot
+/public/storage
+/storage/*.key
+/vendor
+.env
+.env.backup
+.phpunit.result.cache
+.rnd
+package-lock.json
+composer.lock
+docker-compose.override.yml
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/.idea
+/.vscode
+/storage/media-library
+
+
+# Firebase / Google credentials
+storage/firebase_credentials.json
+storage/firebase_credentials1.json
+storage/google-app-credentials.json
+
+# OAuth Keys
+storage/oauth-private.key
+storage/oauth-public.key
+
+# Laravel storage
+/storage/*.json
+!/storage/*.example.json

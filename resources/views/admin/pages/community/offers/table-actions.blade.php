@@ -1,0 +1,18 @@
+<div class="d-flex justify-content-around">
+    <button title="Edit" @cannot('offers.edit') disabled @endcannot  wire:click="showEditModal({{ $id }})" class="btn btn-secondary mx-1">
+        <i class="icon-pencil7"></i>
+    </button>
+    @if($deleted_at)
+        <button title="Restore" @cannot('offers.edit') disabled @endcannot  wire:click="showRestoreModal({{ $id }})"
+                class="btn btn-secondary mx-1">
+            <i class="icon-history"></i>
+        </button>
+    @endif
+
+    <div class="mx-2">
+        <button @cannot('offers.inquiry') disabled @endcannot  wire:click="$emitUp('setOfferId', {{ $id }})"
+                class="btn btn-secondary">
+            <i class="icon-folder-open"></i>
+        </button>
+    </div>
+</div>

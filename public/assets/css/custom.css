@@ -1,0 +1,243 @@
+* {
+    font-family: 'Cairo';
+}
+
+.rtl {
+    direction: rtl;
+
+!important;
+}
+
+.ltr {
+    direction: ltr !important;
+}
+
+.select2-selection {
+    height: 100% !important;
+    padding: .4375rem .875rem;
+}
+
+.select2-selection:focus {
+    color: #333;
+    border-color: #2196f3 !important;
+    outline: 0;
+}
+
+.select2-selection .select2-selection__rendered {
+    line-height: inherit !important;
+}
+
+.select2-selection .select2-selection__arrow {
+    height: inherit !important;
+}
+
+input.select2-search__field:focus-visible {
+    color: #333;
+    border-color: #2196f3 !important;
+    outline: 0;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__clear {
+    padding-top: 0;
+    display: flex;
+    align-items: flex-end;
+    position: relative;
+    height: auto;
+}
+
+.select2-container {
+    width: 100% !important;
+}
+
+i.handle {
+    cursor: grab;
+}
+
+.order-data:not(:last-child) {
+    border-bottom: 1px solid rgba(0, 0, 0, .125);
+}
+
+.cke_dialog_ui_file {
+    height: auto !important;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.delete-image {
+    position: absolute;
+    right: 25px;
+    top: 5px;
+}
+
+.border-warning-400 {
+    border-color: #ff7043;
+}
+
+.text-warning-400 {
+    color: #ff7043;
+}
+
+.text-warning-400[href]:focus, .text-warning-400[href]:hover {
+    color: #ff531d;
+}
+
+.border-indigo-400 {
+    border-color: #5c6bc0;
+}
+
+.text-indigo-400 {
+    color: #5c6bc0;
+}
+
+.text-indigo-400[href]:focus, .text-indigo-400[href]:hover {
+    color: #4555b1;
+}
+
+.map-container {
+    height: 500px
+}
+
+.jvectormap-label {
+    position: absolute;
+    display: none;
+    background-color: #000;
+    color: #fff;
+    padding: .5rem .75rem;
+    border-radius: .1875rem;
+}
+
+.has-fixed-height {
+    height: 400px;
+}
+
+.media-chat .media.media-chat-item-reverse {
+    margin-right: 1rem !important;
+}
+
+.swiper-container {
+    width: 100%;
+    height: 200px;
+    border-radius: 1.5rem !important;
+}
+
+.swiper-slide {
+    background-position: center;
+    background-size: cover;
+}
+
+.swiper-slide img {
+    display: block;
+    width: 100%;
+    border-radius: 1.25rem;
+}
+
+.swiper-slide.d-flex {
+    display: block;
+    width: 100%;
+    border-radius: 1.25rem;
+}
+
+.swiper-button-next:after, .swiper-button-prev:after {
+    font-family: swiper-icons;
+    font-size: 25px;
+    letter-spacing: 0;
+    text-transform: none;
+    font-variant: initial;
+    line-height: 1;
+}
+
+.elite img {
+    border: 2px orange solid;
+}
+
+[dir=rtl] .elite::before {
+    content: '';
+    background: url("../images/frontend/elite.png");
+    background-size: cover;
+    position: absolute;
+    height: 15px;
+    width: 15px;
+    right: 55px;
+}
+
+.elite::before {
+    content: '';
+    background: url("../images/frontend/elite.png");
+    background-size: cover;
+    position: absolute;
+    height: 15px;
+    width: 15px;
+    left: 55px;
+}
+
+[dir='rtl'] .lg-toolbar .lg-icon {
+    float: left;
+}
+
+[dir='rtl'] .lg-thumb {
+    display: inline-flex;
+}
+
+.lg-video-object {
+    padding: 3rem;
+}
+
+.lg-fullscreen-on .lg-video-object {
+    padding: 0;
+}
+
+.note-editor .note-toolbar .note-color .dropdown-toggle:after,
+.note-popover .popover-content .note-color .dropdown-toggle:after,
+.btn-group > .btn-group:not(:first-child) > .btn:after,
+.btn-group > .btn:not(:first-child):after,
+.note-btn-group .note-btn:after {
+    content: none;
+}
+
+.note-editor .note-toolbar .note-color .dropdown-toggle, .note-popover .popover-content .note-color .dropdown-toggle {
+    padding: 0;
+}
+
+.note-editor.note-airframe.fullscreen, .note-editor.note-frame.fullscreen {
+    background: white;
+}
+
+.ck-editor__editable {
+    min-height: 350px;
+}
+
+.ck.ck-sticky-panel .ck-sticky-panel__content_sticky {
+    top: 55px !important;
+    width: 55vw !important;
+}
+
+.home-inline-gallery .home-inline-gallery-header {
+    margin-bottom: 2.5rem
+}
+
+.home-inline-gallery .home-inline-gallery-header p {
+    font-size: 1.4rem
+}
+
+.inline-gallery-container {
+    width: 100%;
+    height: 500px;
+    position: relative;
+}
+
+.inline-gallery-container .lg-item {
+    left: 0;
+}
+
+@media (min-width: 992px) {
+    .navbar-expand-lg .navbar-brand {
+        min-width: 3.6rem;
+    }
+}
+
+.lg-sub-html {
+    display: none;
+}

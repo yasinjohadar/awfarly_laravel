@@ -1,0 +1,31 @@
+<?php
+return [
+    'something-wrong' => 'Something went wrong, Please try again later!',
+    'wrong-id' => 'There is no package with that ID!',
+    'no-packages' => 'You are not subscribed to any packages right now.',
+    'subscription_types' => [
+        'minutely' => 'Minutely',
+        'hourly' => 'Hourly',
+        'daily' => 'Daily',
+        'weekly' => 'Weekly',
+        'monthly' => 'Monthly',
+        'two_months' => 'Two Months',
+        'three_months' => 'Three Months',
+        'six_months' => 'Six Months',
+        'yearly' => 'Yearly',
+    ],
+    'tag' => ":value :currency / :type",
+    'currencies' => [
+        'SAR' => 'SAR',
+        'USD' => 'USD',
+        'EGP' => 'EGP',
+        'KWD' => 'KWD',
+        'AED' => 'AED',
+    ],
+    'package_purchased' => 'You have successfully subscribed to package: :name',
+    'already-subscribed' => "You're already subscribed to this package.",
+    'old-transaction' => 'This is an old transaction.',
+    'transaction-failed' => 'Transaction failed.',
+    'wrong-identifier' => 'Wrong identifier',
+    'has-subscription' => 'You already have an active subscription',
+];

@@ -1,0 +1,55 @@
+<?php
+
+return [
+    'breadcrumb' => [
+        'title' => 'Subscriptions Packages Create',
+        'home' => 'Home',
+        'subscriptions' => 'Subscriptions',
+        'packages' => 'Packages',
+        'page' => 'Create',
+    ],
+    'content' => [
+        'title' => 'Subscriptions Packages Create',
+        'inputs' => [
+            'product_id' => 'Product #',
+            'name_en' => 'English Name',
+            'name_ar' => 'Arabic Name',
+            'description_en' => 'English Description',
+            'description_ar' => 'Arabic Description',
+            'specifications_en' => 'English Specifications',
+            'specifications_ar' => 'Arabic Specifications',
+            'maximum_posts' => 'Posts Count',
+            'price' => 'Price',
+            'old_price' => 'Old Price',
+            'duration' => 'Duration',
+            'subscription_type' => 'Subscription Type',
+            'subscription_types' => [
+                'minutely' => 'Minutely',
+                'hourly' => 'Hourly',
+                'daily' => 'Daily',
+                'weekly' => 'Weekly',
+                'monthly' => 'Monthly',
+                'two_months' => 'Two Months',
+                'three_months' => 'Three Months',
+                'six_months' => 'Six Months',
+                'yearly' => 'Yearly',
+            ],
+            'currency' => 'Currency',
+            'currencies' => [
+                'SAR' => 'SAR',
+                'USD' => 'USD',
+                'EGP' => 'EGP',
+                'KWD' => 'KWD',
+                'AED' => 'AED',
+            ],
+            'is_visible' => 'Visible',
+            'is_active' => 'Active',
+            'is_trial' => 'Trial',
+            'boolean' => [
+                'yes' => 'Yes',
+                'no' => 'No',
+            ],
+        ],
+        'submit' => 'Create',
+    ],
+];

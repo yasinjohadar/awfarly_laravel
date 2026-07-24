@@ -1,0 +1,31 @@
+<?php
+return [
+    'something-wrong' => 'حدث خطأ ما، برجاء المحاوله لاحقاً!',
+    'wrong-id' => 'لا يوجد خطة بهذا المعرف!',
+    'no-packages' => 'أنت غير مشترك في اي خطة حالياً',
+    'subscription_types' => [
+        'minutely' => 'دقيقة',
+        'hourly' => 'ساعة',
+        'daily' => 'يومياً',
+        'weekly' => 'إسبوعياً',
+        'monthly' => 'شهرياً',
+        'two_months' => 'شهرين',
+        'three_months' => 'ثلاثة شهور',
+        'six_months' => 'ستة شهور',
+        'yearly' => 'سنوياً',
+    ],
+    'tag' => ":value :currency / :type",
+    'currencies' => [
+        'SAR' => 'ريال سعودي',
+        'USD' => 'دولار أمريكي',
+        'EGP' => 'جنيه مصري',
+        'KWD' => 'دينار كويتي',
+        'AED' => 'درهم إماراتي',
+    ],
+    'package_purchased' => 'لقد اشتركت بنجاح في الخطه:  :name',
+    'already-subscribed' => "أنت بالفعل مشترك في هذه الخطة",
+    'old-transaction' => 'هذه العملية قديمة',
+    'transaction-failed' => 'فشل الاجراء.',
+    'wrong-identifier' => 'معرف خاطئ',
+    'has-subscription' => 'انت مشترك بالفعل في خطة!',
+];
