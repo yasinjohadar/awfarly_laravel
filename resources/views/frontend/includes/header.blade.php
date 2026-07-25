@@ -33,12 +33,14 @@
                         {{__('frontend/navbar.download')}}
                     </a>
                 </li>
+                @if($about_us)
                 <li id="about-us" class="nav-item{{isset($slug) && $slug === $about_us['slug'] ? ' active' : ''}}">
                     <a class="nav-link"
                        href="{{route('pages.index', ['id' => $about_us['id'], 'slug' => $about_us['slug']])}}">
                         {{$about_us['title']}}
                     </a>
                 </li>
+                @endif
                 <li id="contact-us" class="nav-item{{Request::routeIs('contact-us.index') ? ' active' : ''}}">
                     <a class="nav-link" href="{{route('contact-us.index')}}">
                         {{__('frontend/navbar.contact-us')}}
@@ -155,7 +157,7 @@
                         sectionLink.parentElement.classList.add('active');
                         @if(Request::routeIs('home.index'))
                         document.getElementById('home').classList.remove('active');
-                        @elseif(isset($slug) && $slug === $about_us['slug'])
+                        @elseif($about_us && isset($slug) && $slug === $about_us['slug'])
                         document.getElementById('about-us').classList.remove('active');
                         @elseif (Request::routeIs('contact-us.index'))
                         document.getElementById('contact-us').classList.remove('active');
@@ -165,7 +167,7 @@
                         sectionLink.parentElement.classList.remove('active');
                         @if(Request::routeIs('home.index'))
                         document.getElementById('home').classList.add('active');
-                        @elseif(isset($slug) && $slug === $about_us['slug'])
+                        @elseif($about_us && isset($slug) && $slug === $about_us['slug'])
                         document.getElementById('about-us').classList.add('active');
                         @elseif (Request::routeIs('contact-us.index'))
                         document.getElementById('contact-us').classList.add('active');

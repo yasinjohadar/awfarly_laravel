@@ -123,14 +123,14 @@ class AppServiceProvider extends ServiceProvider
                 //get language column to show
                 $title = App::currentLocale() === 'ar' ? 'title_ar' : 'title_en';
 
-                $about_us = Page::where('slug', 'like', '%about%')
+                $about_us_page = Page::where('slug', 'like', '%about%')
                     ->first();
 
-                $about_us = [
-                    'id' => $about_us->id,
-                    'title' => $about_us->{$title},
-                    'slug' => $about_us->slug,
-                ];
+                $about_us = $about_us_page ? [
+                    'id' => $about_us_page->id,
+                    'title' => $about_us_page->{$title},
+                    'slug' => $about_us_page->slug,
+                ] : null;
 
                 $view->with([
                     'languages' => $languages,
