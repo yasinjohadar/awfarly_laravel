@@ -80,7 +80,14 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "audit": {
+            "block-insecure": false,
+            "ignore": {
+                "PKSA-tcfz-w4fm-hhk9": "Pinned google/protobuf for Laravel 8 / Firestore stack; upgrade when migrating PHP/Laravel",
+                "PKSA-yqjh-6qvh-g493": "Pinned google/protobuf for Laravel 8 / Firestore stack; upgrade when migrating PHP/Laravel"
+            }
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
