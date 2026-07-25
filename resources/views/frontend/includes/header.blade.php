@@ -53,6 +53,7 @@
                         </a>
                     </li>
                 @endauth
+                @if($user_language)
                 <li class="nav-item dropdown" id="languages_select">
                     <a href="#" class="nav-link dropdown-toggle d-flex justify-content-center" id="languages"
                        dir="ltr" data-toggle="dropdown" aria-expanded="false">
@@ -72,6 +73,7 @@
                         @endforeach
                     </div>
                 </li>
+                @endif
             </ul>
         </div>
     </div>

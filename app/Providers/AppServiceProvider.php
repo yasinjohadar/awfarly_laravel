@@ -23,6 +23,18 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
+     * Resolve current UI language with safe fallbacks when seed data is missing.
+     */
+    public static function resolveUserLanguage(?string $code = null): ?Language
+    {
+        $code = $code ?: Session::get('userLocale', App::getLocale() ?: 'ar');
+
+        return Language::where('code', $code)->first()
+            ?? Language::where('is_default', true)->first()
+            ?? Language::first();
+    }
+
+    /**
      * Bootstrap any application services.
      *
      * @return void
@@ -84,7 +96,8 @@ class AppServiceProvider extends ServiceProvider
                 $user_language = Auth::guard('admin')->user()
                     ->user_language()
                     ->select('name', 'code', 'image', 'direction')
-                    ->first();
+                    ->first()
+                    ?? AppServiceProvider::resolveUserLanguage();
 
                 $view->with([
                     'languages' => $languages,
@@ -100,12 +113,9 @@ class AppServiceProvider extends ServiceProvider
                 $languages = Language::select('name', 'code', 'image', 'direction')
                     ->get();
 
-                $user_language = Language::where('code', Session::get('userLocale', 'ar'))
-                    ->first();
-
                 $view->with([
                     'languages' => $languages,
-                    'user_language' => $user_language,
+                    'user_language' => AppServiceProvider::resolveUserLanguage(),
                 ]);
             }
         );
@@ -117,8 +127,7 @@ class AppServiceProvider extends ServiceProvider
                 $languages = Language::select('name', 'code', 'image', 'direction')
                     ->get();
 
-                $user_language = Language::where('code', Session::get('userLocale', 'ar'))
-                    ->first();
+                $user_language = AppServiceProvider::resolveUserLanguage();
 
                 //get language column to show
                 $title = App::currentLocale() === 'ar' ? 'title_ar' : 'title_en';

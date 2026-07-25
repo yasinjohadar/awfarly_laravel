@@ -20,6 +20,7 @@
         </li>
     </ul>
     <ul class="ml-lg-auto navbar-nav flex-row order-1 order-lg-2 flex-1 flex-lg-0 justify-content-end align-items-center">
+        @if($user_language)
         <li class="nav-item nav-item-dropdown-lg dropdown">
             <a href="#" class="navbar-nav-link navbar-nav-link-toggler dropdown-toggle"
                dir="ltr" data-toggle="dropdown" aria-expanded="false">
@@ -38,5 +39,6 @@
                 @endforeach
             </div>
         </li>
+        @endif
     </ul>
 </div>
