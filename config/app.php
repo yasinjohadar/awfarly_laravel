@@ -182,8 +182,6 @@ return [
          */
         Spatie\Permission\PermissionServiceProvider::class,
 
-        Barryvdh\Debugbar\ServiceProvider::class,
-
         /**
          * Firebase
          */
@@ -243,7 +241,6 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
-        'Debugbar' => Barryvdh\Debugbar\Facade::class,
         'Settings' => \App\Helpers\Settings::class,
         'GeoIP' => PulkitJalan\GeoIP\Facades\GeoIP::class
     ],
