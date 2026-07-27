@@ -7,6 +7,7 @@ use App\Models\Chats\Messages\ChatMessages;
 use App\Models\Chats\Users\ChatUsers;
 use App\Models\Countries\Cities\City;
 use App\Models\Countries\Country;
+use App\Models\Countries\Governorates\Governorate;
 use App\Models\Languages\Language;
 use App\Models\Offers\Likes\OfferLikes;
 use App\Models\Offers\Comments\Likes\OffersCommentLikes;
@@ -95,6 +96,7 @@ class AdvertiserUser extends Authenticatable implements Wallet
         'notify_language',
         'image',
         'country_code',
+        'governorate_id',
         'city_id',
         'language_code',
         'contact_number',
@@ -104,6 +106,7 @@ class AdvertiserUser extends Authenticatable implements Wallet
         'website_url',
         'allowed_posts_count',
         'allowed_offers_count',
+        'maximum_monthly_offers',
         'email_verified_at',
         'mobile_verified_at',
         'rate',
@@ -257,6 +260,14 @@ class AdvertiserUser extends Authenticatable implements Wallet
     public function country(): HasOne
     {
         return $this->hasOne(Country::class, 'code', 'country_code');
+    }
+
+    /**
+     * @return HasOne
+     */
+    public function governorate(): HasOne
+    {
+        return $this->hasOne(Governorate::class, 'id', 'governorate_id');
     }
 
     /**

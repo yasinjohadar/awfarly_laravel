@@ -2,7 +2,7 @@
 
 namespace App\Models\Countries\Cities;
 
-use App\Models\Countries\Country;
+use App\Models\Countries\Governorates\Governorate;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,7 +21,7 @@ class City extends Model
      */
     protected $fillable = [
         'order',
-        'country_code',
+        'governorate_id',
         'name_ar',
         'name_en',
     ];
@@ -29,8 +29,8 @@ class City extends Model
     /**
      * @return BelongsTo
      */
-    public function country(): BelongsTo
+    public function governorate(): BelongsTo
     {
-        return $this->belongsTo(Country::class, 'country_code', 'code');
+        return $this->belongsTo(Governorate::class, 'governorate_id', 'id');
     }
 }

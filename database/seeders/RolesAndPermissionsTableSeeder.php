@@ -147,6 +147,12 @@ class RolesAndPermissionsTableSeeder extends Seeder
         $permissions['countries']['edit'] = Permission::create(['guard_name' => 'admin', 'name' => 'countries.edit']);
         $permissions['countries']['delete'] = Permission::create(['guard_name' => 'admin', 'name' => 'countries.delete']);
 
+        //Create Governorates permissions
+        $permissions['governorates']['inquiry'] = Permission::create(['guard_name' => 'admin', 'name' => 'governorates.inquiry']);
+        $permissions['governorates']['add'] = Permission::create(['guard_name' => 'admin', 'name' => 'governorates.add']);
+        $permissions['governorates']['edit'] = Permission::create(['guard_name' => 'admin', 'name' => 'governorates.edit']);
+        $permissions['governorates']['delete'] = Permission::create(['guard_name' => 'admin', 'name' => 'governorates.delete']);
+
         //Create Cities permissions
         $permissions['cities']['inquiry'] = Permission::create(['guard_name' => 'admin', 'name' => 'cities.inquiry']);
         $permissions['cities']['add'] = Permission::create(['guard_name' => 'admin', 'name' => 'cities.add']);
@@ -296,6 +302,12 @@ class RolesAndPermissionsTableSeeder extends Seeder
             $permissions['countries']['add'],
             $permissions['countries']['edit'],
             $permissions['countries']['delete'],
+
+            //Create Governorates permissions
+            $permissions['governorates']['inquiry'],
+            $permissions['governorates']['add'],
+            $permissions['governorates']['edit'],
+            $permissions['governorates']['delete'],
 
             //Create Cities permissions
             $permissions['cities']['inquiry'],

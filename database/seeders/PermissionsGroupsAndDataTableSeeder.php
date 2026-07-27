@@ -44,11 +44,12 @@ class PermissionsGroupsAndDataTableSeeder extends Seeder
             ['name' => 'Backup', 'is_allowed' => true,],
             ['name' => 'Logs', 'is_allowed' => true,],
             ['name' => 'Countries', 'is_allowed' => true,],
-            ['name' => 'Cities', 'is_allowed' => true,],
+            ['name' => 'Governorates', 'is_allowed' => true,],
             ['name' => 'Business Types', 'is_allowed' => true,],
             ['name' => 'Chats', 'is_allowed' => true,],
             ['name' => 'Ratings', 'is_allowed' => true,],
             ['name' => 'Statistics', 'is_allowed' => true,],
+            ['name' => 'Cities', 'is_allowed' => true,],
         ]);
 
 
@@ -77,11 +78,12 @@ class PermissionsGroupsAndDataTableSeeder extends Seeder
          * Backup = 20
          * Logs = 21
          * Countries = 22
-         * Cities = 23
+         * Governorates = 23
          * BusinessTypes = 24
          * Chats = 25
          * Ratings = 26
          * Statistics = 27
+         * Cities = 28
          */
         DB::table('permissions_groups_data')->insert([
             //Create Admins permissions
@@ -202,11 +204,11 @@ class PermissionsGroupsAndDataTableSeeder extends Seeder
             ['group_id' => 22, 'name' => "Countries edit", 'key' => 'countries.edit', 'is_allowed' => true,],
             ['group_id' => 22, 'name' => "Countries delete", 'key' => 'countries.delete', 'is_allowed' => true,],
 
-            //Create Cities permissions
-            ['group_id' => 23, 'name' => "Cities inquiry", 'key' => 'cities.inquiry', 'is_allowed' => true,],
-            ['group_id' => 23, 'name' => "Cities add", 'key' => 'cities.add', 'is_allowed' => true,],
-            ['group_id' => 23, 'name' => "Cities edit", 'key' => 'cities.edit', 'is_allowed' => true,],
-            ['group_id' => 23, 'name' => "Cities delete", 'key' => 'cities.delete', 'is_allowed' => true,],
+            //Create Governorates permissions
+            ['group_id' => 23, 'name' => "Governorates inquiry", 'key' => 'governorates.inquiry', 'is_allowed' => true,],
+            ['group_id' => 23, 'name' => "Governorates add", 'key' => 'governorates.add', 'is_allowed' => true,],
+            ['group_id' => 23, 'name' => "Governorates edit", 'key' => 'governorates.edit', 'is_allowed' => true,],
+            ['group_id' => 23, 'name' => "Governorates delete", 'key' => 'governorates.delete', 'is_allowed' => true,],
 
             //Create Business Types permissions
             ['group_id' => 24, 'name' => "Business Types inquiry", 'key' => 'business.types.inquiry', 'is_allowed' => true,],
@@ -228,6 +230,12 @@ class PermissionsGroupsAndDataTableSeeder extends Seeder
             ['group_id' => 27, 'name' => "Statistics Users", 'key' => 'statistics.users', 'is_allowed' => true,],
             ['group_id' => 27, 'name' => "Statistics Requests", 'key' => 'statistics.requests', 'is_allowed' => true,],
             ['group_id' => 27, 'name' => "Statistics Reports", 'key' => 'statistics.reports', 'is_allowed' => true,],
+
+            //Create Cities permissions
+            ['group_id' => 28, 'name' => "Cities inquiry", 'key' => 'cities.inquiry', 'is_allowed' => true,],
+            ['group_id' => 28, 'name' => "Cities add", 'key' => 'cities.add', 'is_allowed' => true,],
+            ['group_id' => 28, 'name' => "Cities edit", 'key' => 'cities.edit', 'is_allowed' => true,],
+            ['group_id' => 28, 'name' => "Cities delete", 'key' => 'cities.delete', 'is_allowed' => true,],
         ]);
     }
 }

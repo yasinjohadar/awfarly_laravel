@@ -26,6 +26,7 @@ class Advertisement extends Model implements HasMedia
         'content',
         'categories',
         'countries',
+        'governorates',
         'cities',
         'starts_at',
         'ends_at',
@@ -35,6 +36,7 @@ class Advertisement extends Model implements HasMedia
     protected $casts = [
         'categories' => 'json',
         'countries' => 'json',
+        'governorates' => 'json',
         'cities' => 'json',
         'is_active' => 'boolean',
     ];

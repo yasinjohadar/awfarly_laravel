@@ -2,7 +2,7 @@
 
 namespace App\Models\Countries;
 
-use App\Models\Countries\Cities\City;
+use App\Models\Countries\Governorates\Governorate;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -29,8 +29,8 @@ class Country extends Model
     /**
      * @return HasMany
      */
-    public function cities(): HasMany
+    public function governorates(): HasMany
     {
-        return $this->hasMany(City::class, 'country_code', 'code');
+        return $this->hasMany(Governorate::class, 'country_code', 'code');
     }
 }

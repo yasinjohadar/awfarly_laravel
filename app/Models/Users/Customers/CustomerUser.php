@@ -7,6 +7,7 @@ use App\Models\Chats\Messages\ChatMessages;
 use App\Models\Chats\Users\ChatUsers;
 use App\Models\Countries\Cities\City;
 use App\Models\Countries\Country;
+use App\Models\Countries\Governorates\Governorate;
 use App\Models\Languages\Language;
 use App\Models\Offers\Likes\OfferLikes;
 use App\Models\Offers\Comments\Likes\OffersCommentLikes;
@@ -85,6 +86,7 @@ class CustomerUser extends Authenticatable
         'notify_language',
         'image',
         'country_code',
+        'governorate_id',
         'city_id',
         'language_code',
         'contact_number',
@@ -275,6 +277,14 @@ class CustomerUser extends Authenticatable
     public function country(): HasOne
     {
         return $this->hasOne(Country::class, 'code', 'country_code');
+    }
+
+    /**
+     * @return HasOne
+     */
+    public function governorate(): HasOne
+    {
+        return $this->hasOne(Governorate::class, 'id', 'governorate_id');
     }
 
     /**
