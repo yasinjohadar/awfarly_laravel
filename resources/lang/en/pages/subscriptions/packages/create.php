@@ -19,6 +19,8 @@ return [
             'specifications_en' => 'English Specifications',
             'specifications_ar' => 'Arabic Specifications',
             'maximum_posts' => 'Posts Count',
+            'maximum_offers' => 'Active Offers Count',
+            'maximum_monthly_offers' => 'Monthly Offers Count',
             'price' => 'Price',
             'old_price' => 'Old Price',
             'duration' => 'Duration',

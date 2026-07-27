@@ -1,21 +1,24 @@
-<?php
-
-return [
-    'breadcrumb' => [
-        'title' => 'Cities Create',
-        'home' => 'Home',
-        'countries' => 'Countries',
-        'cities' => 'Cities',
-        'page' => 'Create',
-    ],
-    'content' => [
-        'title' => 'Cities Create',
-        'inputs' => [
-            'country_code' => 'Country',
-            'name_en' => 'English Name',
-            'name_ar' => 'Arabic Name',
-        ],
-        'submit' => 'Create',
-        'cancel' => 'Cancel',
-    ],
-];
+<?php
+
+return [
+    'breadcrumb' => [
+        'title' => 'Create City',
+        'home' => 'Home',
+        'countries' => 'Countries',
+        'cities' => 'Cities',
+        'page' => 'Create',
+    ],
+    'content' => [
+        'title' => 'Create City',
+        'inputs' => [
+            'governorate' => 'Governorate',
+            'name_en' => 'English Name',
+            'name_ar' => 'Arabic Name',
+            'placeholders' => [
+                'select_governorate' => 'Choose a governorate',
+            ],
+        ],
+        'submit' => 'Create',
+        'cancel' => 'Cancel',
+    ],
+];

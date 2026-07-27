@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Users\Advertisers\BusinessTypes\AdvertiserBusinessType;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class BusinessTypesTableSeeder extends Seeder
 {
@@ -14,7 +15,10 @@ class BusinessTypesTableSeeder extends Seeder
      */
     public function run()
     {
-        // Create pages
+        Schema::disableForeignKeyConstraints();
+        AdvertiserBusinessType::truncate();
+        Schema::enableForeignKeyConstraints();
+
         AdvertiserBusinessType::insert([
             [
                 'order' => 1,

@@ -10,6 +10,7 @@ return [
     ],
     'content' => [
         'title' => 'Business Types Inquiry',
+        'add' => 'Add Business Type',
         'datatable' => [
             'name_en' => 'English Name',
             'name_ar' => 'Arabic Name',

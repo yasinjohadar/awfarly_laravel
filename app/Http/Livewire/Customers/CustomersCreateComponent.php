@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -28,6 +29,7 @@ class CustomersCreateComponent extends Component
     public $image;
     public ?string $password = null;
     public ?string $country_code = 'none';
+    public ?string $governorate_id = 'none';
     public ?string $city_id = 'none';
     public ?string $language_code = 'ar';
     public ?string $contact_number = null;
@@ -51,7 +53,13 @@ class CustomersCreateComponent extends Component
         'mobile' => ['required', 'unique:admins_users,mobile', 'unique:advertisers_users,mobile', 'unique:customers_users,mobile', 'regex:^\+\d+$^'],
         'username' => ['nullable', 'unique:admins_users,username', 'unique:advertisers_users,username', 'unique:customers_users,username'],
         'country_code' => ['required', 'exists:countries,code'],
-        'city_id' => ['required', 'exists:cities,id'],
+        'governorate_id' => ['required', 'exists:governorates,id'],
+        'city_id' => [
+            'required',
+            Rule::exists('cities', 'id')->where(function ($query) {
+                return $query->where('governorate_id', $this->governorate_id);
+            }),
+        ],
         'language_code' => ['required', 'exists:languages,code'],
         'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif'],
         'password' => ['required'],
@@ -77,7 +85,7 @@ class CustomersCreateComponent extends Component
             "$this->country_column",
             'code'
         )
-            ->whereHas('cities')
+            ->whereHas('governorates')
             ->get()
             ->keyBy(function ($value) {
                 return $value->code;
@@ -128,6 +136,7 @@ class CustomersCreateComponent extends Component
                 'mobile' => Filter::RemoveHtml($this->mobile),
                 'username' => Filter::RemoveHtml($this->username),
                 'country_code' => $this->country_code,
+                'governorate_id' => $this->governorate_id,
                 'city_id' => $this->city_id,
                 'language_code' => $this->language_code,
                 'image' => $url,
@@ -153,6 +162,7 @@ class CustomersCreateComponent extends Component
                 'mobile',
                 'username',
                 'country_code',
+                'governorate_id',
                 'city_id',
                 'language_code',
                 'image',

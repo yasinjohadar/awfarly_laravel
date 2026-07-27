@@ -57,6 +57,12 @@
                 </div>
             </div>
             <div class="col-md-12 mt-5">
+                <div class="font-weight-bold">{{__('pages/advertisements/show.content.governorates')}}</div>
+                <div class="text-secondary">
+                    {{$governorates}}
+                </div>
+            </div>
+            <div class="col-md-12 mt-5">
                 <div class="font-weight-bold">{{__('pages/advertisements/show.content.cities')}}</div>
                 <div class="text-secondary">
                     {{$cities}}

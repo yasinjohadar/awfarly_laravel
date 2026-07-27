@@ -14,6 +14,8 @@ class LanguagesTableSeeder extends Seeder
      */
     public function run()
     {
+        Language::query()->delete();
+
         Language::insert([
             [
                 'name' => 'English',

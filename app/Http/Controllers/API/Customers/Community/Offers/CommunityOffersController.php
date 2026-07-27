@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Customers\Community\Offers;
 
 use App\Helpers\Filter;
+use App\Helpers\Geography\Geography;
 use App\Helpers\Notifications;
 use App\Helpers\Settings;
 use App\Http\Controllers\Controller;
@@ -45,6 +46,7 @@ class CommunityOffersController extends Controller
 
         $data = $request->only([
             'countryCode',
+            'governorateId',
             'cityId',
             'categoryId',
             'isGetAllCategories'
@@ -52,6 +54,7 @@ class CommunityOffersController extends Controller
 
         $this->apiValidate($data, [
             'countryCode' => 'nullable|string|exists:countries,code',
+            'governorateId' => 'nullable|string|exists:governorates,id',
             'cityId' => 'nullable|string|exists:cities,id',
             'categoryId' => 'nullable|string|exists:categories,id',
             'isGetAllCategories' => ['nullable']
@@ -95,12 +98,8 @@ class CommunityOffersController extends Controller
             });
         }
 
-        //Filter city
-        if (isset($data['cityId']) && $data['cityId']) {
-            $offers = $offers->where(function ($q) use ($data) {
-                return $q->where('advertisers_users.city_id', $data['cityId']);
-            });
-        }
+        $offers = Geography::applyUserLocationFilter($offers, $data);
+
 
         //Filter city
         if (isset($data['categoryId']) && $data['categoryId']) {
@@ -208,6 +207,7 @@ class CommunityOffersController extends Controller
             'page',
             'keyword',
             'countryCode',
+            'governorateId',
             'cityId',
             'categoryId',
             'isGetAllCategories',
@@ -216,6 +216,7 @@ class CommunityOffersController extends Controller
         $this->apiValidate($data, [
             'keyword' => 'nullable|string|min:3',
             'countryCode' => 'nullable|string|exists:countries,code',
+            'governorateId' => 'nullable|string|exists:governorates,id',
             'cityId' => 'nullable|string|exists:cities,id',
             'categoryId' => 'nullable|string|exists:categories,id',
             'isGetAllCategories' => ['nullable'],
@@ -288,12 +289,8 @@ class CommunityOffersController extends Controller
             });
         }
 
-        //Filter city
-        if (isset($data['cityId']) && $data['cityId']) {
-            $offers = $offers->where(function ($q) use ($data) {
-                return $q->where('advertisers_users.city_id', $data['cityId']);
-            });
-        }
+        $offers = Geography::applyUserLocationFilter($offers, $data);
+
 
         //Filter city
         if (isset($data['categoryId']) && $data['categoryId']) {

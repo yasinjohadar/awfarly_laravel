@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\System\Countries;
 
-use App\Http\Resources\System\Countries\Cities\CitiesResource;
+use App\Http\Resources\System\Countries\Governorates\GovernoratesResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\App;
@@ -20,8 +20,7 @@ class CountriesResource extends JsonResource
         //get language column to show
         $language_column = App::currentLocale() === 'ar' ? 'name_ar' : 'name_en';
 
-        //get cities by its order
-        $cities = $this->cities()
+        $governorates = $this->governorates()
             ->orderBy('order')
             ->get();
 
@@ -30,7 +29,7 @@ class CountriesResource extends JsonResource
             'name' => $this->{$language_column},
             'code' => $this->code,
             'mobileCode' => $this->mobile_code,
-            'cities' => CitiesResource::collection($cities),
+            'governorates' => GovernoratesResource::collection($governorates),
         ];
     }
 }

@@ -43,6 +43,7 @@ class PackagesInquiryComponent extends LivewireDatatable
     public ?string $name_ar = null;
     public ?int $maximum_posts = null;
     public ?int $maximum_offers = null;
+    public ?int $maximum_monthly_offers = null;
     public ?string $description_en = null;
     public ?string $description_ar = null;
     public ?string $specifications_en = null;
@@ -111,6 +112,10 @@ class PackagesInquiryComponent extends LivewireDatatable
                 ->searchable(),
             NumberColumn::name('maximum_offers')
                 ->label(__('pages/subscriptions/packages/inquiry.datatable.maximum_offers'))
+                ->filterable()
+                ->searchable(),
+            NumberColumn::name('maximum_monthly_offers')
+                ->label(__('pages/subscriptions/packages/inquiry.datatable.maximum_monthly_offers'))
                 ->filterable()
                 ->searchable(),
             Column::callback('description_en', function ($description) {
@@ -238,6 +243,7 @@ class PackagesInquiryComponent extends LivewireDatatable
         $this->specifications_ar = implode("\n", $package->specifications_ar);
         $this->maximum_posts = $package->maximum_posts;
         $this->maximum_offers = $package->maximum_offers;
+        $this->maximum_monthly_offers = $package->maximum_monthly_offers;
         $this->price = $package->price;
         $this->old_price = $package->old_price;
         $this->subscription_type = $package->subscription_type;
@@ -268,6 +274,7 @@ class PackagesInquiryComponent extends LivewireDatatable
             'name_ar' => ['required', 'string', "unique:packages,name_ar,{$id}"],
             'maximum_posts' => ['required', 'integer'],
             'maximum_offers' => ['required', 'integer'],
+            'maximum_monthly_offers' => ['required', 'integer', 'min:0'],
             'description_en' => ['nullable', 'string'],
             'description_ar' => ['nullable', 'string'],
             'specifications_en' => ['required', 'string'],
@@ -327,6 +334,7 @@ class PackagesInquiryComponent extends LivewireDatatable
                 'name_ar' => Filter::RemoveHtml($this->name_ar),
                 'maximum_posts' => $this->maximum_posts,
                 'maximum_offers' => $this->maximum_offers,
+                'maximum_monthly_offers' => $this->maximum_monthly_offers,
                 'description_en' => $description_en,
                 'description_ar' => $description_ar,
                 'specifications_en' => $specifications_en,

@@ -58,7 +58,11 @@ class AppServiceProvider extends ServiceProvider
                     $alias = 'community';
                 } else if (Request::routeIs('admin.subscriptions.*')) {
                     $alias = 'subscriptions';
-                } else if (Request::routeIs('admin.countries.*')) {
+                } else if (
+                    Request::routeIs('admin.countries.*') ||
+                    Request::routeIs('admin.governorates.*') ||
+                    Request::routeIs('admin.cities.*')
+                ) {
                     $alias = 'languages';
                 } else if (Request::routeIs('admin.requests.*')) {
                     $alias = 'requests';

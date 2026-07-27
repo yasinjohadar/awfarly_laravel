@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Advertisers\Account;
 
 use App\Helpers\Files;
+use App\Helpers\Advertisers\OfferLimits;
 use App\Helpers\Settings;
 use App\Http\Resources\Advertisers\BusinessTypes\BusinessTypesResource;
 use App\Http\Resources\Advertisers\Subscriptions\Packages\PackagesResource;
@@ -79,18 +80,9 @@ class AccountResource extends JsonResource
                 ->whereHas('category')
                 ->count() > 0;
 
-        //check maximum allowed offers for advertiser
-        $allowed_offers = Settings::Get('max.advertiser.active.offers', 1);
-
-        $user_offers = Auth::guard('advertiser-api')->user()
-            ->offers()
-            ->where(function ($q) {
-                $q->where('expires_at', '>', now())
-                    ->orWhereNull('expires_at');
-            })
-            ->count();
-
-        $isAllowAddOffer = !($user_offers >= $allowed_offers);
+        //check maximum allowed offers for advertiser (active + monthly)
+        $limits = OfferLimits::evaluate(Auth::guard('advertiser-api')->user());
+        $isAllowAddOffer = $limits['allowed'];
         return [
             'id' => $this->id,
             'username' => $this->username,
@@ -105,8 +97,10 @@ class AccountResource extends JsonResource
             'birth_date' => optional($this->birth_date)->format('d/m/Y') ?? null,
             'gender' => $this->gender ?? null,
             'country' => $this->country->{$language_column} ?? null,
+            'governorate' => $this->governorate->{$language_column} ?? null,
             'city' => $this->city->{$language_column} ?? null,
             'countryCode' => $this->country_code ?? null,
+            'governorateId' => $this->governorate_id ?? null,
             'cityId' => $this->city_id ?? null,
             'language' => [
                 'id' => $this->language->id,
@@ -125,6 +119,11 @@ class AccountResource extends JsonResource
                 'totalPosts' => $user_posts,
                 'maximumPosts' => $maximum_posts,
                 'leftPosts' => $this->allowed_posts_count ?? Settings::Get('user.allowed.posts', 10),
+                'activeOffers' => $limits['activeCount'],
+                'maximumActiveOffers' => $limits['activeLimit'],
+                'monthlyOffers' => $limits['monthlyCount'],
+                'maximumMonthlyOffers' => $limits['monthlyLimit'],
+                'leftMonthlyOffers' => max(0, $limits['monthlyLimit'] - $limits['monthlyCount']),
             ],
             'interestedCategories' => CategoriesResource::collection($userCategories),
             'isAllowAddOffer' => $isAllowAddOffer,

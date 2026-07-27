@@ -9,6 +9,8 @@ return [
     ],
     'content' => [
         'title' => 'Advertisers Inquiry',
+        'add' => 'Add Advertiser',
+        'reported' => 'Reported Advertisers',
         'datatable' => [
             'name' => 'Name',
             'business_type' => 'Business Type',
@@ -18,6 +20,7 @@ return [
             'username' => 'Username',
             'bio' => 'BIO',
             'country' => 'Country',
+            'governorate' => 'Governorate',
             'city' => 'City',
             'language' => 'Language',
             'rate' => 'Rate',
@@ -57,6 +60,7 @@ return [
                 'password' => 'Password',
                 'bio' => 'BIO',
                 'country' => 'Country',
+                'governorate' => 'Governorate',
                 'city' => 'City',
                 'language' => 'Language',
                 'rate' => 'Rate',
@@ -75,6 +79,7 @@ return [
                     'business_type' => "Choose business type",
                     'package' => "Choose a package",
                     'country' => 'Choose a country',
+                    'governorate' => 'Choose a governorate',
                     'city' => 'Choose a city',
                     'language' => 'Select Language',
                     'password' => "Leaving this field empty means the password won't be changed!",

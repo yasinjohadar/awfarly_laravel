@@ -17,6 +17,7 @@ return [
             'password' => 'Password',
             'bio' => 'BIO',
             'country' => 'Country',
+            'governorate' => 'Governorate',
             'city' => 'City',
             'language' => 'Language',
             'contact_number' => 'Contact Number',
@@ -41,6 +42,7 @@ return [
             'placeholders' => [
                 'choose_file' => "Choose file",
                 'country' => 'Choose a country',
+                'governorate' => 'Choose a governorate',
                 'city' => 'Choose a city',
                 'language' => 'Select Language',
             ]

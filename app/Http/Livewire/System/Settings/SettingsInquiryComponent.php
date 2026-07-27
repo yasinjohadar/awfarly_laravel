@@ -189,7 +189,7 @@ class SettingsInquiryComponent extends LivewireDatatable
                 'value' => $data['value']
             ]);
 
-            if(($this->type == 'posts' && $setting->key == 'user.allowed.posts') || ($this->type == 'offers' && $setting->key == 'max.advertiser.active.offers') ){
+            if(($this->type == 'posts' && $setting->key == 'user.allowed.posts') || ($this->type == 'offers' && in_array($setting->key, ['max.advertiser.active.offers', 'max.advertiser.monthly.offers'])) ){
                 Artisan::call('check:advertisers-allowed-posts');
             }
 

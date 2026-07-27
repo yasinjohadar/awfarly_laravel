@@ -8,7 +8,7 @@ return [
         'page' => 'عرض',
     ],
     'content' => [
-        'title' => 'مدن الدوله <strong>:name</strong>',
+        'title' => 'محافظات الدولة <strong>:name</strong>',
         'datatable' => [
             'name_en' => 'الإسم باللغة الإنجليزية',
             'name_ar' => 'الإسم باللغة العربية',

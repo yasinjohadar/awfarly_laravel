@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Advertisers\Account;
 
 use App\Helpers\Files;
 use App\Helpers\Filter;
+use App\Helpers\Geography\Geography;
 use App\Helpers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Advertisers\Account\AccountResource;
@@ -89,6 +90,7 @@ class AccountController extends Controller
             'bio',
             'mobile',
             'countryCode',
+            'governorateId',
             'cityId',
             'languageCode',
             'contactNumber',
@@ -125,6 +127,7 @@ class AccountController extends Controller
             'countryCode' => ['nullable', 'exists:countries,code'],
             'gender' => ['nullable','sometimes', 'string','in:male,female'],
             'birth_date' => ['nullable','sometimes', 'date'],
+            'governorateId' => ['nullable', 'exists:governorates,id'],
             'cityId' => ['nullable', 'exists:cities,id'],
             'languageCode' => ['nullable', 'in:ar,en'],
             'contactNumber' => ['nullable', 'regex:^\+\d+$^'],
@@ -147,6 +150,10 @@ class AccountController extends Controller
             'interestedCategories.*' => ['exists:categories,id']
         ]);
 
+
+        if ($message = Geography::validateCityBelongsToGovernorate($data)) {
+            return $this->apiBadRequestResponse($message);
+        }
 
         //Validate the old password
         if ((!empty($request->get('password'))) && !Hash::check($request->get('oldPassword'), $user->getAuthPassword())) {
@@ -245,11 +252,9 @@ class AccountController extends Controller
             }
         }
 
-        //change city id
-        if ($request->has('cityId')) {
-            if (!empty($request->get('cityId'))) {
-                $user->city_id = Filter::RemoveHtml($data['cityId']);
-            }
+        //change location
+        if ($request->has('governorateId') || $request->has('cityId')) {
+            Geography::assignUserLocation($user, $data);
         }
 
         //change language code

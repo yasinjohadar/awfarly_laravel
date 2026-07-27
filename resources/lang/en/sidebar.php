@@ -68,6 +68,7 @@ return [
     ],
     'languages' => 'Languages',
     'countries' => 'Countries',
+    'governorates' => 'Governorates',
     'cities' => 'Cities',
     'pages' => 'Pages',
     'advertisements' => [

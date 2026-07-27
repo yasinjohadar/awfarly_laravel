@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Auth;
 use Exception;
 use Carbon\Carbon;
 use App\Helpers\Filter;
+use App\Helpers\Geography\Geography;
 use App\Helpers\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -52,6 +53,7 @@ class RegisterController extends Controller
             'username',
             'password',
             'countryCode',
+            'governorateId',
             'cityId',
             'fcmToken',
             'isAcceptedSendNotifications',
@@ -76,7 +78,7 @@ class RegisterController extends Controller
             'discount_percentage' => ['sometimes','numeric'],
             'password' => 'required|min:6',
             'countryCode' => 'required|exists:countries,code',
-            'cityId' => 'required|exists:cities,id',
+            ...Geography::requiredLocationRules(),
             'fcmToken' => 'nullable|string',
             'isAcceptedSendNotifications' => 'nullable|bool',
             'mobileVerificationCode' => 'nullable|string',
@@ -90,6 +92,10 @@ class RegisterController extends Controller
         ]);
         // Set guard
         $this->guard = $data['type'];
+
+        if ($message = Geography::validateCityBelongsToGovernorate($data)) {
+            return $this->apiBadRequestResponse($message);
+        }
 
         DB::beginTransaction();
         try {
@@ -126,6 +132,7 @@ class RegisterController extends Controller
                     'name' => $request->has('name') ? ucwords(Filter::RemoveHtml(trim($data['name']))) : null,
                     'business_type' => ($data['type'] == 'advertiser' && $request->has('businessTypeId') && $data['businessTypeId']) ? $data['businessTypeId'] : null,
                     'country_code' => $request->has('countryCode') ? $data['countryCode'] : null,
+                    'governorate_id' => $request->has('governorateId') ? $data['governorateId'] : null,
                     'city_id' => $request->has('cityId') ? $data['cityId'] : null,
 //                    'username' => $request->has('username') ? Filter::RemoveHtml($data['username']) : null,
                     'mobile' => $request->has('mobile') ? Filter::RemoveHtml($data['mobile']) : null,

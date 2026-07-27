@@ -4,6 +4,7 @@ return [
     'wrong-username' => 'There is no user found with this username.',
     'something-wrong' => 'Something went wrong, Please try again later!',
     'exceeded-limit' => "Unfortunately, You can't have total of :count active offers at the same time.",
+    'exceeded-monthly-limit' => "You've reached your monthly offers creation limit (:count offers this month).",
     'offer-added' => 'Offer has been added successfully.',
     'offer-edited' => 'Offer has been edited successfully.',
     'offer-deleted' => 'Offer has been deleted successfully.',

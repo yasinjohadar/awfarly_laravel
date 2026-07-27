@@ -9,6 +9,8 @@ return [
     ],
     'content' => [
         'title' => 'Customers Inquiry',
+        'add' => 'Add Customer',
+        'reported' => 'Reported Customers',
         'datatable' => [
             'deleted' => 'deleted',
 
@@ -20,6 +22,7 @@ return [
             'username' => 'Username',
             'bio' => 'BIO',
             'country' => 'Country',
+            'governorate' => 'Governorate',
             'city' => 'City',
             'language' => 'Language',
             'contact_number' => 'Contact Number',
@@ -60,6 +63,7 @@ return [
                 'password' => 'Password',
                 'bio' => 'BIO',
                 'country' => 'Country',
+                'governorate' => 'Governorate',
                 'city' => 'City',
                 'language' => 'Language',
                 'contact_number' => 'Contact Number',
@@ -83,6 +87,7 @@ return [
                 ],
                 'placeholders' => [
                     'country' => 'Choose a country',
+                    'governorate' => 'Choose a governorate',
                     'city' => 'Choose a city',
                     'language' => 'Select Language',
                     'password' => "Leaving this field empty means the password won't be changed!",

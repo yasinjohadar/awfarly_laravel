@@ -87,8 +87,10 @@ class AdvertisersResource extends JsonResource
             'imageUrl' => $this->image ? route('files.image.get', $this->image) : null,
             'bio' => $this->bio ?? null,
             'country' => $this->country->{$language_column} ?? null,
+            'governorate' => $this->governorate->{$language_column} ?? null,
             'city' => $this->city->{$language_column} ?? null,
             'countryCode' => $this->country_code ?? null,
+            'governorateId' => $this->governorate_id ?? null,
             'cityId' => $this->city_id ?? null,
             'rate' => $this->rate ?? null,
             'socialAccounts' => [

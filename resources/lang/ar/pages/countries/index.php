@@ -9,12 +9,14 @@ return [
     ],
     'content' => [
         'title' => 'عرض الدول',
+        'add' => 'إضافة دولة',
         'datatable' => [
             'code' => 'رمز الدولة',
             'name_en' => 'الإسم باللغة الإنجليزية',
             'name_ar' => 'الإسم باللغة العربية',
             'mobile_code' => 'رمز الهاتف',
-            'cities_count' => 'المدن',
+            'cities_count' => 'المحافظات',
+            'governorates_count' => 'المحافظات',
             'active' => 'نشط',
         ],
     ],

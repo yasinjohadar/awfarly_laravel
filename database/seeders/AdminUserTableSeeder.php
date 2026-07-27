@@ -15,6 +15,8 @@ class AdminUserTableSeeder extends Seeder
      */
     public function run()
     {
+        AdminUser::query()->delete();
+
         // Create admin
         AdminUser::create([
             'name' => 'Test Admin',

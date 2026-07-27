@@ -54,19 +54,19 @@ class AdvertisementsController extends Controller
         $name_column = App::currentLocale() === 'ar' ? 'name_ar' : 'name_en';
 
         //Get the groups with permissions within it
-        $countries = Country::with('cities')
+        $countries = Country::with('governorates')
             ->orderBy('order')
             ->get()
             ->map(function ($country) use ($name_column) {
                 return [
                     'CountryName' => $country->{$name_column},
-                    'CountryData' => $country->cities()
+                    'CountryData' => $country->governorates()
                         ->orderBy('order')
                         ->get()
-                        ->map(function ($city) use ($name_column) {
+                        ->map(function ($governorate) use ($name_column) {
                             return [
-                                'city' => $city->{$name_column},
-                                'value' => $city->id,
+                                'city' => $governorate->{$name_column},
+                                'value' => $governorate->id,
                             ];
                         }),
                 ];
@@ -130,7 +130,9 @@ class AdvertisementsController extends Controller
             'categories' => ['nullable', 'array'],
             'categories.*' => ['exists:categories,id'],
             'countries' => ['nullable', 'array'],
-            'countries.*' => ['exists:cities,id'],
+            'countries.*' => ['exists:governorates,id'],
+            'cities' => ['nullable', 'array'],
+            'cities.*' => ['exists:cities,id'],
             'starts_at' => ['nullable'],
             'ends_at' => ['nullable', 'after:starts_at'],
         ]);
@@ -153,11 +155,13 @@ class AdvertisementsController extends Controller
 
 
             if ($request->has('countries')) {
-                /*$countries = json_encode($request->get('countries'));*/
-                $countries = $request->get('countries');
+                $governorates = $request->get('countries');
             } else {
-                $countries = null;
+                $governorates = null;
             }
+
+            $cities = $request->has('cities') ? $request->get('cities') : null;
+
             $advertisement = Advertisement::create([
                 'type' => $request->get('type'),
                 'users' => $request->get('users'),
@@ -166,7 +170,8 @@ class AdvertisementsController extends Controller
                 'advertiser_image' => $image,
                 'content' => $request->has('content') ? $request->get('content') : null,
                 'categories' => $categories,
-                'cities' => $countries,
+                'governorates' => $governorates,
+                'cities' => $cities,
                 'starts_at' => $request->get('starts_at') ?? Carbon::now(),
                 'ends_at' => $request->get('ends_at') ?? null,
                 'is_active' => (bool)$request->get('is_active'),
@@ -228,19 +233,19 @@ class AdvertisementsController extends Controller
         $name_column = App::currentLocale() === 'ar' ? 'name_ar' : 'name_en';
 
         //Get the groups with permissions within it
-        $countries = Country::with('cities')
+        $countries = Country::with('governorates')
             ->orderBy('order')
             ->get()
             ->map(function ($country) use ($name_column) {
                 return [
                     'CountryName' => $country->{$name_column},
-                    'CountryData' => $country->cities()
+                    'CountryData' => $country->governorates()
                         ->orderBy('order')
                         ->get()
-                        ->map(function ($city) use ($name_column) {
+                        ->map(function ($governorate) use ($name_column) {
                             return [
-                                'city' => $city->{$name_column},
-                                'value' => $city->id,
+                                'city' => $governorate->{$name_column},
+                                'value' => $governorate->id,
                             ];
                         }),
                 ];
@@ -305,7 +310,9 @@ class AdvertisementsController extends Controller
             'categories' => ['nullable', 'array'],
             'categories.*' => ['exists:categories,id'],
             'countries' => ['nullable', 'array'],
-            'countries.*' => ['exists:cities,id'],
+            'countries.*' => ['exists:governorates,id'],
+            'cities' => ['nullable', 'array'],
+            'cities.*' => ['exists:cities,id'],
             'starts_at' => ['nullable'],
             'ends_at' => ['nullable', 'after:starts_at'],
         ]);
@@ -333,10 +340,12 @@ class AdvertisementsController extends Controller
 
 
             if ($request->has('countries')) {
-                $data['cities'] = $request->get('countries');
+                $data['governorates'] = $request->get('countries');
             } else {
-                $data['cities'] = null;
+                $data['governorates'] = null;
             }
+
+            $data['cities'] = $request->has('cities') ? $request->get('cities') : null;
 
             if ($request->hasFile('media.*')) {
                 foreach ($advertisement->getMedia('advertisements') as $media) {

@@ -10,7 +10,7 @@
 
     <div class="navbar-collapse collapse" id="navbar-footer">
         <span class="navbar-text">
-            © {{date('Y') == '2021' ? '2021' : '2021 - '.date('Y')}} <a href="#">M3rady App</a>
+            © {{ date('Y') }} <a href="{{ url('/') }}">أوفرلي Awfarli</a>
         </span>
 
         <!--ul class="navbar-nav ml-lg-auto">

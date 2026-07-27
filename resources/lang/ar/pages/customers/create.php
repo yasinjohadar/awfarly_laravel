@@ -17,6 +17,7 @@ return [
             'password' => 'الرقم السري',
             'bio' => 'السيرة الذاتية',
             'country' => 'الدولة',
+            'governorate' => 'المحافظة',
             'city' => 'المدينة',
             'language' => 'اللغة',
             'contact_number' => 'رقم التواصل',
@@ -41,6 +42,7 @@ return [
             'placeholders' => [
                 'choose_file' => "الصورة الشخصية",
                 'country' => 'إختر دولة',
+                'governorate' => 'إختر محافظة',
                 'city' => 'إختر مدينة',
                 'language' => 'إختر لغة',
             ]

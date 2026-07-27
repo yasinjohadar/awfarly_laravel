@@ -5,7 +5,11 @@
         </button>
     </div>
 
-    <div class="navbar-brand text-center text-lg-left">
+    <div class="navbar-brand text-center text-lg-left d-flex align-items-center">
+        <button type="button"
+                class="btn btn-outline-light-100 text-white border-transparent btn-icon rounded-pill btn-sm sidebar-control sidebar-main-resize d-none d-lg-inline-flex mr-2">
+            <i class="icon-transmission"></i>
+        </button>
         <a href="{{url('/')}}" class="d-inline-block">
             <img src="{{asset('assets/images/logo_light.png')}}" class="d-none d-sm-block" style="height: 3.125rem;" alt="">
             <img src="{{asset('assets/images/logo_icon_light.png')}}" class="d-sm-none" alt="">

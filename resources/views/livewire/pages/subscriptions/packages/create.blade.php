@@ -109,11 +109,24 @@
             </div>
         </div><div class="form-group row">
             <label class="col-form-label col-lg-1"
-                   for="maximum_posts">{{__('pages/subscriptions/packages/create.content.inputs.maximum_offers')}}</label>
+                   for="maximum_offers">{{__('pages/subscriptions/packages/create.content.inputs.maximum_offers')}}</label>
             <div class="col-lg-11">
                 <input type="number" min="0" class="form-control @error('maximum_offers') is-invalid @enderror"
                        id="maximum_offers" wire:model.defer="maximum_offers"/>
                 @error('maximum_offers')
+                <div class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </div>
+                @enderror
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-lg-1"
+                   for="maximum_monthly_offers">{{__('pages/subscriptions/packages/create.content.inputs.maximum_monthly_offers')}}</label>
+            <div class="col-lg-11">
+                <input type="number" min="0" class="form-control @error('maximum_monthly_offers') is-invalid @enderror"
+                       id="maximum_monthly_offers" wire:model.defer="maximum_monthly_offers"/>
+                @error('maximum_monthly_offers')
                 <div class="invalid-feedback" role="alert">
                     <strong>{{ $message }}</strong>
                 </div>

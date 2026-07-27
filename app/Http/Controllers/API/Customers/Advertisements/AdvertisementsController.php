@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\API\Customers\Advertisements;
 
+use App\Helpers\Geography\Geography;
 use App\Helpers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Customers\Advertisements\AdvertisementsResource;
 use App\Models\Advertisements\Advertisement;
-use App\Models\Countries\Cities\City;
 use Auth;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\ResponseFactory;
@@ -21,19 +21,15 @@ class AdvertisementsController extends Controller
      */
     public function getAdvertisements(Request $request)
     {
-        //get limit
         $limit = ($request->has('limit') && $request->get('limit') > 0) ? $request->get('limit') : Settings::Get('advertisements.pagination.limit', 10);
 
-        $data = $request->all();
+        $data = $request->only(array_merge(['type', 'categoryId', 'countryCode', 'isRandom'], Geography::locationFilterFields()));
 
-        $this->apiValidate($data, [
+        $this->apiValidate($data, array_merge([
             'type' => ['nullable', 'in:any,mobile,website'],
             'categoryId' => ['nullable', 'exists:categories,id'],
-            'countryCode' => ['nullable', 'exists:countries,code'],
-            'cityId' => ['nullable', 'exists:cities,id'],
-        ]);
+        ], Geography::advertisementFilterRules()));
 
-        //get advertisements
         $advertisements = Advertisement::where(function ($query) {
             return $query->where('ends_at', '>', now())
                 ->orWhereNull('ends_at');
@@ -45,8 +41,6 @@ class AdvertisementsController extends Controller
             ->where('is_active', true)
             ->whereHas('post');
 
-
-        //set type if existed
         if (isset($data['type']) && $data['type']) {
             $advertisements = $advertisements->where(function ($query) use ($data) {
                 return $query->where('type', $data['type'])
@@ -54,7 +48,6 @@ class AdvertisementsController extends Controller
             });
         }
 
-        //set category id if existed
         if ($request->has('categoryId')) {
             if (!is_null($data['categoryId'])) {
                 $advertisements = $advertisements->whereJsonContains('categories', $request->get('categoryId'));
@@ -66,44 +59,15 @@ class AdvertisementsController extends Controller
             }
         }
 
-        if (isset($data['countryCode']) && $data['countryCode'] && (!isset($data['cityId']) || !$data['cityId'])) {
-            $cities = City::where('country_code', $data['countryCode'])
-                ->get()
-                ->map(function ($city) {
-                    return "{$city->id}";
-                })
-                ->toArray();
+        $advertisements = Geography::applyAdvertisementLocationFilter($advertisements, $data);
 
-            $advertisements = $advertisements->where(function ($query) use ($cities) {
-                foreach ($cities as $city) {
-                    $query->whereJsonContains('cities', $city);
-                }
-            });
-        }
-
-        //set city id if existed
-        if (isset($data['cityId']) && $data['cityId']) {
-            $advertisements = $advertisements->where(function ($query) use ($data) {
-                return $query->whereJsonContains('cities', $data['cityId']);
-            });
-        }
-
-        if ((!isset($data['countryCode']) || !$data['countryCode']) && (!isset($data['cityId']) || !$data['cityId'])) {
-            $advertisements = $advertisements->where(function ($query) {
-                $query->whereNull('cities');
-            });
-        }
-        //get whether it's random order or not
         if (isset($data['isRandom']) && $data['isRandom']) {
-            $advertisements = $advertisements
-                ->inRandomOrder();
+            $advertisements = $advertisements->inRandomOrder();
         }
 
-        //paginate
         $advertisements = $advertisements->orderBy('created_at', 'desc')
             ->paginate($limit);
 
-        //add post view or update it
         foreach ($advertisements as $advertisement) {
             $view_added = Auth::guard('customer-api')->user()
                 ->viewedPosts()
@@ -116,10 +80,11 @@ class AdvertisementsController extends Controller
                 Auth::guard('customer-api')->user()
                     ->viewedPosts()
                     ->create([
-                        'post_id' => $advertisement->post->id
+                        'post_id' => $advertisement->post->id,
                     ]);
             }
         }
+
         return $this->apiPaginateResponse(AdvertisementsResource::collection($advertisements));
     }
 }

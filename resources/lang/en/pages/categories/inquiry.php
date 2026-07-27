@@ -9,6 +9,7 @@ return [
     ],
     'content' => [
         'title' => 'Categories Inquiry',
+        'add' => 'Add Category',
         'datatable' => [
             'parent' => 'Parent Category ID',
             'name_en' => 'EN Name',

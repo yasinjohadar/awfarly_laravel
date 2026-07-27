@@ -9,6 +9,8 @@ return [
     ],
     'content' => [
         'title' => 'عرض المستخدمين',
+        'add' => 'إضافة مستخدم',
+        'reported' => 'المستخدمين المبلغ عنهم',
         'datatable' => [
             'deleted' => 'محذوف',
             'name' => 'الإسم',
@@ -19,6 +21,7 @@ return [
             'username' => 'إسم المستحدم',
             'bio' => 'السيرة الذاتية',
             'country' => 'الدولة',
+            'governorate' => 'المحافظة',
             'city' => 'المدينة',
             'language' => 'اللغة',
             'contact_number' => 'رقم التواصل',
@@ -59,6 +62,7 @@ return [
                 'password' => 'الرقم السري',
                 'bio' => 'السيرة الذاتية',
                 'country' => 'الدولة',
+                'governorate' => 'المحافظة',
                 'city' => 'المدينة',
                 'language' => 'اللغة',
                 'contact_number' => 'رقم التواصل',
@@ -82,6 +86,7 @@ return [
                 ],
                 'placeholders' => [
                     'country' => 'إختر دولة',
+                    'governorate' => 'إختر محافظة',
                     'city' => 'إختر مدينة',
                     'language' => 'إختر لغة',
                     'password' => "ترك هذه الخانه فارغه يعني ان الرقم السري لن يتغير!",

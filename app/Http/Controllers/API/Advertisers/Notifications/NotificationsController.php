@@ -78,7 +78,8 @@ class NotificationsController extends Controller
             'title'         =>  'required|string|min:3',
             'description'   =>  'required|string|min:3',
             'country_code'  =>  'required|string',
-            'city_id'       =>  'sometimes|nullable|integer',
+            'governorate_id'=>  'sometimes|nullable|integer|exists:governorates,id',
+            'city_id'       =>  'sometimes|nullable|integer|exists:cities,id',
             'age_from'       =>  'sometimes|nullable|integer',
             'age_to'       =>  'sometimes|nullable|integer',
             'distance_in_meter'       =>  'sometimes|nullable|integer',
@@ -102,6 +103,7 @@ class NotificationsController extends Controller
 
         $users = CustomerUser::when($request->country_code,fn($q)=>$q->where('country_code',$request->country_code))
             ->when($request->city_id,fn($q)=>$q->where('city_id',$request->city_id))
+            ->when($request->governorate_id && !$request->city_id,fn($q)=>$q->where('governorate_id',$request->governorate_id))
             ->when($request->gender,fn($q)=>$q->where('gender',$request->gender))
 //            ->when($request->language,fn($q)=>$q->where('notify_language',$request->language))
             ->when($request->distance_in_meter,fn($q)=>$q->whereDistance('location', optional($user)->location, '<=', $request->distance_in_meter * 1000))
@@ -127,6 +129,7 @@ class NotificationsController extends Controller
 
         $advertisers = AdvertiserUser::when($request->country_code,fn($q)=>$q->where('country_code',$request->country_code))
             ->when($request->city_id,fn($q)=>$q->where('city_id',$request->city_id))
+            ->when($request->governorate_id && !$request->city_id,fn($q)=>$q->where('governorate_id',$request->governorate_id))
             ->when($request->gender,fn($q)=>$q->where('gender',$request->gender))
 //            ->when($request->language,fn($q)=>$q->where('notify_language',$request->language))
             ->when($request->distance_in_meter,fn($q)=>$q->whereDistance('location', optional(auth()->user())->location, '<=', $request->distance_in_meter))

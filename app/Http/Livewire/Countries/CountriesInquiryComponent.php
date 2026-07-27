@@ -76,10 +76,10 @@ class CountriesInquiryComponent extends LivewireDatatable
             NumberColumn::callback(['id', 'created_at'], function ($id) {
                 return Country::where('id', $id)
                     ->first()
-                    ->cities()
+                    ->governorates()
                     ->count();
             })
-                ->label(__('pages/countries/index.content.datatable.cities_count'))
+                ->label(__('pages/countries/index.content.datatable.governorates_count'))
                 ->filterable()
                 ->searchable(),
             BooleanColumn::name('is_active')
@@ -101,7 +101,7 @@ class CountriesInquiryComponent extends LivewireDatatable
      */
     public function builder()
     {
-        return Country::with('cities');
+        return Country::with('governorates');
     }
 
     /**

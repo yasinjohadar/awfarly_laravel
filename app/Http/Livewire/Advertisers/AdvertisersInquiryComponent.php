@@ -18,7 +18,9 @@ use App\Models\Languages\Language;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
+use Illuminate\Validation\Rule;
 use App\Models\Countries\Cities\City;
+use App\Models\Countries\Governorates\Governorate;
 use App\Models\Subscriptions\Packages\Package;
 use Mediconesystems\LivewireDatatables\Column;
 use App\Models\Users\Advertisers\AdvertiserUser;
@@ -45,6 +47,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     public array $user;
     public Collection $languages;
     public Collection $countries;
+    public Collection $governorates;
     public Collection $cities;
     public Collection $business_types;
     public Collection $packages;
@@ -55,13 +58,15 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     private string $country_column = '';
     public bool $has_delete = true;
     public ?string $country_code = null;
+    public ?string $governorate_id = null;
     public ?string $business_type = null;
     public ?string $package_id = null;
     public ?string $user_package_id = null;
 
     protected $listeners = [
         'setBusinessType' => 'setBusinessType',
-        'setCountry'
+        'setCountry',
+        'setGovernorate',
     ];
 
     /**
@@ -113,7 +118,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
             "$this->country_column",
             'code'
         )
-            ->whereHas('cities')
+            ->whereHas('governorates')
             ->get()
             ->keyBy(function ($value) {
                 return $value->code;
@@ -125,6 +130,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                 ];
             });
 
+        $this->governorates = new Collection();
         $this->cities = new Collection();
 
         //select all business types
@@ -212,6 +218,11 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                 ->label(__('pages/advertisers/index.content.datatable.country'))
                 ->filterable($this->all_countries)
                 ->searchable(),
+            Column::name("governorates.$this->country_column")
+                ->label(__('pages/advertisers/index.content.datatable.governorate'))
+                ->filterable($this->all_governorates)
+                ->searchable()
+                ->hide(),
             Column::name("cities.$this->country_column")
                 ->label(__('pages/advertisers/index.content.datatable.city'))
                 ->filterable($this->all_cities)
@@ -352,6 +363,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     {
         return AdvertiserUser::withTrashed()->leftJoin('languages', 'languages.code', 'advertisers_users.language_code')
             ->leftJoin('countries', 'countries.code', 'advertisers_users.country_code')
+            ->leftJoin('governorates', 'governorates.id', 'advertisers_users.governorate_id')
             ->leftJoin('cities', 'cities.id', 'advertisers_users.city_id');
     }
 
@@ -382,6 +394,11 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     public function getAllCountriesProperty()
     {
         return Country::pluck($this->country_column);
+    }
+
+    public function getAllGovernoratesProperty()
+    {
+        return Governorate::pluck($this->country_column);
     }
 
     /**
@@ -494,17 +511,22 @@ class AdvertisersInquiryComponent extends LivewireDatatable
         $this->user['mobile_verified_at'] = $this->user['mobile_verified_at'] ? 1 : 0;
 
         $this->country_code = $this->user['country_code'];
+        $this->governorate_id = $this->user['governorate_id'] ?? null;
 
-        //select all countries
-        $cities = City::select(
-            "$this->country_column",
-            'id'
-        )
+        $governorates = Governorate::select("$this->country_column", 'id')
             ->where('country_code', $this->user['country_code'])
             ->get();
 
-        $this->cities = $cities->mapWithKeys(function ($countries, $key) {
-            return [$countries->id => $countries[$this->country_column]];
+        $this->governorates = $governorates->mapWithKeys(function ($governorate) {
+            return [$governorate->id => $governorate[$this->country_column]];
+        });
+
+        $cities = City::select("$this->country_column", 'id')
+            ->where('governorate_id', $this->user['governorate_id'] ?? 0)
+            ->get();
+
+        $this->cities = $cities->mapWithKeys(function ($city) {
+            return [$city->id => $city[$this->country_column]];
         });
 
         $this->business_type = $this->user['business_type'];
@@ -514,7 +536,11 @@ class AdvertisersInquiryComponent extends LivewireDatatable
         $this->showEditModal = true;
         //dispatch event to refresh select2
         $this->dispatchBrowserEvent('refreshSelect2Create');
-        $this->dispatchBrowserEvent('change-country', ['country_code' => $this->user['country_code'], 'city_id' => $this->user['city_id']]);
+        $this->dispatchBrowserEvent('change-country', [
+            'country_code' => $this->user['country_code'],
+            'governorate_id' => $this->user['governorate_id'] ?? null,
+            'city_id' => $this->user['city_id'],
+        ]);
     }
 
     /**
@@ -572,7 +598,13 @@ class AdvertisersInquiryComponent extends LivewireDatatable
             'user.password' => ['nullable'],
             'user.bio' => ['nullable'],
             'user.country_code' => ['required', 'exists:countries,code'],
-            'user.city_id' => ['required', 'exists:cities,id'],
+            'user.governorate_id' => ['required', 'exists:governorates,id'],
+            'user.city_id' => [
+                'required',
+                Rule::exists('cities', 'id')->where(function ($query) {
+                    return $query->where('governorate_id', $this->user['governorate_id'] ?? null);
+                }),
+            ],
             'user.language_code' => ['nullable', 'exists:languages,code'],
             'user.contact_number' => ['nullable', 'regex:^\+\d+$^'],
             'user.whatsapp_number' => ['nullable', 'regex:^\+\d+$^'],
@@ -581,6 +613,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
             'user.website_url' => ['nullable', 'url'],
             'user.allowed_posts_count' => ['nullable', 'numeric', 'min:0'],
             'user.allowed_offers_count' => ['nullable', 'numeric', 'min:0'],
+            'user.maximum_monthly_offers' => ['nullable', 'numeric', 'min:0'],
             'user.rate' => ['nullable', 'numeric', 'min:0', 'max:5'],
             'user.status' => ['nullable', 'in:active,inactive,banned'],
             'user.email_verified_at' => ['nullable', 'boolean'],
@@ -590,6 +623,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
         ]);
 
         $this->user['country_code'] = $this->country_code;
+        $this->user['governorate_id'] = $this->governorate_id ?? $this->user['governorate_id'];
 
         //set data
         $data = $this->user;
@@ -606,6 +640,9 @@ class AdvertisersInquiryComponent extends LivewireDatatable
         $data['website_url'] = !empty($this->user['website_url']) ? Filter::RemoveHtml($this->user['website_url']) : null;
         $data['allowed_posts_count'] = !empty($this->user['allowed_posts_count']) ? $this->user['allowed_posts_count'] : null;
         $data['allowed_offers_count'] = !empty($this->user['allowed_offers_count']) ? $this->user['allowed_offers_count'] : null;
+        $data['maximum_monthly_offers'] = isset($this->user['maximum_monthly_offers']) && $this->user['maximum_monthly_offers'] !== ''
+            ? $this->user['maximum_monthly_offers']
+            : null;
         $data['rate'] = !empty($this->user['rate']) ? $this->user['rate'] : null;
 
         //unset the user id
@@ -661,6 +698,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                         $data['is_elite'] = true;
                         $data['allowed_posts_count'] = $subscription_package->maximum_posts;
                         $data['allowed_offers_count'] = $subscription_package->maximum_offers;
+                        $data['maximum_monthly_offers'] = $subscription_package->maximum_monthly_offers;
                     }
                 } else {
                     $subscription_package = Package::findOrFail($this->package_id);
@@ -685,6 +723,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                     $data['is_elite'] = true;
                     $data['allowed_posts_count'] = $subscription_package->maximum_posts;
                     $data['allowed_offers_count'] = $subscription_package->maximum_offers;
+                    $data['maximum_monthly_offers'] = $subscription_package->maximum_monthly_offers;
                 }
             } else {
                 $user->packages()
@@ -800,18 +839,31 @@ class AdvertisersInquiryComponent extends LivewireDatatable
      */
     public function setCountry($code)
     {
-        //select all countries
-        $cities = City::select(
-            "$this->country_column",
-            'id'
-        )
+        $governorates = Governorate::select("$this->country_column", 'id')
             ->where('country_code', $code)
             ->get();
 
-        $this->cities = $cities->mapWithKeys(function ($countries, $key) {
-            return [$countries->id => $countries[$this->country_column]];
+        $this->governorates = $governorates->mapWithKeys(function ($governorate) {
+            return [$governorate->id => $governorate[$this->country_column]];
         });
 
+        $this->cities = new Collection();
+        $this->governorate_id = null;
+        $this->user['governorate_id'] = 'none';
+        $this->user['city_id'] = 'none';
+    }
+
+    public function setGovernorate($id)
+    {
+        $cities = City::select("$this->country_column", 'id')
+            ->where('governorate_id', $id)
+            ->get();
+
+        $this->cities = $cities->mapWithKeys(function ($city) {
+            return [$city->id => $city[$this->country_column]];
+        });
+
+        $this->governorate_id = $id;
         $this->user['city_id'] = 'none';
     }
 }

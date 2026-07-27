@@ -21,6 +21,7 @@ use App\Http\Controllers\Admins\System\Settings\SystemSettingsController;
 use App\Http\Controllers\Admins\Requests\UsernameChangeRequestsController;
 use App\Http\Controllers\Admins\Community\Offers\CommunityOffersController;
 use App\Http\Controllers\Admins\Countries\Cities\CountriesCitiesController;
+use App\Http\Controllers\Admins\Countries\Governorates\CountriesGovernoratesController;
 use App\Http\Controllers\Admins\Community\Comments\CommunityCommentsController;
 use App\Http\Controllers\Admins\MarketingTools\SMS\MarketingToolsSMSController;
 use App\Http\Controllers\Admins\Community\Proposals\CommunityProposalsController;
@@ -267,6 +268,18 @@ Route::resource('countries', CountriesController::class)
     ]);
 
 /**
+ * Governorates routes
+ */
+Route::resource('governorates', CountriesGovernoratesController::class)
+    ->only([
+        'index',
+        'create',
+    ]);
+
+Route::get('governorates/get', [CountriesGovernoratesController::class, 'getGovernoratesByCountryCode'])
+    ->name('country.governorates');
+
+/**
  * Cities routes
  */
 Route::resource('cities', CountriesCitiesController::class)
@@ -275,8 +288,8 @@ Route::resource('cities', CountriesCitiesController::class)
         'create',
     ]);
 
-Route::get('cities/get', [CountriesCitiesController::class, 'getCitiesByCountryCode'])
-    ->name('country.cities');
+Route::get('cities/get', [CountriesCitiesController::class, 'getCitiesByGovernorateId'])
+    ->name('governorate.cities');
 
 /**
  * Pages routes

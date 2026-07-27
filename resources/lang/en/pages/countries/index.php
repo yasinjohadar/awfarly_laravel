@@ -9,12 +9,14 @@ return [
     ],
     'content' => [
         'title' => 'Countries Inquiry',
+        'add' => 'Add Country',
         'datatable' => [
             'code' => 'Country Code',
             'name_en' => 'EN Name',
             'name_ar' => 'AR Name',
             'mobile_code' => 'Mobile Code',
-            'cities_count' => 'Cities',
+            'cities_count' => 'Governorates',
+            'governorates_count' => 'Governorates',
             'active' => 'Active',
         ],
     ],

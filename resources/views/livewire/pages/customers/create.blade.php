@@ -96,8 +96,8 @@
                     }).val('').change();
                     select2.on('change', (event) => {
                         country_code = event.target.value;
-                        $dispatch('cities', {country_code: (country_code !== 'none') ? country_code : null})
-                        $dispatch('select-city', {country_code: (country_code !== 'none') ? country_code : null})
+                        $dispatch('governorates', {country_code: (country_code !== 'none') ? country_code : null})
+                        $dispatch('select-governorate', {country_code: (country_code !== 'none') ? country_code : null})
                     });
                 })">
             <label class="col-form-label col-lg-2"
@@ -128,9 +128,46 @@
         @enderror
         <div x-subscribe="country_code" wire:ignore
              x-data="{add: false, country_code: null}"
-             x-on:cities.window="country_code = $event.detail.country_code"
+             x-on:governorates.window="country_code = $event.detail.country_code"
              x-init="country_code = null">
             <template x-if="country_code">
+                <div class="form-group row" x-data="{governorate_id: @entangle('governorate_id').defer}"
+                     x-init="$nextTick(() => {
+                        $('#governorate_id').select2().on('change', (event) => {
+                            governorate_id = $('#governorate_id').val();
+                            $dispatch('select-city', {governorate_id: governorate_id})
+                        })
+                    })">
+                    <label class="col-form-label col-lg-2"
+                           for="governorate_id">{{__('pages/customers/create.content.inputs.governorate')}}</label>
+                    <div class="col-lg-10">
+                        <select x-cloak x-model="governorate_id" name="governorate_id"
+                                data-placeholder="{{__('pages/customers/create.content.inputs.placeholders.governorate')}}"
+                                id="governorate_id"
+                                class="form-control select2 @error('governorate_id') is-invalid @enderror"
+                                x-ref="governorate_id"
+                                x-bind:value="governorate_id">
+                            <option></option>
+                        </select>
+                    </div>
+                </div>
+            </template>
+        </div>
+        @error('governorate_id')
+        <div class="form-group row" style="margin-top: -20px">
+            <div class="col-form-label col-lg-2"></div>
+            <div class="col-lg-10">
+                <div class="invalid-feedback d-block" role="alert">
+                    <strong>{{ $message }}</strong>
+                </div>
+            </div>
+        </div>
+        @enderror
+        <div x-subscribe="governorate_id" wire:ignore
+             x-data="{add: false, governorate_id: null}"
+             x-on:cities.window="governorate_id = $event.detail.governorate_id"
+             x-init="governorate_id = null">
+            <template x-if="governorate_id">
                 <div class="form-group row" x-data="{city_id: @entangle('city_id').defer}"
                      x-init="$nextTick(() => {
                         $('#city_id').select2().on('change', (event) => {
@@ -302,12 +339,28 @@
         window.addEventListener('clearFileInput', () => {
             $('#image').val(null);
             $('#country_code').select2().val(null).change();
+            $('#governorate_id').select2().val(null).change();
             $('#city_id').select2().val(null).change();
         });
-        window.addEventListener('select-city', (el) => {
-            axios.get('{{route('admin.country.cities')}}', {
+        window.addEventListener('select-governorate', (el) => {
+            axios.get('{{route('admin.country.governorates')}}', {
                 params: {
                     country_code: el.detail.country_code,
+                }
+            }).then(function (response) {
+                $('#governorate_id').children('option').remove();
+                $('#governorate_id').select2({
+                    placeholder: '{{__('pages/customers/create.content.inputs.placeholders.governorate')}}',
+                    data: response.data,
+                }).val('').change();
+                $('#city_id').children('option').remove();
+                $('#city_id').select2().val('').change();
+            })
+        });
+        window.addEventListener('select-city', (el) => {
+            axios.get('{{route('admin.governorate.cities')}}', {
+                params: {
+                    governorate_id: el.detail.governorate_id,
                 }
             }).then(function (response) {
                 $('#city_id').children('option').remove();

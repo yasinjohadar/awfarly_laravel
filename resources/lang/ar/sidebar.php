@@ -68,6 +68,7 @@ return [
     ],
     'languages' => 'اللغات',
     'countries' => 'الدول',
+    'governorates' => 'المحافظات',
     'cities' => 'المدن',
     'pages' => 'الصفحات',
     'advertisements' => [

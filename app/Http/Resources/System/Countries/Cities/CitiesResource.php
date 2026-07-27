@@ -22,7 +22,7 @@ class CitiesResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->{$language_column},
-            'countryCode' => $this->country_code,
+            'governorateId' => $this->governorate_id,
         ];
     }
 }

@@ -263,7 +263,7 @@
             "itemName": "city",
             "valueName": "value",
             "inputName": 'countries',
-            "selectedItems": {!! old('countries') ? json_encode(old('countries')) : json_encode($advertisement->cities) !!},
+            "selectedItems": {!! old('countries') ? json_encode(old('countries')) : json_encode($advertisement->governorates ?? []) !!},
         };
         $("#categories").transfer(categoriesSettings);
         $("#countries").transfer(countriesSettings);

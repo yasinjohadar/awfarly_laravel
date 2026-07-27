@@ -29,6 +29,7 @@ return [
         'file' => 'File',
         'files_note' => 'Please note that if you upload files in here it will replace the old uploaded files.',
         'categories' => 'Categories',
+        'governorates' => 'Governorates',
         'cities' => 'Cities',
         'starts_at' => 'Starts At',
         'ends_at' => 'Ends At',

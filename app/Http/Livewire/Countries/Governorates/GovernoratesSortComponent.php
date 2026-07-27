@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Http\Livewire\Countries\Governorates;
+
+use App\Models\Countries\Country;
+use App\Models\Countries\Governorates\Governorate;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
+use Jantinnerezo\LivewireAlert\LivewireAlert;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+use Throwable;
+
+class GovernoratesSortComponent extends Component
+{
+    use LivewireAlert;
+    use WithFileUploads;
+
+    public int $country_id;
+    public array $order = [];
+    public string $language_column = 'name_ar';
+
+    protected $listeners = [
+        'showAddModal',
+    ];
+
+    public function loadScripts()
+    {
+        $this->dispatchBrowserEvent('loadScripts');
+    }
+
+    public function render()
+    {
+        $this->language_column = App::currentLocale() === 'ar' ? 'name_ar' : 'name_en';
+        $country = Country::find($this->country_id);
+
+        $governorates = Governorate::orderBy('order')
+            ->where('country_code', $country->code)
+            ->get()
+            ->map(function ($governorate) {
+                return [
+                    'name' => $governorate->{$this->language_column},
+                    'id' => $governorate->id,
+                ];
+            });
+
+        $this->order = Governorate::orderBy('order')
+            ->where('country_code', $country->code)
+            ->pluck('id')
+            ->toArray();
+
+        return view('admin.pages.countries.governorates.sort', ['governorates' => $governorates]);
+    }
+
+    public function setOrder($orders)
+    {
+        DB::beginTransaction();
+        try {
+            foreach ($orders as $index => $order) {
+                Governorate::where('id', $order)
+                    ->first()
+                    ->update([
+                        'order' => $index + 1,
+                    ]);
+            }
+        } catch (Throwable $e) {
+            DB::rollBack();
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+
+        DB::commit();
+        $this->alert('success', __('toastr.success'), [
+            'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+        ]);
+    }
+}

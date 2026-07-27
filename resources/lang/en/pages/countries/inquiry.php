@@ -8,7 +8,7 @@ return [
         'page' => 'Inquiry',
     ],
     'content' => [
-        'title' => 'Country <strong>:name</strong> Cities',
+        'title' => 'Country <strong>:name</strong> Governorates',
         'datatable' => [
             'name_en' => 'EN Name',
             'name_ar' => 'AR Name',

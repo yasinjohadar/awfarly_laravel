@@ -7,6 +7,7 @@ use App\Http\Controllers\API\Shared\Pages\PagesController;
 use App\Http\Controllers\API\Shared\Requests\RequestsController;
 use App\Http\Controllers\API\System\BusinessTypes\BusinessTypesController;
 use App\Http\Controllers\API\System\Countries\Cities\CitiesController;
+use App\Http\Controllers\API\System\Countries\Governorates\GovernoratesController;
 use App\Http\Controllers\API\System\Countries\CountriesController;
 use App\Http\Controllers\API\Shared\Followings\UsersFollowingsController;
 use App\Http\Controllers\API\System\GeoIP\GeoIPController;
@@ -59,11 +60,15 @@ Route::group([
     Route::get('/countries/{code}', [CountriesController::class, 'getCountryByCode'])
         ->name('country.get');
 
-    //get all countries
+    Route::get('/governorates', [GovernoratesController::class, 'getGovernorates'])
+        ->name('governorates.get');
+
+    Route::get('/governorates/{id}', [GovernoratesController::class, 'getGovernorateById'])
+        ->name('governorate.get');
+
     Route::get('/cities', [CitiesController::class, 'getCities'])
         ->name('cities.get');
 
-    //get country by code
     Route::get('/cities/{id}', [CitiesController::class, 'getCityById'])
         ->name('city.get');
 

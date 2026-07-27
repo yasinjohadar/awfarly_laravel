@@ -31,6 +31,7 @@ class Package extends Model
         'is_active',
         'is_trial',
         'maximum_offers',
+        'maximum_monthly_offers',
         'maximum_points',
     ];
 

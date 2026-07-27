@@ -7,17 +7,29 @@ use App\Http\Resources\System\Countries\Cities\CitiesResource;
 use App\Models\Countries\Cities\City;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class CitiesController extends Controller
 {
     /**
+     * @param Request $request
      * @return Application|ResponseFactory|Response
      */
-    public function getCities()
+    public function getCities(Request $request)
     {
-        //get all cities
-        $cities = City::orderBy('order')
+        $data = $request->only(['governorateId']);
+
+        $this->apiValidate($data, [
+            'governorateId' => 'nullable|exists:governorates,id',
+        ]);
+
+        $cities = City::query()
+            ->when(
+                !empty($data['governorateId']),
+                fn ($query) => $query->where('governorate_id', $data['governorateId'])
+            )
+            ->orderBy('order')
             ->get();
 
         return $this->apiResponse(CitiesResource::collection($cities));
@@ -29,11 +41,8 @@ class CitiesController extends Controller
      */
     public function getCityById($id)
     {
-        //get city
-        $city = City::where('id', $id)
-            ->first();
+        $city = City::where('id', $id)->first();
 
-        //if the city wasn't found return exception
         if (!$city) {
             return $this->apiBadRequestResponse(__('api/system/countries/cities/cities.wrong-id'));
         }

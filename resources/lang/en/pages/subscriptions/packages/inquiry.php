@@ -10,12 +10,15 @@ return [
     ],
     'content' => [
         'title' => 'Subscriptions Packages Inquiry',
+        'add' => 'Add Package',
     ],
     'datatable' => [
         'product_id' => 'Product #',
         'name_en' => 'English Name',
         'name_ar' => 'Arabic Name',
         'maximum_posts' => 'Posts Count',
+        'maximum_offers' => 'Active Offers Count',
+        'maximum_monthly_offers' => 'Monthly Offers Count',
         'description_en' => 'English Description',
         'description_ar' => 'Arabic Description',
         'specifications_en' => 'English Specifications',

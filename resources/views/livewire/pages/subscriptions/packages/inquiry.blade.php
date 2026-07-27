@@ -1,9 +1,14 @@
 <div class="card">
-    <div class="card-header">
+    <div class="card-header d-flex align-items-center justify-content-between flex-wrap">
         @if($package_id)
-            <h5 class="card-title">{!! __('pages/subscriptions/packages/show.content.title', ['id' => $package_id]) !!}</h5>
+            <h5 class="card-title mb-0">{!! __('pages/subscriptions/packages/show.content.title', ['id' => $package_id]) !!}</h5>
         @else
-            <h5 class="card-title">{{__('pages/subscriptions/packages/inquiry.content.title')}}</h5>
+            <h5 class="card-title mb-0">{{__('pages/subscriptions/packages/inquiry.content.title')}}</h5>
+            @can('packages.add')
+                <a href="{{route('admin.subscriptions.packages.create')}}" class="btn btn-primary">
+                    {{__('pages/subscriptions/packages/inquiry.content.add')}}
+                </a>
+            @endcan
         @endif
     </div>
     <div class="card-body">
@@ -36,4 +41,3 @@
         @endif
     </div>
 </div>
-

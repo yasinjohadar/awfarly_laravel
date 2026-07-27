@@ -13,25 +13,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // Roles
+        // Core system
         $this->call(RolesAndPermissionsTableSeeder::class);
-
-        // Permissions
         $this->call(PermissionsGroupsAndDataTableSeeder::class);
-
-        // Settings
         $this->call(SettingsTableSeeder::class);
-
-        // Languages
         $this->call(LanguagesTableSeeder::class);
-
-        // Admin users
         $this->call(AdminUserTableSeeder::class);
-
-        // Business Types
         $this->call(BusinessTypesTableSeeder::class);
-
-        // Pages
         $this->call(PagesTableSeeder::class);
+
+        // Syria demo dataset
+        $this->call(SyriaGeoSeeder::class);
+        $this->call(CategoriesTableSeeder::class);
+        $this->call(PackagesTableSeeder::class);
+        $this->call(DemoUsersSeeder::class);
+        $this->call(DemoContentSeeder::class);
     }
 }

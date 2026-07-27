@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\API\Advertisers\Community\Offers;
 
+use App\Helpers\Advertisers\OfferLimits;
 use App\Helpers\FCM\FcmHelper;
 use App\Helpers\Files;
 use App\Helpers\Filter;
+use App\Helpers\Geography\Geography;
 use App\Helpers\Notifications;
 use App\Helpers\Settings;
 use App\Http\Controllers\Controller;
@@ -48,6 +50,7 @@ class CommunityOffersController extends Controller
 
         $data = $request->only([
             'countryCode',
+            'governorateId',
             'cityId',
             'categoryId',
             'isGetAllCategories',
@@ -56,6 +59,7 @@ class CommunityOffersController extends Controller
 
         $this->apiValidate($data, [
             'countryCode' => 'nullable|string|exists:countries,code',
+            'governorateId' => 'nullable|string|exists:governorates,id',
             'cityId' => 'nullable|string|exists:cities,id',
             'categoryId' => 'nullable|string|exists:categories,id',
             'isGetAllCategories' => ['nullable'],
@@ -117,12 +121,8 @@ class CommunityOffersController extends Controller
             });
         }
 
-        //Filter city
-        if (isset($data['cityId']) && $data['cityId']) {
-            $offers = $offers->where(function ($q) use ($data) {
-                return $q->where('advertisers_users.city_id', $data['cityId']);
-            });
-        }
+        $offers = Geography::applyUserLocationFilter($offers, $data);
+
 
         //Filter city
         if (isset($data['categoryId']) && $data['categoryId']) {
@@ -229,6 +229,7 @@ class CommunityOffersController extends Controller
             'page',
             'keyword',
             'countryCode',
+            'governorateId',
             'cityId',
             'categoryId',
             'isGetAllCategories'
@@ -237,6 +238,7 @@ class CommunityOffersController extends Controller
         $this->apiValidate($data, [
             'keyword' => 'nullable|string|min:3',
             'countryCode' => 'nullable|string|exists:countries,code',
+            'governorateId' => 'nullable|string|exists:governorates,id',
             'cityId' => 'nullable|string|exists:cities,id',
             'categoryId' => 'nullable|string|exists:categories,id',
             'isGetAllCategories' => ['nullable'],
@@ -307,12 +309,8 @@ class CommunityOffersController extends Controller
             });
         }
 
-        //Filter city
-        if (isset($data['cityId']) && $data['cityId']) {
-            $offers = $offers->where(function ($q) use ($data) {
-                return $q->where('advertisers_users.city_id', $data['cityId']);
-            });
-        }
+        $offers = Geography::applyUserLocationFilter($offers, $data);
+
 
         //Filter city
         if (isset($data['categoryId']) && $data['categoryId']) {
@@ -501,22 +499,23 @@ class CommunityOffersController extends Controller
             'media.*.startAt' => ['nullable', 'integer'],
             'media.*.endAt' => ['nullable', 'integer', 'gt:media.*.startAt'],
         ]);
-        $allowed_offers_count = Auth::guard('advertiser-api')->user()->allowed_offers_count;
+        $advertiser = Auth::guard('advertiser-api')->user();
+        $limits = OfferLimits::evaluate($advertiser);
 
-        //check maximum allowed offers for advertiser
-        $allowed_offers = $allowed_offers_count ?? Settings::Get('max.advertiser.active.offers', 20);
-
-        $user_offers = Auth::guard('advertiser-api')->user()
-            ->offers()
-            ->where(function ($q) {
-                $q->where('expires_at', '>', now())
-                    ->orWhereNull('expires_at');
-            })
-            ->count();
-
-        if ($user_offers >= $allowed_offers) {
-            return $this->apiBadRequestResponse(__('api/advertisers/community/offers/offers.exceeded-limit', ['count' => $allowed_offers]));
+        if ($limits['reason'] === 'active') {
+            return $this->apiBadRequestResponse(__('api/advertisers/community/offers/offers.exceeded-limit', [
+                'count' => $limits['activeLimit'],
+            ]));
         }
+
+        if ($limits['reason'] === 'monthly') {
+            return $this->apiBadRequestResponse(__('api/advertisers/community/offers/offers.exceeded-monthly-limit', [
+                'count' => $limits['monthlyLimit'],
+            ]));
+        }
+
+        $allowed_offers = $limits['activeLimit'];
+
         //get auto approve status in settings
         $auto_approve = Settings::Get('offers.default.auto.approve', false);
 

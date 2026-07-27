@@ -18,7 +18,7 @@ class CountriesController extends Controller
      */
     public function index()
     {
-        if (!Auth::guard('admin')->user()->can('cities.inquiry')) {
+        if (!Auth::guard('admin')->user()->can('countries.inquiry')) {
             return abort(404);
         }
         return view('admin.pages.countries.index');
@@ -31,7 +31,7 @@ class CountriesController extends Controller
      */
     public function create()
     {
-        if (!Auth::guard('admin')->user()->can('cities.inquiry')) {
+        if (!Auth::guard('admin')->user()->can('countries.add')) {
             return abort(404);
         }
         return view('admin.pages.countries.create');

@@ -1,9 +1,14 @@
 <div class="card">
-    <div class="card-header">
+    <div class="card-header d-flex align-items-center justify-content-between flex-wrap">
         @if($category)
-            <h5 class="card-title">{!! __('pages/categories/index.content.title', ['name' => $category->{(App::getLocale() === 'ar' ? 'name_ar' : 'name_en')}]) !!}</h5>
+            <h5 class="card-title mb-0">{!! __('pages/categories/index.content.title', ['name' => $category->{(App::getLocale() === 'ar' ? 'name_ar' : 'name_en')}]) !!}</h5>
         @else
-            <h5 class="card-title">{{__('pages/categories/inquiry.content.title')}}</h5>
+            <h5 class="card-title mb-0">{{__('pages/categories/inquiry.content.title')}}</h5>
+            @can('categories.add')
+                <a href="{{route('admin.categories.create')}}" class="btn btn-primary">
+                    {{__('pages/categories/inquiry.content.add')}}
+                </a>
+            @endcan
         @endif
     </div>
 

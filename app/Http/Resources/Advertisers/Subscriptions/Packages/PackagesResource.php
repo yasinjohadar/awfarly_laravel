@@ -44,6 +44,8 @@ class PackagesResource extends JsonResource
             'description' => $this->{$description},
             'specifications' => $this->{$specifications},
             'maximumPosts' => $this->maximum_posts,
+            'maximumOffers' => $this->maximum_offers,
+            'maximumMonthlyOffers' => $this->maximum_monthly_offers,
             'price' => $this->price,
             'oldPrice' => $this->old_price,
             'duration' => $this->duration,

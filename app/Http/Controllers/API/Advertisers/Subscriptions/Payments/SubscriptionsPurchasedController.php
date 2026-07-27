@@ -108,6 +108,7 @@ class SubscriptionsPurchasedController extends Controller
                                     'is_elite' => true,
                                     'allowed_posts_count' => $package->maximum_posts,
                                     'allowed_offers_count' => $package->maximum_offers,
+                                    'maximum_monthly_offers' => $package->maximum_monthly_offers,
                                 ]);
                             Auth::guard('advertiser-api')->user()->deposit($package->maximum_points);
 
@@ -169,6 +170,7 @@ class SubscriptionsPurchasedController extends Controller
                             'is_elite' => true,
                             'allowed_posts_count' => $package->maximum_posts,
                             'allowed_offers_count' => $package->maximum_offers,
+                            'maximum_monthly_offers' => $package->maximum_monthly_offers,
                         ]);
                     Auth::guard('advertiser-api')->user()->deposit($package->maximum_points);
 

@@ -1,16 +1,8 @@
 <div class="sidebar sidebar-dark sidebar-main sidebar-expand-lg">
     <div id="sidebar" class="sidebar-content">
-        @include('admin.includes.user')
-
         <div class="sidebar-section">
             <ul class="nav nav-sidebar" data-nav-type="accordion">
                 {{--Dashboard--}}
-                <li id="dashboard" class="nav-item-header">
-                    <div class="text-uppercase font-size-xs line-height-xs">
-                        {{__('sidebar.dashboard')}}
-                    </div>
-                    <i class="icon-menu" title="{{__('sidebar.dashboard')}}"></i>
-                </li>
                 <li class="nav-item">
                     <a href="{{route('admin.dashboard')}}"
                        class="nav-link{{Request::routeIs('admin.dashboard') ? ' active' : ''}}">
@@ -81,117 +73,39 @@
                         </li>
                     @endcanany
                     @canany(['customers.inquiry', 'customers.add',])
-                        <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.customers.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
-                            <a class="nav-link cursor-pointer">
+                        <li class="nav-item{{Request::routeIs('admin.customers.*') ? ' active' : ''}}">
+                            <a href="{{route('admin.customers.index')}}"
+                               class="nav-link{{Request::routeIs('admin.customers.*') ? ' active' : ''}}">
                                 <i class="icon-users4"></i>
                                 <span>{{__('sidebar.users.customers')}}</span>
                             </a>
-                            <ul class="nav nav-group-sub"
-                                data-submenu-title="{{__('sidebar.users.customers')}}" style="">
-                                @can('customers.inquiry')
-                                    <li class="nav-item">
-                                        <a href="{{route('admin.customers.index')}}"
-                                           class="nav-link{{Request::routeIs('admin.customers.index') || Request::routeIs('admin.customers.show') ? ' active' : ''}}">
-                                            {{__('sidebar.inquiry')}}
-                                        </a>
-                                    </li>
-                                @endcan
-                                @can('customers.add')
-                                    <li class="nav-item">
-                                        <a href="{{route('admin.customers.create')}}"
-                                           class="nav-link{{Request::routeIs('admin.customers.create') ? ' active' : ''}}">
-                                            {{__('sidebar.create')}}
-                                        </a>
-                                    </li>
-                                @endcan
-                                @can('customers.inquiry')
-                                    <li class="nav-item">
-                                        <a href="{{route('admin.customers.reports')}}"
-                                           class="nav-link{{Request::routeIs('admin.customers.reports') ? ' active' : ''}}">
-                                            {{__('sidebar.users.reported_customers')}}
-                                        </a>
-                                    </li>
-                                @endcan
-                            </ul>
                         </li>
                     @endcanany
-                    @canany(['advertisers.inquiry', 'advertisers.add','business.types.inquiry', 'business.types.add','ratings.inquiry'])
-                        <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.advertisers.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
-                            <a class="nav-link cursor-pointer">
+                    @canany(['advertisers.inquiry', 'advertisers.add'])
+                        <li class="nav-item{{(Request::routeIs('admin.advertisers.index') || Request::routeIs('admin.advertisers.create') || Request::routeIs('admin.advertisers.show') || Request::routeIs('admin.advertisers.reports')) ? ' active' : ''}}">
+                            <a href="{{route('admin.advertisers.index')}}"
+                               class="nav-link{{(Request::routeIs('admin.advertisers.index') || Request::routeIs('admin.advertisers.create') || Request::routeIs('admin.advertisers.show') || Request::routeIs('admin.advertisers.reports')) ? ' active' : ''}}">
                                 <i class="icon-users"></i>
                                 <span>{{__('sidebar.users.advertisers.title')}}</span>
                             </a>
-                            <ul class="nav nav-group-sub"
-                                data-submenu-title="{{__('sidebar.users.advertisers.title')}}" style="">
-                                @can('advertisers.inquiry')
-                                    <li class="nav-item">
-                                        <a href="{{route('admin.advertisers.index')}}"
-                                           class="nav-link{{Request::routeIs('admin.advertisers.index') || Request::routeIs('admin.advertisers.show') ? ' active' : ''}}">
-                                            {{__('sidebar.inquiry')}}
-                                        </a>
-                                    </li>
-                                @endcan
-                                @can('advertisers.add')
-                                    <li class="nav-item">
-                                        <a href="{{route('admin.advertisers.create')}}"
-                                           class="nav-link{{Request::routeIs('admin.advertisers.create') ? ' active' : ''}}">
-                                            {{__('sidebar.create')}}
-                                        </a>
-                                    </li>
-                                @endcan
-                                @can('advertisers.inquiry')
-                                    <li class="nav-item">
-                                        <a href="{{route('admin.advertisers.reports')}}"
-                                           class="nav-link{{Request::routeIs('admin.advertisers.reports') ? ' active' : ''}}">
-                                            {{__('sidebar.users.advertisers.reported')}}
-                                        </a>
-                                    </li>
-                                @endcan
-                                @canany(['ratings.inquiry'])
-                                    <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.advertisers.ratings')) ? ' nav-item-expanded nav-item-open' : ''}}">
-                                        <a class="nav-link cursor-pointer">
-                                            <span>{{__('sidebar.users.advertisers.ratings')}}</span>
-                                        </a>
-                                        <ul class="nav nav-group-sub"
-                                            data-submenu-title="{{__('sidebar.users.advertisers.ratings')}}">
-                                            @can('ratings.inquiry')
-                                                <li class="nav-item">
-                                                    <a href="{{route('admin.advertisers.ratings')}}"
-                                                       class="nav-link{{Request::routeIs('admin.advertisers.ratings') ? ' active' : ''}}">
-                                                        {{__('sidebar.inquiry')}}
-                                                    </a>
-                                                </li>
-                                            @endcan
-                                        </ul>
-                                    </li>
-                                @endcan
-                                @canany(['business.types.inquiry', 'business.types.add'])
-                                    <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.advertisers.business.types.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
-                                        <a class="nav-link cursor-pointer">
-                                            <span>{{__('sidebar.users.advertisers.business_types')}}</span>
-                                        </a>
-                                        <ul class="nav nav-group-sub"
-                                            data-submenu-title="{{__('sidebar.users.advertisers.business_types')}}">
-                                            @can('business.types.inquiry')
-                                                <li class="nav-item">
-                                                    <a href="{{route('admin.advertisers.business.types.index')}}"
-                                                       class="nav-link{{Request::routeIs('admin.advertisers.business.types.index') ? ' active' : ''}}">
-                                                        {{__('sidebar.inquiry')}}
-                                                    </a>
-                                                </li>
-                                            @endcan
-                                            @can('business.types.add')
-                                                <li class="nav-item">
-                                                    <a href="{{route('admin.advertisers.business.types.create')}}"
-                                                       class="nav-link{{Request::routeIs('admin.advertisers.business.types.create') ? ' active' : ''}}">
-                                                        {{__('sidebar.create')}}
-                                                    </a>
-                                                </li>
-                                            @endcan
-                                        </ul>
-                                    </li>
-                                @endcanany
-                            </ul>
+                        </li>
+                    @endcanany
+                    @can('ratings.inquiry')
+                        <li class="nav-item{{Request::routeIs('admin.advertisers.ratings') ? ' active' : ''}}">
+                            <a href="{{route('admin.advertisers.ratings')}}"
+                               class="nav-link{{Request::routeIs('admin.advertisers.ratings') ? ' active' : ''}}">
+                                <i class="icon-stars"></i>
+                                <span>{{__('sidebar.users.advertisers.ratings')}}</span>
+                            </a>
+                        </li>
+                    @endcan
+                    @canany(['business.types.inquiry', 'business.types.add'])
+                        <li class="nav-item{{Request::routeIs('admin.advertisers.business.types.*') ? ' active' : ''}}">
+                            <a href="{{route('admin.advertisers.business.types.index')}}"
+                               class="nav-link{{Request::routeIs('admin.advertisers.business.types.*') ? ' active' : ''}}">
+                                <i class="icon-briefcase"></i>
+                                <span>{{__('sidebar.users.advertisers.business_types')}}</span>
+                            </a>
                         </li>
                     @endcanany
                 @endcanany
@@ -205,30 +119,12 @@
                         </div>
                         <i class="icon-menu" title="{{__('sidebar.categories')}}"></i>
                     </li>
-                    <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.categories.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
-                        <a class="nav-link cursor-pointer">
+                    <li class="nav-item{{Request::routeIs('admin.categories.*') ? ' active' : ''}}">
+                        <a href="{{route('admin.categories.index')}}"
+                           class="nav-link{{Request::routeIs('admin.categories.*') ? ' active' : ''}}">
                             <i class="icon-stack2"></i>
                             <span>{{__('sidebar.categories')}}</span>
                         </a>
-                        <ul class="nav nav-group-sub"
-                            data-submenu-title="{{__('sidebar.categories')}}">
-                            @can('categories.inquiry')
-                                <li class="nav-item">
-                                    <a href="{{route('admin.categories.index')}}"
-                                       class="nav-link{{Request::routeIs('admin.categories.index') ? ' active' : ''}}">
-                                        {{__('sidebar.inquiry')}}
-                                    </a>
-                                </li>
-                            @endcan
-                            @can('categories.add')
-                                <li class="nav-item">
-                                    <a href="{{route('admin.categories.create')}}"
-                                       class="nav-link{{Request::routeIs('admin.categories.create') ? ' active' : ''}}">
-                                        {{__('sidebar.create')}}
-                                    </a>
-                                </li>
-                            @endcan
-                        </ul>
                     </li>
                 @endcanany
                 {{--/Categories--}}
@@ -467,30 +363,12 @@
                         <i class="icon-menu" title="{{__('sidebar.subscriptions.title')}}"></i>
                     </li>
                     @canany(['packages.inquiry','packages.add'])
-                        <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.subscriptions.packages.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
-                            <a class="nav-link cursor-pointer">
+                        <li class="nav-item{{Request::routeIs('admin.subscriptions.packages.*') ? ' active' : ''}}">
+                            <a href="{{route('admin.subscriptions.packages.index')}}"
+                               class="nav-link{{Request::routeIs('admin.subscriptions.packages.*') ? ' active' : ''}}">
                                 <i class="icon-package"></i>
                                 <span>{{__('sidebar.subscriptions.packages')}}</span>
                             </a>
-                            <ul class="nav nav-group-sub"
-                                data-submenu-title="{{__('sidebar.subscriptions.packages')}}">
-                                @can('packages.inquiry')
-                                    <li class="nav-item">
-                                        <a href="{{route('admin.subscriptions.packages.index')}}"
-                                           class="nav-link{{Request::routeIs('admin.subscriptions.packages.index') ? ' active' : ''}}">
-                                            {{__('sidebar.inquiry')}}
-                                        </a>
-                                    </li>
-                                @endcan
-                                @can('packages.add')
-                                    <li class="nav-item">
-                                        <a href="{{route('admin.subscriptions.packages.create')}}"
-                                           class="nav-link{{Request::routeIs('admin.subscriptions.packages.create') ? ' active' : ''}}">
-                                            {{__('sidebar.create')}}
-                                        </a>
-                                    </li>
-                                @endcan
-                            </ul>
                         </li>
                     @endcanany
                     {{--
@@ -521,22 +399,12 @@
                     @endcanany
                     --}}
                     @canany(['payments.inquiry'])
-                        <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.subscriptions.payments.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
-                            <a class="nav-link cursor-pointer">
+                        <li class="nav-item{{Request::routeIs('admin.subscriptions.payments.*') ? ' active' : ''}}">
+                            <a href="{{route('admin.subscriptions.payments.index')}}"
+                               class="nav-link{{Request::routeIs('admin.subscriptions.payments.*') ? ' active' : ''}}">
                                 <i class="icon-cart4"></i>
                                 <span>{{__('sidebar.subscriptions.payments.title')}}</span>
                             </a>
-                            <ul class="nav nav-group-sub"
-                                data-submenu-title="{{__('sidebar.subscriptions.payments.title')}}">
-                                @can('payments.inquiry')
-                                    <li class="nav-item">
-                                        <a href="{{route('admin.subscriptions.payments.index')}}"
-                                           class="nav-link{{Request::routeIs('admin.subscriptions.payments.index') ? ' active' : ''}}">
-                                            {{__('sidebar.subscriptions.payments.transactions')}}
-                                        </a>
-                                    </li>
-                                @endcan
-                            </ul>
                         </li>
                     @endcanany
                     {{--
@@ -560,71 +428,6 @@
                     @endcanany--}}
                 @endcanany
                 {{--/Subscriptions--}}
-
-                {{--Languages--}}
-                @canany(['languages.inquiry', 'languages.add', 'countries.inquiry', 'countries.add'])
-                    <li id="languages" class="nav-item-header">
-                        <div class="text-uppercase font-size-xs line-height-xs">
-                            {{__('sidebar.languages')}}
-                        </div>
-                        <i class="icon-menu" title="{{__('sidebar.languages')}}"></i>
-                    </li>
-                    {{--
-                    @canany(['languages.inquiry', 'languages.add'])
-                    <li class="nav-item nav-item-submenu">
-                        <a class="nav-link cursor-pointer">
-                            <i class="icon-earth"></i>
-                            <span>{{__('sidebar.languages')}}</span>
-                        </a>
-                        <ul class="nav nav-group-sub"
-                            data-submenu-title="{{__('sidebar.categories')}}">
-                            @can('languages.inquiry')
-                            <li class="nav-item">
-                                <a href="{{url('/')}}" class="nav-link">
-                                    {{__('sidebar.inquiry')}}
-                                </a>
-                            </li>
-                            @endcan
-                            @can('languages.add')
-                            <li class="nav-item">
-                                <a href="{{url('/')}}" class="nav-link">
-                                    {{__('sidebar.create')}}
-                                </a>
-                            </li>
-                            @endcan
-                        </ul>
-                    </li>
-                    @endcanany
-                    --}}
-                    @canany(['countries.inquiry', 'countries.add'])
-                        <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.countries.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
-                            <a class="nav-link cursor-pointer">
-                                <i class="icon-flag3"></i>
-                                <span>{{__('sidebar.countries')}}</span>
-                            </a>
-                            <ul class="nav nav-group-sub"
-                                data-submenu-title="{{__('sidebar.categories')}}">
-                                @can('countries.inquiry')
-                                    <li class="nav-item">
-                                        <a href="{{route('admin.countries.index')}}"
-                                           class="nav-link{{Request::routeIs('admin.countries.index') ? ' active' : ''}}">
-                                            {{__('sidebar.inquiry')}}
-                                        </a>
-                                    </li>
-                                @endcan
-                                @can('countries.add')
-                                    <li class="nav-item">
-                                        <a href="{{route('admin.countries.create')}}"
-                                           class="nav-link{{Request::routeIs('admin.countries.create') ? ' active' : ''}}">
-                                            {{__('sidebar.create')}}
-                                        </a>
-                                    </li>
-                                @endcan
-                            </ul>
-                        </li>
-                    @endcanany
-                @endcanany
-                {{--/Languages--}}
 
                 {{--Requests --}}
                 @canany(['requests.contact.us','requests.username.change',])
@@ -900,85 +703,111 @@
                 {{--/Marketing Tools--}}
 
                 {{--System--}}
-                @canany(['settings.inquiry', 'export.database', 'logs.inquiry'])
+                @canany(['settings.inquiry', 'export.database', 'logs.inquiry', 'countries.inquiry', 'countries.add', 'governorates.inquiry', 'governorates.add', 'cities.inquiry', 'cities.add'])
                     <li id="system" class="nav-item-header">
                         <div class="text-uppercase font-size-xs line-height-xs">
                             {{__('sidebar.system.title')}}
                         </div>
                         <i class="icon-menu" title="{{__('sidebar.system.title')}}"></i>
                     </li>
-                    @can('settings.inquiry')
-                        <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.system.settings.index')) ? ' nav-item-expanded nav-item-open' : ''}}">
+                    @canany(['settings.inquiry', 'countries.inquiry', 'countries.add', 'governorates.inquiry', 'governorates.add', 'cities.inquiry', 'cities.add'])
+                        <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.system.settings.index') || Request::routeIs('admin.countries.*') || Request::routeIs('admin.governorates.*') || Request::routeIs('admin.cities.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
                             <a class="nav-link cursor-pointer">
                                 <i class="icon-cog"></i>
                                 <span>{{__('sidebar.system.settings.title')}}</span>
                             </a>
                             <ul class="nav nav-group-sub"
                                 data-submenu-title="{{__('sidebar.system.settings.title')}}">
-                                <li class="nav-item">
-                                    <a href="{{route('admin.system.settings.index', 'general')}}"
-                                       class="nav-link{{(isset($settingType) && $settingType === 'general') ? ' active' : ''}}">
-                                        {{__('sidebar.system.settings.general')}}
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{route('admin.system.settings.index', 'chat')}}"
-                                       class="nav-link{{(isset($settingType) && $settingType === 'chat') ? ' active' : ''}}">
-                                        {{__('sidebar.system.settings.chat')}}
-                                    </a>
-                                </li>
-                                <li class="nav-item nav-item-submenu{{(isset($settingType) && in_array($settingType, ['posts', 'offers', 'proposals'])) ? ' nav-item-expanded nav-item-open' : ''}}">
-                                    <a class="nav-link cursor-pointer">
-                                        <span>{{__('sidebar.system.settings.community')}}</span>
-                                    </a>
-                                    <ul class="nav nav-group-sub">
-                                        <li class="nav-item">
-                                            <a href="{{route('admin.system.settings.index', 'posts')}}"
-                                               class="nav-link{{(isset($settingType) && $settingType === 'posts') ? ' active' : ''}}">
-                                                {{__('sidebar.system.settings.posts')}}
-                                            </a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a href="{{route('admin.system.settings.index', 'offers')}}"
-                                               class="nav-link{{(isset($settingType) && $settingType === 'offers') ? ' active' : ''}}">
-                                                {{__('sidebar.system.settings.offers')}}
-                                            </a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a href="{{route('admin.system.settings.index', 'proposals')}}"
-                                               class="nav-link{{(isset($settingType) && $settingType === 'proposals') ? ' active' : ''}}">
-                                                {{__('sidebar.system.settings.proposals')}}
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{route('admin.system.settings.index', 'users')}}"
-                                       class="nav-link{{(isset($settingType) && $settingType === 'users') ? ' active' : ''}}">
-                                        {{__('sidebar.system.settings.users')}}
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{route('admin.system.settings.index', 'maintenance')}}"
-                                       class="nav-link{{(isset($settingType) && $settingType === 'maintenance') ? ' active' : ''}}">
-                                        {{__('sidebar.system.settings.maintenance')}}
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{route('admin.system.settings.index', 'apps')}}"
-                                       class="nav-link{{(isset($settingType) && $settingType === 'apps') ? ' active' : ''}}">
-                                        {{__('sidebar.system.settings.apps')}}
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{route('admin.system.settings.index', 'social')}}"
-                                       class="nav-link{{(isset($settingType) && $settingType === 'social') ? ' active' : ''}}">
-                                        {{__('sidebar.system.settings.social')}}
-                                    </a>
-                                </li>
+                                @can('settings.inquiry')
+                                    <li class="nav-item">
+                                        <a href="{{route('admin.system.settings.index', 'general')}}"
+                                           class="nav-link{{(isset($settingType) && $settingType === 'general') ? ' active' : ''}}">
+                                            {{__('sidebar.system.settings.general')}}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{route('admin.system.settings.index', 'chat')}}"
+                                           class="nav-link{{(isset($settingType) && $settingType === 'chat') ? ' active' : ''}}">
+                                            {{__('sidebar.system.settings.chat')}}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item nav-item-submenu{{(isset($settingType) && in_array($settingType, ['posts', 'offers', 'proposals'])) ? ' nav-item-expanded nav-item-open' : ''}}">
+                                        <a class="nav-link cursor-pointer">
+                                            <span>{{__('sidebar.system.settings.community')}}</span>
+                                        </a>
+                                        <ul class="nav nav-group-sub">
+                                            <li class="nav-item">
+                                                <a href="{{route('admin.system.settings.index', 'posts')}}"
+                                                   class="nav-link{{(isset($settingType) && $settingType === 'posts') ? ' active' : ''}}">
+                                                    {{__('sidebar.system.settings.posts')}}
+                                                </a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a href="{{route('admin.system.settings.index', 'offers')}}"
+                                                   class="nav-link{{(isset($settingType) && $settingType === 'offers') ? ' active' : ''}}">
+                                                    {{__('sidebar.system.settings.offers')}}
+                                                </a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a href="{{route('admin.system.settings.index', 'proposals')}}"
+                                                   class="nav-link{{(isset($settingType) && $settingType === 'proposals') ? ' active' : ''}}">
+                                                    {{__('sidebar.system.settings.proposals')}}
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{route('admin.system.settings.index', 'users')}}"
+                                           class="nav-link{{(isset($settingType) && $settingType === 'users') ? ' active' : ''}}">
+                                            {{__('sidebar.system.settings.users')}}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{route('admin.system.settings.index', 'maintenance')}}"
+                                           class="nav-link{{(isset($settingType) && $settingType === 'maintenance') ? ' active' : ''}}">
+                                            {{__('sidebar.system.settings.maintenance')}}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{route('admin.system.settings.index', 'apps')}}"
+                                           class="nav-link{{(isset($settingType) && $settingType === 'apps') ? ' active' : ''}}">
+                                            {{__('sidebar.system.settings.apps')}}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{route('admin.system.settings.index', 'social')}}"
+                                           class="nav-link{{(isset($settingType) && $settingType === 'social') ? ' active' : ''}}">
+                                            {{__('sidebar.system.settings.social')}}
+                                        </a>
+                                    </li>
+                                @endcan
+                                @canany(['countries.inquiry', 'countries.add'])
+                                    <li class="nav-item">
+                                        <a href="{{route('admin.countries.index')}}"
+                                           class="nav-link{{Request::routeIs('admin.countries.*') ? ' active' : ''}}">
+                                            {{__('sidebar.countries')}}
+                                        </a>
+                                    </li>
+                                @endcanany
+                                @canany(['governorates.inquiry', 'governorates.add'])
+                                    <li class="nav-item">
+                                        <a href="{{route('admin.governorates.index')}}"
+                                           class="nav-link{{Request::routeIs('admin.governorates.*') ? ' active' : ''}}">
+                                            {{__('sidebar.governorates')}}
+                                        </a>
+                                    </li>
+                                @endcanany
+                                @canany(['cities.inquiry', 'cities.add'])
+                                    <li class="nav-item">
+                                        <a href="{{route('admin.cities.index')}}"
+                                           class="nav-link{{Request::routeIs('admin.cities.*') ? ' active' : ''}}">
+                                            {{__('sidebar.cities')}}
+                                        </a>
+                                    </li>
+                                @endcanany
                             </ul>
                         </li>
-                    @endcan
+                    @endcanany
                     {{--
                     @can('export.database')
                     <li class="nav-item nav-item-submenu">

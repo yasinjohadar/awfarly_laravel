@@ -79,17 +79,23 @@
                 @endisset
             </div>
             <div class="form-group" wire:ignore
-                 x-on:change-country.window="country_code = $event.detail.country_code, city_id = $event.detail.city_id;
+                 x-on:change-country.window="country_code = $event.detail.country_code, governorate_id = $event.detail.governorate_id, city_id = $event.detail.city_id;
                  $('#country_code').select2({
                         placeholder: '{{__('pages/customers/index.modal.edit.inputs.placeholders.country')}}',
                         cache: true
                     }).val(country_code).change();
-                    $dispatch('cities', {country_code: (country_code !== 'none') ? country_code : null});
-                    $dispatch('select-city', {country_code: (country_code !== 'none') ? country_code : null});
-                    axios.get('{{route('admin.country.cities')}}', {
-                        params: {
-                            country_code: country_code,
-                        }
+                    $dispatch('governorates', {country_code: (country_code !== 'none') ? country_code : null});
+                    axios.get('{{route('admin.country.governorates')}}', {
+                        params: { country_code: country_code }
+                    }).then(function (response) {
+                        $('#governorate_id').children('option').remove();
+                        $('#governorate_id').select2({
+                            placeholder: '{{__('pages/customers/index.modal.edit.inputs.placeholders.governorate')}}',
+                            data: response.data,
+                        }).val(governorate_id).change();
+                        return axios.get('{{route('admin.governorate.cities')}}', {
+                            params: { governorate_id: governorate_id }
+                        });
                     }).then(function (response) {
                         $('#city_id').children('option').remove();
                         $('#city_id').select2({
@@ -106,8 +112,9 @@
                     }).val(country_code).change();
                     select2.on('select2:select', (event) => {
                         country_code = event.target.value;
-                        $dispatch('cities', {country_code: (country_code !== 'none') ? country_code : null})
-                        $dispatch('select-city', {country_code: (country_code !== 'none') ? country_code : null})
+                        window.livewire.emit('setCountry', country_code);
+                        $dispatch('governorates', {country_code: (country_code !== 'none') ? country_code : null});
+                        $dispatch('select-governorate', {country_code: (country_code !== 'none') ? country_code : null});
                     });
                 })">
                 <label for="country_code">{{__('pages/customers/index.modal.edit.inputs.country')}}</label>
@@ -132,16 +139,46 @@
             </div>
             <div x-subscribe="country_code"  wire:ignore
                  x-data="{add: false, country_code: null}"
-                 x-on:cities.window="country_code = $event.detail.country_code"
+                 x-on:governorates.window="country_code = $event.detail.country_code"
                  x-init="country_code = null">
                 <template x-if="country_code">
+                    <div class="form-group" x-data="{governorate_id: @entangle('user.governorate_id').defer}"
+                         x-init="$nextTick(() => {
+                        $('#governorate_id').select2().on('select2:select', (event) => {
+                            governorate_id = $('#governorate_id').val();
+                            window.livewire.emit('setGovernorate', governorate_id);
+                            $dispatch('select-city', {governorate_id: governorate_id});
+                        })
+                    })">
+                        <label for="governorate_id">{{__('pages/customers/index.modal.edit.inputs.governorate')}}</label>
+                        <select x-cloak x-model="governorate_id" name="governorate_id"
+                                data-placeholder="{{__('pages/customers/index.modal.edit.inputs.placeholders.governorate')}}"
+                                id="governorate_id"
+                                class="form-control select2 @error('user.governorate_id') is-invalid @enderror"
+                                x-ref="governorate_id"
+                                x-bind:value="governorate_id">
+                            <option></option>
+                        </select>
+                        @error('user.governorate_id')
+                        <div class="invalid-feedback d-block" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </div>
+                        @enderror
+                    </div>
+                </template>
+            </div>
+            <div x-subscribe="governorate_id" wire:ignore
+                 x-data="{add: false, governorate_id: null}"
+                 x-on:cities.window="governorate_id = $event.detail.governorate_id"
+                 x-init="governorate_id = null">
+                <template x-if="governorate_id">
                     <div class="form-group" x-data="{city_id: @entangle('user.city_id').defer}"
                          x-init="$nextTick(() => {
                         $('#city_id').select2().on('select2:select', (event) => {
                             city_id = $('#city_id').val();
                         })
                     })">
-                        <label for="city_id">{{__('pages/advertisers/index.modal.edit.inputs.city')}}</label>
+                        <label for="city_id">{{__('pages/customers/index.modal.edit.inputs.city')}}</label>
                         <select x-cloak x-model="city_id" name="city_id"
                                 data-placeholder="{{__('pages/customers/index.modal.edit.inputs.placeholders.city')}}"
                                 id="city_id"
@@ -309,10 +346,26 @@
             $('#new_image').val(null);
         });
 
-        window.addEventListener('select-city', (el) => {
-            axios.get('{{route('admin.country.cities')}}', {
+        window.addEventListener('select-governorate', (el) => {
+            axios.get('{{route('admin.country.governorates')}}', {
                 params: {
                     country_code: el.detail.country_code,
+                }
+            }).then(function (response) {
+                $('#governorate_id').children('option').remove();
+                $('#governorate_id').select2({
+                    placeholder: '{{__('pages/customers/index.modal.edit.inputs.placeholders.governorate')}}',
+                    data: response.data,
+                }).val('').change();
+                $('#city_id').children('option').remove();
+                $('#city_id').select2().val('').change();
+            })
+        });
+
+        window.addEventListener('select-city', (el) => {
+            axios.get('{{route('admin.governorate.cities')}}', {
+                params: {
+                    governorate_id: el.detail.governorate_id,
                 }
             }).then(function (response) {
                 $('#city_id').children('option').remove();

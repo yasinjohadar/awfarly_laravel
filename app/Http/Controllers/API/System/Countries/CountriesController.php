@@ -20,7 +20,7 @@ class CountriesController extends Controller
         //countries
         $countries = Country::orderBy('order')
             ->where('is_active', true)
-            ->whereHas('cities')
+            ->whereHas('governorates')
             ->get();
 
         return $this->apiResponse(CountriesResource::collection($countries));

@@ -7,6 +7,7 @@ use App\Helpers\Files;
 use App\Helpers\Filter;
 use App\Models\Countries\Cities\City;
 use App\Models\Countries\Country;
+use App\Models\Countries\Governorates\Governorate;
 use App\Models\Languages\Language;
 use App\Models\Users\Customers\CustomerUser;
 use Carbon\Carbon;
@@ -16,6 +17,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Livewire\WithFileUploads;
 use Mediconesystems\LivewireDatatables\BooleanColumn;
@@ -39,6 +41,7 @@ class CustomersInquiryComponent extends LivewireDatatable
     public array $user;
     public Collection $languages;
     public Collection $countries;
+    public Collection $governorates;
     public Collection $cities;
     public bool $showDeleteModal = false;
     public bool $showEditModal = false;
@@ -47,9 +50,11 @@ class CustomersInquiryComponent extends LivewireDatatable
     private string $country_column = '';
     public bool $has_delete = true;
     public ?string $country_code = null;
+    public ?string $governorate_id = null;
 
     protected $listeners = [
-        'setCountry'
+        'setCountry',
+        'setGovernorate',
     ];
 
     /**
@@ -102,7 +107,7 @@ class CustomersInquiryComponent extends LivewireDatatable
             "$this->country_column",
             'code'
         )
-            ->whereHas('cities')
+            ->whereHas('governorates')
             ->get()
             ->keyBy(function ($value) {
                 return $value->code;
@@ -114,6 +119,7 @@ class CustomersInquiryComponent extends LivewireDatatable
                 ];
             });
 
+        $this->governorates = new Collection();
         $this->cities = new Collection();
 
 
@@ -174,6 +180,11 @@ class CustomersInquiryComponent extends LivewireDatatable
                 ->label(__('pages/customers/index.content.datatable.country'))
                 ->filterable($this->all_countries)
                 ->searchable(),
+            Column::name("governorates.$this->country_column")
+                ->label(__('pages/customers/index.content.datatable.governorate'))
+                ->filterable($this->all_governorates)
+                ->searchable()
+                ->hide(),
             Column::name("cities.$this->country_column")
                 ->label(__('pages/customers/index.content.datatable.city'))
                 ->filterable($this->all_cities)
@@ -288,6 +299,7 @@ class CustomersInquiryComponent extends LivewireDatatable
     {
         return CustomerUser::withTrashed()->leftJoin('languages', 'languages.code', 'customers_users.language_code')
             ->leftJoin('countries', 'countries.code', 'customers_users.country_code')
+            ->leftJoin('governorates', 'governorates.id', 'customers_users.governorate_id')
             ->leftJoin('cities', 'cities.id', 'customers_users.city_id');
     }
 
@@ -323,6 +335,11 @@ class CustomersInquiryComponent extends LivewireDatatable
     /**
      * @return mixed
      */
+    public function getAllGovernoratesProperty()
+    {
+        return Governorate::pluck($this->country_column);
+    }
+
     public function getAllCitiesProperty()
     {
         return City::pluck($this->country_column);
@@ -413,21 +430,31 @@ class CustomersInquiryComponent extends LivewireDatatable
         $this->user['mobile_verified_at'] = $this->user['mobile_verified_at'] ? 1 : 0;
 
         $this->country_code = $this->user['country_code'];
-        //select all countries
-        $cities = City::select(
-            "$this->country_column",
-            'id'
-        )
+        $this->governorate_id = $this->user['governorate_id'] ?? null;
+
+        $governorates = Governorate::select("$this->country_column", 'id')
             ->where('country_code', $this->user['country_code'])
             ->get();
 
-        $this->cities = $cities->mapWithKeys(function ($countries, $key) {
-            return [$countries->id => $countries[$this->country_column]];
+        $this->governorates = $governorates->mapWithKeys(function ($governorate) {
+            return [$governorate->id => $governorate[$this->country_column]];
+        });
+
+        $cities = City::select("$this->country_column", 'id')
+            ->where('governorate_id', $this->user['governorate_id'] ?? 0)
+            ->get();
+
+        $this->cities = $cities->mapWithKeys(function ($city) {
+            return [$city->id => $city[$this->country_column]];
         });
 
         //show the modal
         $this->showEditModal = true;
-        $this->dispatchBrowserEvent('change-country', ['country_code' => $this->user['country_code'], 'city_id' => $this->user['city_id']]);
+        $this->dispatchBrowserEvent('change-country', [
+            'country_code' => $this->user['country_code'],
+            'governorate_id' => $this->user['governorate_id'] ?? null,
+            'city_id' => $this->user['city_id'],
+        ]);
     }
 
     public function closeEditModal()
@@ -481,7 +508,13 @@ class CustomersInquiryComponent extends LivewireDatatable
             'user.password' => ['nullable'],
             'user.bio' => ['nullable'],
             'country_code' => ['required', 'exists:countries,code'],
-            'user.city_id' => ['required', 'exists:cities,id'],
+            'user.governorate_id' => ['required', 'exists:governorates,id'],
+            'user.city_id' => [
+                'required',
+                Rule::exists('cities', 'id')->where(function ($query) {
+                    return $query->where('governorate_id', $this->user['governorate_id'] ?? null);
+                }),
+            ],
             'user.language_code' => ['nullable', 'exists:languages,code'],
             'user.contact_number' => ['nullable', 'regex:^\+\d+$^'],
             'user.whatsapp_number' => ['nullable', 'regex:^\+\d+$^'],
@@ -495,6 +528,7 @@ class CustomersInquiryComponent extends LivewireDatatable
         ]);
 
         $this->user['country_code'] = $this->country_code;
+        $this->user['governorate_id'] = $this->governorate_id ?? $this->user['governorate_id'];
 
         //set data
         $data = $this->user;
@@ -598,18 +632,31 @@ class CustomersInquiryComponent extends LivewireDatatable
      */
     public function setCountry($code)
     {
-        //select all countries
-        $cities = City::select(
-            "$this->country_column",
-            'id'
-        )
+        $governorates = Governorate::select("$this->country_column", 'id')
             ->where('country_code', $code)
             ->get();
 
-        $this->cities = $cities->mapWithKeys(function ($countries, $key) {
-            return [$countries->id => $countries[$this->country_column]];
+        $this->governorates = $governorates->mapWithKeys(function ($governorate) {
+            return [$governorate->id => $governorate[$this->country_column]];
         });
 
+        $this->cities = new Collection();
+        $this->governorate_id = null;
+        $this->user['governorate_id'] = 'none';
+        $this->user['city_id'] = 'none';
+    }
+
+    public function setGovernorate($id)
+    {
+        $cities = City::select("$this->country_column", 'id')
+            ->where('governorate_id', $id)
+            ->get();
+
+        $this->cities = $cities->mapWithKeys(function ($city) {
+            return [$city->id => $city[$this->country_column]];
+        });
+
+        $this->governorate_id = $id;
         $this->user['city_id'] = 'none';
     }
 }

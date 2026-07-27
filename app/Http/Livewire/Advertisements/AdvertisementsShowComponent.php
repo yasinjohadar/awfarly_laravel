@@ -6,6 +6,7 @@ use App\Helpers\Files;
 use App\Models\Advertisements\Advertisement;
 use App\Models\Categories\Category;
 use App\Models\Countries\Cities\City;
+use App\Models\Countries\Governorates\Governorate;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
@@ -70,7 +71,15 @@ class AdvertisementsShowComponent extends Component
         //implode categories to one string
         $categories = $categories ? implode(", ", $categories) : '-';
 
-        //get cities
+        $governorates = Governorate::whereIn('id', $advertisement->governorates ?? [])
+            ->get()
+            ->map(function ($governorate) use ($name_column) {
+                return $governorate->{$name_column};
+            })
+            ->toArray();
+
+        $governorates = $governorates ? implode(', ', $governorates) : '-';
+
         $cities = City::whereIn('id', $advertisement->cities ?? [])
             ->get()
             ->map(function ($city) use ($name_column) {
@@ -78,13 +87,13 @@ class AdvertisementsShowComponent extends Component
             })
             ->toArray();
 
-        //implode cities to one string
-        $cities = $cities ? implode(", ", $cities) : '-';
+        $cities = $cities ? implode(', ', $cities) : '-';
 
         return view('admin.pages.advertisements.inquiry', [
             'advertisement' => $advertisement,
             'showEditModal' => $this->showEditModal,
             'categories' => $categories,
+            'governorates' => $governorates,
             'cities' => $cities,
         ]);
     }

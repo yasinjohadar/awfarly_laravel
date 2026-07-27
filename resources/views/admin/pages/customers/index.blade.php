@@ -9,8 +9,20 @@
 
 @section('content')
     <div class="card">
-        <div class="card-header">
-            <h5 class="card-title">{{__('pages/customers/index.content.title')}}</h5>
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap">
+            <h5 class="card-title mb-0">{{__('pages/customers/index.content.title')}}</h5>
+            <div class="d-flex flex-wrap" style="gap: .5rem;">
+                @can('customers.inquiry')
+                    <a href="{{route('admin.customers.reports')}}" class="btn btn-secondary">
+                        {{__('pages/customers/index.content.reported')}}
+                    </a>
+                @endcan
+                @can('customers.add')
+                    <a href="{{route('admin.customers.create')}}" class="btn btn-primary">
+                        {{__('pages/customers/index.content.add')}}
+                    </a>
+                @endcan
+            </div>
         </div>
         <div class="card-body">
             @livewire('customers.customers-inquiry-component', ['activeNumberFilters' => $activeNumberFilters ?? []])

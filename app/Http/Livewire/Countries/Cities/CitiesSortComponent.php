@@ -3,7 +3,7 @@
 namespace App\Http\Livewire\Countries\Cities;
 
 use App\Models\Countries\Cities\City;
-use App\Models\Countries\Country;
+use App\Models\Countries\Governorates\Governorate;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
@@ -14,20 +14,16 @@ use Throwable;
 class CitiesSortComponent extends Component
 {
     use LivewireAlert;
-
     use WithFileUploads;
 
-    public int $country_id;
+    public int $governorate_id;
     public array $order = [];
     public string $language_column = 'name_ar';
 
     protected $listeners = [
-        'showAddModal'
+        'showAddModal',
     ];
 
-    /**
-     * dispatch event to load scripts in the view
-     */
     public function loadScripts()
     {
         $this->dispatchBrowserEvent('loadScripts');
@@ -37,10 +33,8 @@ class CitiesSortComponent extends Component
     {
         $this->language_column = App::currentLocale() === 'ar' ? 'name_ar' : 'name_en';
 
-        $country = Country::find($this->country_id);
-
         $cities = City::orderBy('order')
-            ->where('country_code', $country->code)
+            ->where('governorate_id', $this->governorate_id)
             ->get()
             ->map(function ($city) {
                 return [
@@ -50,15 +44,13 @@ class CitiesSortComponent extends Component
             });
 
         $this->order = City::orderBy('order')
-            ->where('country_code', $country->code)
+            ->where('governorate_id', $this->governorate_id)
             ->pluck('id')
             ->toArray();
+
         return view('admin.pages.countries.cities.sort', ['cities' => $cities]);
     }
 
-    /**
-     * set new order for files
-     */
     public function setOrder($orders)
     {
         DB::beginTransaction();
@@ -67,14 +59,11 @@ class CitiesSortComponent extends Component
                 City::where('id', $order)
                     ->first()
                     ->update([
-                        'order' => $index + 1
+                        'order' => $index + 1,
                     ]);
             }
-            /*$this->dispatchBrowserEvent('getData');*/
         } catch (Throwable $e) {
             DB::rollBack();
-
-            //send toastr alert with error
             $this->alert('error', __('toastr.error'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
                 'text' => $e->getMessage(),
@@ -82,8 +71,8 @@ class CitiesSortComponent extends Component
 
             return null;
         }
+
         DB::commit();
-        //send toastr alert with success
         $this->alert('success', __('toastr.success'), [
             'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
         ]);

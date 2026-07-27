@@ -10,13 +10,15 @@ return [
     ],
     'content' => [
         'title' => 'عرض خطط الإشتراك',
+        'add' => 'إضافة خطة',
     ],
     'datatable' => [
         'product_id' => 'رقم المنتج',
         'name_en' => 'الإسم باللغه الإنجليزية',
         'name_ar' => 'الإسم باللغة العربية',
         'maximum_posts' => 'عدد المنشورات',
-        'maximum_offers' => 'عدد العروض',
+        'maximum_offers' => 'عدد العروض النشطة',
+        'maximum_monthly_offers' => 'عدد العروض الشهري',
         'maximum_points' => 'عدد انلقاط',
         'description_en' => 'الوصف باللغه الإنجليزية',
         'description_ar' => 'الوصف باللغة العربية',

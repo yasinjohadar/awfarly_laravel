@@ -4,7 +4,7 @@ namespace App\Http\Livewire\Countries\Cities;
 
 use App\Helpers\Filter;
 use App\Models\Countries\Cities\City;
-use App\Models\Countries\Country;
+use App\Models\Countries\Governorates\Governorate;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -19,36 +19,27 @@ class CitiesCreateComponent extends Component
 {
     use LivewireAlert;
 
-    public string $country_code = '';
+    public string $governorate_id = '';
     public string $name_en = '';
     public string $name_ar = '';
-    private string $country_column = '';
+    private string $name_column = '';
 
     protected array $rules = [
-        'country_code' => ['required', 'exists:countries,code'],
+        'governorate_id' => ['required', 'exists:governorates,id'],
         'name_en' => ['required'],
         'name_ar' => ['required'],
     ];
 
     public function __construct($id = null)
     {
-        //get admin language
         $this->getAdminLanguage();
-
         parent::__construct($id);
     }
 
-    /**
-     * get admin language
-     */
     public function getAdminLanguage()
     {
-        $country_column = Auth::guard('admin')->user()->language_code;
-        if ($country_column === 'ar') {
-            $this->country_column = 'name_ar';
-        } else {
-            $this->country_column = 'name_en';
-        }
+        $countryColumn = Auth::guard('admin')->user()->language_code;
+        $this->name_column = $countryColumn === 'ar' ? 'name_ar' : 'name_en';
     }
 
     /**
@@ -56,61 +47,53 @@ class CitiesCreateComponent extends Component
      */
     public function render()
     {
-        //select all countries
-        $countries = Country::select(
-            "$this->country_column",
-            'code'
-        )
+        $governorates = Governorate::select("$this->name_column", 'id')
+            ->orderBy('country_code')
+            ->orderBy('order')
             ->get()
-            ->map(function ($country) {
+            ->map(function ($governorate) {
                 return [
-                    'country_code' => $country->code,
-                    'name' => $country[$this->country_column],
+                    'governorate_id' => $governorate->id,
+                    'name' => $governorate[$this->name_column],
                 ];
             });
 
-        return view('livewire.pages.countries.cities.create', ['countries' => $countries]);
+        return view('livewire.pages.countries.cities.create', ['governorates' => $governorates]);
     }
 
-    /**
-     * @return null
-     */
     public function store()
     {
         if (!Auth::guard('admin')->user()->can('cities.add')) {
-            //send toastr alert with error
             $this->alert('error', __('permissions.insufficient_permissions'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
             ]);
+
             return null;
         }
+
         $this->validate();
         DB::beginTransaction();
         try {
-            $data = [
-                'country_code' => $this->country_code,
+            City::create([
+                'governorate_id' => $this->governorate_id,
                 'name_en' => Filter::RemoveHtml($this->name_en),
                 'name_ar' => Filter::RemoveHtml($this->name_ar),
-            ];
-            City::create($data);
+            ]);
             $this->resetValidation();
             $this->alert('success', __('toastr.success'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
             ]);
-            $this->reset([
-                'country_code',
-                'name_en',
-                'name_ar',
-            ]);
+            $this->reset(['governorate_id', 'name_en', 'name_ar']);
         } catch (Throwable $e) {
             DB::rollBack();
             $this->alert('error', __('toastr.error'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
-                 'text' => $e->getMessage(),
+                'text' => $e->getMessage(),
             ]);
 
             return null;
         }
+
         DB::commit();
     }
 }

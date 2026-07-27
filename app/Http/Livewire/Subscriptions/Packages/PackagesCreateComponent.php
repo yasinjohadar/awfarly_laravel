@@ -20,6 +20,8 @@ class PackagesCreateComponent extends Component
     public ?string $name_en = null;
     public ?string $name_ar = null;
     public ?int $maximum_posts = null;
+    public ?int $maximum_offers = null;
+    public ?int $maximum_monthly_offers = null;
     public ?string $description_en = null;
     public ?string $description_ar = null;
     public ?string $specifications_en = null;
@@ -38,6 +40,8 @@ class PackagesCreateComponent extends Component
         'name_en' => ['required', 'string', 'unique:packages,name_en'],
         'name_ar' => ['required', 'string', 'unique:packages,name_ar'],
         'maximum_posts' => ['required', 'integer'],
+        'maximum_offers' => ['required', 'integer', 'min:0'],
+        'maximum_monthly_offers' => ['required', 'integer', 'min:0'],
         'description_en' => ['nullable', 'string'],
         'description_ar' => ['nullable', 'string'],
         'specifications_en' => ['required', 'string'],
@@ -106,6 +110,8 @@ class PackagesCreateComponent extends Component
                 'name_en' => Filter::RemoveHtml($this->name_en),
                 'name_ar' => Filter::RemoveHtml($this->name_ar),
                 'maximum_posts' => $this->maximum_posts,
+                'maximum_offers' => $this->maximum_offers,
+                'maximum_monthly_offers' => $this->maximum_monthly_offers,
                 'description_en' => $description_en,
                 'description_ar' => $description_ar,
                 'specifications_en' => $specifications_en,
@@ -134,6 +140,8 @@ class PackagesCreateComponent extends Component
                 'name_en',
                 'name_ar',
                 'maximum_posts',
+                'maximum_offers',
+                'maximum_monthly_offers',
                 'description_en',
                 'description_ar',
                 'specifications_en',
