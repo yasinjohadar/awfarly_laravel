@@ -3,8 +3,9 @@
     <div class="container justify-content-center">
         <div class="d-flex justify-content-around">
             <a class="navbar-brand py-2 w-auto" href="{{url('/')}}">
-                <img class="img-fluid" width="36" style="height: auto !important;"
-                     src="{{asset('assets/images/frontend/logo.png')}}" alt="logo">
+                <img class="img-fluid rounded-circle" width="40" height="40"
+                     style="width: 40px !important; height: 40px !important; object-fit: cover;"
+                     src="{{Settings::Logo('assets/images/frontend/logo.png')}}" alt="{{Settings::Get('site.name', 'logo')}}">
             </a>
             <div class="d-flex align-items-center">
                 <a class="py-2 mx-2 mx-md-3" href="{{Settings::Get('android.url')}}">

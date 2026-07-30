@@ -59,7 +59,19 @@ class AdvertisementsController extends Controller
             }
         }
 
-        $advertisements = Geography::applyAdvertisementLocationFilter($advertisements, $data);
+        if (Geography::hasExplicitLocationFilter($data) || !empty($data['countryCode'])) {
+            $advertisements = Geography::applyAdvertisementLocationFilter($advertisements, $data);
+        } else {
+            $prefs = Geography::preferredLocationIds(Auth::guard('advertiser-api')->user());
+            if (!empty($prefs['governorates']) || !empty($prefs['cities'])) {
+                $advertisements = Geography::applyPreferredAdvertisementLocationFilter(
+                    $advertisements,
+                    Auth::guard('advertiser-api')->user()
+                );
+            } else {
+                $advertisements = Geography::applyAdvertisementLocationFilter($advertisements, $data);
+            }
+        }
 
         if (isset($data['isRandom']) && $data['isRandom']) {
             $advertisements = $advertisements->inRandomOrder();

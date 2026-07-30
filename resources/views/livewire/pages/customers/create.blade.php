@@ -135,8 +135,13 @@
                      x-init="$nextTick(() => {
                         $('#governorate_id').select2().on('change', (event) => {
                             governorate_id = $('#governorate_id').val();
-                            $dispatch('select-city', {governorate_id: governorate_id})
-                        })
+                            $dispatch('cities', {governorate_id: governorate_id});
+                            $dispatch('select-city', {governorate_id: governorate_id});
+                        });
+                        if (governorate_id && governorate_id !== 'none') {
+                            $dispatch('cities', {governorate_id: governorate_id});
+                            $dispatch('select-city', {governorate_id: governorate_id});
+                        }
                     })">
                     <label class="col-form-label col-lg-2"
                            for="governorate_id">{{__('pages/customers/create.content.inputs.governorate')}}</label>

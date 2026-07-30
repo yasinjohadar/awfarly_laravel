@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\API\Advertisers\Subscriptions\Payments\Google;
 
+use App\Helpers\Advertisers\PackageQuotas;
 use App\Http\Controllers\Controller;
 use App\Models\Subscriptions\Packages\Advertisers\AdvertiserPackages;
 use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Imdhemy\Purchases\Events\AppStore\DidRenew;
 use Imdhemy\Purchases\Events\AppStore\InteractiveRenewal;
 
 class GoogleSubscriptionsRefreshedController extends Controller
@@ -18,22 +17,23 @@ class GoogleSubscriptionsRefreshedController extends Controller
      */
     public function handle(InteractiveRenewal $event)
     {
-        // The following data can be retrieved from the event
         $notification = $event->getServerNotification();
         $subscription = $notification->getSubscription();
         $uniqueIdentifier = $subscription->getUniqueIdentifier();
         $expirationTime = $subscription->getExpiryTime();
 
-        $package = AdvertiserPackages::where('unique_identifier', $uniqueIdentifier)
+        $package = AdvertiserPackages::with('package')
+            ->where('unique_identifier', $uniqueIdentifier)
             ->first();
 
         if (!$package) {
             return false;
         }
+
         DB::beginTransaction();
         try {
-            AdvertiserPackages::where('advertiser_id', '!=', $package->advertiser_id)
-                ->where('unique_identifier', '!=', $uniqueIdentifier)
+            AdvertiserPackages::where('advertiser_id', $package->advertiser_id)
+                ->where('id', '!=', $package->id)
                 ->where('is_current', true)
                 ->where('is_active', true)
                 ->update([
@@ -51,13 +51,12 @@ class GoogleSubscriptionsRefreshedController extends Controller
                 'is_active' => true,
             ]);
 
-            $package->advertiser()
-                ->update([
-                    'is_elite' => true,
-                ]);
-
+            if ($package->advertiser && $package->package) {
+                PackageQuotas::applyFromPackage($package->advertiser, $package->package);
+            }
         } catch (Exception $e) {
             DB::rollBack();
+            return false;
         }
         DB::commit();
     }

@@ -81,7 +81,7 @@ class AccountController extends Controller
             'image.file' => ['image', 'max:15500'],
             'bio' => ['nullable'],
             'username' => ['nullable', "unique:customers_users,username,$user->id", 'unique:advertisers_users,username', 'unique:admins_users,username'],
-            'email' => ['nullable', 'email:rfc,dns', "unique:customers_users,email,$user->id", 'unique:advertisers_users,email', 'unique:admins_users,email'],
+            'email' => ['nullable', 'email:rfc', "unique:customers_users,email,$user->id", 'unique:advertisers_users,email', 'unique:admins_users,email'],
             'mobile' => ['nullable', 'string', "unique:customers_users,mobile,$user->id", 'unique:advertisers_users,mobile', 'unique:admins_users,mobile', 'regex:^\+\d+$^'],
             'gender' => ['nullable','sometimes', 'string','in:male,female'],
             'birth_date' => ['nullable','sometimes', 'date'],

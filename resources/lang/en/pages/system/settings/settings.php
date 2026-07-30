@@ -62,6 +62,7 @@ return [
             'inputs' => [
                 'name' => 'Name',
                 'value' => 'Value',
+                'logo_hint' => 'Leave empty to keep the current logo.',
                 'boolean' => [
                     'yes' => 'Yes',
                     'no' => 'No',

@@ -18,5 +18,13 @@
                 <i class="icon-history"></i>
             </button>
         </div>
+    @else
+        <div class="mx-2">
+            <button title="{{ __('datatable.delete') }}" @cannot('payments.delete') disabled @endcannot
+                    wire:click="showDeleteModal({{ $id }})"
+                    class="btn btn-danger">
+                <i class="icon-trash"></i>
+            </button>
+        </div>
     @endif
 </div>

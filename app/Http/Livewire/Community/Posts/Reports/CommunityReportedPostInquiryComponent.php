@@ -42,11 +42,14 @@ class CommunityReportedPostInquiryComponent extends Component
         $post['media'] = MediaResource::collection($post->getMedia('posts'))->resolve();
 
         //get report status
-        $report_status = $post->reports()
-            ->first()
-            ->status;
+        $report_status = optional($post->reports()->first())->status ?? 'pending';
+        $reports_count = $post->reports()->count();
 
-        return view('livewire.pages.community.posts.reports.show', ['post' => $post, 'status' => $report_status]);
+        return view('livewire.pages.community.posts.reports.show', [
+            'post' => $post,
+            'status' => $report_status,
+            'reports_count' => $reports_count,
+        ]);
     }
 
     /**
@@ -117,6 +120,8 @@ class CommunityReportedPostInquiryComponent extends Component
                 ->update([
                     'status' => 'solved'
                 ]);
+
+            $this->emitUp('recountCounters');
         } catch (Throwable $e) {
 
             //rollback changes
@@ -169,6 +174,8 @@ class CommunityReportedPostInquiryComponent extends Component
                 ->update([
                     'status' => 'solved'
                 ]);
+
+            $this->emitUp('recountCounters');
         } catch (Throwable $e) {
 
             //rollback changes

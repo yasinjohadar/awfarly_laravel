@@ -1,7 +1,7 @@
 <div class="card">
     <div class="card-header">
         @if($offer_id)
-            <h5 class="card-title">{!! __('pages/community/offers/show.content.title', ['id' => $offer_id]) !!}</h5>
+            <h5 class="card-title mb-0">{{ __('pages/community/offers/index.content.title') }}</h5>
         @else
             <h5 class="card-title">{{__('pages/community/offers/index.content.title')}}</h5>
         @endif

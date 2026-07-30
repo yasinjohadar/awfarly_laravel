@@ -20,6 +20,8 @@ return [
         'user_type' => 'User Type',
         'user_id' => 'User #',
         'user_name' => 'User Name',
+        'governorate' => 'Governorate',
+        'city' => 'City',
         'content' => 'Content',
         'views_count' => 'Views',
         'likes_count' => 'Likes',
@@ -30,6 +32,10 @@ return [
         'edit' => [
             'title' => 'Edit Posts',
             'inputs' => [
+                'governorate' => 'Governorate',
+                'city' => 'City',
+                'select_governorate' => 'Select governorate',
+                'select_city' => 'Select city',
                 'views_count' => 'Views Count',
                 'likes_count' => 'Likes Count',
                 'comments_count' => 'Comments Count',

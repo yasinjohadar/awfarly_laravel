@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Users\Advertisers;
 
-use App\Helpers\Settings;
+use App\Helpers\Advertisers\PackageQuotas;
 use App\Models\Users\Advertisers\AdvertiserUser;
 use Exception;
 use Illuminate\Console\Command;
@@ -22,7 +22,7 @@ class AdvertisersAllowedPostsCounterCheck extends Command
      *
      * @var string
      */
-    protected $description = 'This console is to check advertisers remaining posts counter monthly and put default value for it';
+    protected $description = 'Reset free-tier advertisers remaining posts and offer ceilings to default settings';
 
     /**
      * Create a new command instance.
@@ -51,10 +51,10 @@ class AdvertisersAllowedPostsCounterCheck extends Command
                         ->where('is_ended', false)
                         ->where('ends_at', '>', now());
                 })
-                ->update([
-                    'allowed_posts_count' => Settings::Get('user.allowed.posts', 10),
-                    'allowed_offers_count' => Settings::Get('max.advertiser.active.offers', 10),
-                ]);
+                ->get()
+                ->each(function (AdvertiserUser $advertiser) {
+                    PackageQuotas::applyFreeTier($advertiser);
+                });
         } catch (Exception $e) {
             DB::rollBack();
         }

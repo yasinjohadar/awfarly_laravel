@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Customers\Community\Posts;
 
 use App\Helpers\Filter;
+use App\Helpers\Categories\CategoriesFilter;
 use App\Helpers\Geography\Geography;
 use App\Helpers\Notifications;
 use App\Helpers\Settings;
@@ -99,26 +100,23 @@ class CommunityPostsController extends Controller
             });
         }
 
-        $posts = Geography::applyUserLocationFilter($posts, $data);
+        $posts = Geography::applyPostLocationFilter($posts, $data);
 
-
-        //Filter city
-        if (isset($data['categoryId']) && $data['categoryId']) {
-            $posts = $posts->where(function ($q) use ($data) {
-                return $q->where('posts.category_id', $data['categoryId']);
-            });
-        } else if (isset($data['isGetAllCategories']) && $data['isGetAllCategories'] == false) {
-            $categories = Auth::guard('customer-api')->user()
-                ->categories()
-                ->pluck('category_id')
-                ->toArray();
-
-            if (sizeof($categories) > 0) {
-                $posts = $posts->where(function ($q) use ($data, $categories) {
-                    return $q->whereIn('posts.category_id', $categories);
-                });
-            }
+        if (!Geography::hasExplicitLocationFilter($data)) {
+            $posts = Geography::applyPreferredPostLocationFilter(
+                $posts,
+                Auth::guard('customer-api')->user()
+            );
         }
+
+
+        // Filter categories (expand parents to children; apply interests by default)
+        $posts = CategoriesFilter::applyFeedCategoryFilter(
+            $posts,
+            $data,
+            Auth::guard('customer-api')->user(),
+            'posts.category_id'
+        );
 
         $posts = $posts
             ->orderBy('posts.id', 'desc')
@@ -237,26 +235,23 @@ class CommunityPostsController extends Controller
             });
         }
 
-        $posts = Geography::applyUserLocationFilter($posts, $data);
+        $posts = Geography::applyPostLocationFilter($posts, $data);
 
-
-        //Filter city
-        if (isset($data['categoryId']) && $data['categoryId']) {
-            $posts = $posts->where(function ($q) use ($data) {
-                return $q->where('posts.category_id', $data['categoryId']);
-            });
-        } else if (isset($data['isGetAllCategories']) && $data['isGetAllCategories'] == false) {
-            $categories = Auth::guard('customer-api')->user()
-                ->categories()
-                ->pluck('category_id')
-                ->toArray();
-
-            if (sizeof($categories) > 0) {
-                $posts = $posts->where(function ($q) use ($data, $categories) {
-                    return $q->whereIn('posts.category_id', $categories);
-                });
-            }
+        if (!Geography::hasExplicitLocationFilter($data)) {
+            $posts = Geography::applyPreferredPostLocationFilter(
+                $posts,
+                Auth::guard('customer-api')->user()
+            );
         }
+
+
+        // Filter categories (expand parents to children; apply interests by default)
+        $posts = CategoriesFilter::applyFeedCategoryFilter(
+            $posts,
+            $data,
+            Auth::guard('customer-api')->user(),
+            'posts.category_id'
+        );
 
         //get the posts
         $posts = $posts

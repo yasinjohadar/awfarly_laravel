@@ -4,6 +4,8 @@ return [
     'content' => [
         'title' => 'عرض العرض #<strong>:id</strong>',
         'back' => 'رجوع',
+        'edit' => 'تعديل',
+        'delete_offer' => 'حذف العرض',
         'user_id' => 'معلن #',
         'user_name' => 'إسم المعلن',
         'category' => 'قسم',
@@ -12,14 +14,19 @@ return [
         'advertisement_url' => 'رابط الإعلان',
         'expires_at' => 'ينتهي في',
         'expires_in' => 'ينتهي خلال (يوم)',
-        'deleted_at' => 'تم حذفة في',
+        'deleted_at' => 'تم حذفه في',
         'status' => 'الحالة',
         'rate' => 'التقييم',
         'likes_count' => 'إعجابات',
         'views_count' => 'مشاهدات',
         'comments_count' => 'تعليقات',
         'media' => 'الملفات',
-        'save' => 'حفظ',
+        'save' => 'حفظ ترتيب الوسائط',
+        'sections' => [
+            'advertiser' => 'بيانات المعلن',
+            'content' => 'محتوى العرض',
+            'media' => 'الوسائط المرفقة',
+        ],
     ],
     'modal' => [
         'edit' => [
@@ -48,5 +55,11 @@ return [
             'submit' => 'حذف',
             'cancel' => 'إلغاء',
         ],
-    ]
+        'delete_offer' => [
+            'title' => 'حذف العرض',
+            'content' => 'هل أنت متأكد أنك تريد حذف هذا العرض؟',
+            'submit' => 'حذف',
+            'cancel' => 'إلغاء',
+        ],
+    ],
 ];

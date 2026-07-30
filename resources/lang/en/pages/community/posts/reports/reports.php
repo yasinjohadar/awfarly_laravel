@@ -21,6 +21,7 @@ return [
         'delete' => [
             'title' => 'Delete Reported Posts',
             'content' => 'Are you sure you want to delete these reports?',
+            'content_single' => 'Are you sure you want to delete the reports for this post?',
             'submit' => 'Delete',
             'cancel' => 'Cancel',
         ],

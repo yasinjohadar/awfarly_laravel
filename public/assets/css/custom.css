@@ -238,6 +238,36 @@ i.handle {
     }
 }
 
+/* Admin top navbar ~25% shorter */
+.navbar.navbar-static.navbar-dark {
+    min-height: 0;
+}
+
+.navbar.navbar-static.navbar-dark .navbar-brand {
+    padding-top: 0.84rem;
+    padding-bottom: 0.84rem;
+}
+
+.navbar.navbar-static.navbar-dark .navbar-nav-link {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.navbar.navbar-static.navbar-dark .navbar-brand img.d-none.d-sm-block {
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+}
+
+.navbar.navbar-static.navbar-dark .navbar-brand img.d-sm-none {
+    width: 1.9rem !important;
+    height: 1.9rem !important;
+}
+
+.navbar.navbar-static.navbar-dark .dropdown-user img.rounded-circle {
+    width: 26px;
+    height: 26px;
+}
+
 .lg-sub-html {
     display: none;
 }

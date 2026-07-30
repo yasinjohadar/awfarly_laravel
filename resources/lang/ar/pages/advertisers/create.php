@@ -26,6 +26,8 @@ return [
             'facebook_url' => 'رابط الفيسبوك',
             'twitter_url' => 'رابط تويتر',
             'website_url' => 'رابط الموقع',
+            'package' => 'الباقة',
+            'package_hint' => 'عند اختيار باقة تُطبَّق صلاحياتها وحدودها فوراً على المعلن.',
             'allowed_posts_count' => 'عدد المنشورات المسموح بها',
             'allowed_offers_count' => 'عدد العروض النشطة المسموح بها',
             'maximum_monthly_offers' => 'الحد الشهري لإنشاء العروض',
@@ -47,6 +49,7 @@ return [
             'placeholders' => [
                 'choose_file' => "الصورة الشخصية",
                 'business_type' => "إختر مهنة",
+                'package' => "إختر باقة",
                 'country' => 'إختر دولة',
                 'governorate' => 'إختر محافظة',
                 'city' => 'إختر مدينة',

@@ -47,30 +47,33 @@ class CustomersCreateComponent extends Component
         parent::__construct($id);
     }
 
-    protected array $rules = [
-        'name' => ['required', 'unique:admins_users,name', 'unique:advertisers_users,name', 'unique:customers_users,name'],
-        'email' => ['nullable', 'email:rfc,dns', 'unique:admins_users,email', 'unique:advertisers_users,email', 'unique:customers_users,email'],
-        'mobile' => ['required', 'unique:admins_users,mobile', 'unique:advertisers_users,mobile', 'unique:customers_users,mobile', 'regex:^\+\d+$^'],
-        'username' => ['nullable', 'unique:admins_users,username', 'unique:advertisers_users,username', 'unique:customers_users,username'],
-        'country_code' => ['required', 'exists:countries,code'],
-        'governorate_id' => ['required', 'exists:governorates,id'],
-        'city_id' => [
-            'required',
-            Rule::exists('cities', 'id')->where(function ($query) {
-                return $query->where('governorate_id', $this->governorate_id);
-            }),
-        ],
-        'language_code' => ['required', 'exists:languages,code'],
-        'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif'],
-        'password' => ['required'],
-        'contact_number' => ['nullable', 'regex:^\+\d+$^'],
-        'whatsapp_number' => ['nullable', 'regex:^\+\d+$^'],
-        'facebook_url' => ['nullable', 'url'],
-        'twitter_url' => ['nullable', 'url'],
-        'website_url' => ['nullable', 'url'],
-        'status' => ['required', 'in:active,inactive,banned'],
-        'is_accepted_send_notification' => ['required', 'boolean'],
-    ];
+    protected function rules(): array
+    {
+        return [
+            'name' => ['required', 'unique:admins_users,name', 'unique:advertisers_users,name', 'unique:customers_users,name'],
+            'email' => ['nullable', 'email:rfc,dns', 'unique:admins_users,email', 'unique:advertisers_users,email', 'unique:customers_users,email'],
+            'mobile' => ['required', 'unique:admins_users,mobile', 'unique:advertisers_users,mobile', 'unique:customers_users,mobile', 'regex:^\+\d+$^'],
+            'username' => ['nullable', 'unique:admins_users,username', 'unique:advertisers_users,username', 'unique:customers_users,username'],
+            'country_code' => ['required', 'exists:countries,code'],
+            'governorate_id' => ['required', 'exists:governorates,id'],
+            'city_id' => [
+                'required',
+                Rule::exists('cities', 'id')->where(function ($query) {
+                    return $query->where('governorate_id', $this->governorate_id);
+                }),
+            ],
+            'language_code' => ['required', 'exists:languages,code'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif'],
+            'password' => ['required'],
+            'contact_number' => ['nullable', 'regex:^\+\d+$^'],
+            'whatsapp_number' => ['nullable', 'regex:^\+\d+$^'],
+            'facebook_url' => ['nullable', 'url'],
+            'twitter_url' => ['nullable', 'url'],
+            'website_url' => ['nullable', 'url'],
+            'status' => ['required', 'in:active,inactive,banned'],
+            'is_accepted_send_notification' => ['required', 'boolean'],
+        ];
+    }
 
     public function render()
     {

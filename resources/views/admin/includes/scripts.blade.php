@@ -60,15 +60,14 @@
 <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-firestore.js"></script>
 
 <script>
-    /* Firebase config */
+    /* Firebase config — must match Flutter/Laravel project: price-crush-1ae6f */
     var firebaseConfig = {
-        apiKey: "AIzaSyCA3OHEO8pQBO56UgGxmEsx5ewscHjxvdI",
-        authDomain: "pc-api-4652760247159134803-62.firebaseapp.com",
-        projectId: "pc-api-4652760247159134803-62",
-        storageBucket: "pc-api-4652760247159134803-62.appspot.com",
-        messagingSenderId: "185661664972",
-        appId: "1:185661664972:web:47a9a505a1a783c1835c69",
-        measurementId: "G-RJXEQN9HJZ"
+        apiKey: "AIzaSyB7psl8xAvBJ87KDhslmBvoJEgQt0kSDCQ",
+        authDomain: "price-crush-1ae6f.firebaseapp.com",
+        projectId: "price-crush-1ae6f",
+        storageBucket: "price-crush-1ae6f.firebasestorage.app",
+        messagingSenderId: "566413938378",
+        appId: "1:566413938378:android:bd796f69f7e9dd1ef8ee33"
     };
 
     firebase.initializeApp(firebaseConfig);

@@ -7,8 +7,10 @@
 
     <div class="navbar-brand text-center text-lg-left">
         <a href="{{url('/')}}" class="d-inline-block">
-            <img src="{{asset('assets/images/logo_light.png')}}" class="d-none d-sm-block" style="height: 3.125rem;" alt="">
-            <img src="{{asset('assets/images/logo_icon_light.png')}}" class="d-sm-none" alt="">
+            <img src="{{Settings::Logo()}}" class="d-none d-sm-block rounded-circle"
+                 style="width: 3.125rem; height: 3.125rem; object-fit: cover;" alt="{{Settings::Get('site.name')}}">
+            <img src="{{Settings::Logo()}}" class="d-sm-none rounded-circle"
+                 style="width: 2.5rem; height: 2.5rem; object-fit: cover;" alt="{{Settings::Get('site.name')}}">
         </a>
     </div>
 

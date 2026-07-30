@@ -268,6 +268,13 @@ class PackagesInquiryComponent extends LivewireDatatable
 
     public function update($id)
     {
+        if (!Auth::guard('admin')->user()->can('packages.edit')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
         $this->validate([
             'product_id' => ['nullable', 'string', "unique:packages,product_id,{$id}"],
             'name_en' => ['required', 'string', "unique:packages,name_en,{$id}"],
@@ -372,11 +379,55 @@ class PackagesInquiryComponent extends LivewireDatatable
     }
 
     /**
-     * show delete modal
+     * show delete modal for selected rows, or a single package by id
+     * @param int|null $id
      */
-    public function showDeleteModal()
+    public function showDeleteModal($id = null)
     {
+        if ($id !== null) {
+            $this->selected = [(string) $id];
+        }
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $this->setDeleteModalTextsForSelection();
         $this->showDeleteModal = true;
+    }
+
+    /**
+     * Set delete modal title/content based on selection count and package name
+     */
+    protected function setDeleteModalTextsForSelection(): void
+    {
+        $base = 'pages/subscriptions/packages/inquiry.modal.delete';
+
+        if (count($this->selected) === 1) {
+            $package = Package::find($this->selected[0]);
+            $name = '';
+            if ($package) {
+                $name = App::currentLocale() === 'ar'
+                    ? ($package->name_ar ?: $package->name_en)
+                    : ($package->name_en ?: $package->name_ar);
+            }
+
+            $this->deleteModalTexts = [
+                'title' => __("$base.title"),
+                'content' => __("$base.content", ['name' => $name]),
+                'cancel' => __("$base.cancel"),
+                'submit' => __("$base.submit"),
+            ];
+
+            return;
+        }
+
+        $this->deleteModalTexts = [
+            'title' => __("$base.title_multiple"),
+            'content' => __("$base.content_multiple"),
+            'cancel' => __("$base.cancel"),
+            'submit' => __("$base.submit"),
+        ];
     }
 
     /**
@@ -399,10 +450,30 @@ class PackagesInquiryComponent extends LivewireDatatable
             ]);
             return null;
         }
+
+        if (empty($this->selected)) {
+            $this->showDeleteModal = false;
+            return null;
+        }
+
         DB::beginTransaction();
         try {
             $packages = Package::whereIn('id', $this->selected)
+                ->withCount('advertisers')
                 ->get();
+
+            $inUse = $packages->first(function ($package) {
+                return $package->advertisers_count > 0;
+            });
+
+            if ($inUse) {
+                DB::rollBack();
+                $this->alert('error', __('pages/subscriptions/packages/inquiry.modal.delete.in_use'), [
+                    'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                ]);
+                $this->showDeleteModal = false;
+                return null;
+            }
 
             parent::delete($this->selected);
 
@@ -438,7 +509,6 @@ class PackagesInquiryComponent extends LivewireDatatable
         DB::commit();
     }
 
-
     /**
      * set modal texts
      */
@@ -446,7 +516,7 @@ class PackagesInquiryComponent extends LivewireDatatable
     {
         $this->deleteModalTexts = [
             'title' => __('pages/subscriptions/packages/inquiry.modal.delete.title'),
-            'content' => __('pages/subscriptions/packages/inquiry.modal.delete.content'),
+            'content' => __('pages/subscriptions/packages/inquiry.modal.delete.content', ['name' => '']),
             'cancel' => __('pages/subscriptions/packages/inquiry.modal.delete.cancel'),
             'submit' => __('pages/subscriptions/packages/inquiry.modal.delete.submit'),
         ];

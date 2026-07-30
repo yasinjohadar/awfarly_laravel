@@ -168,15 +168,20 @@
              x-on:governorates.window="country_code = $event.detail.country_code"
              x-init="country_code = null">
             <template x-if="country_code">
-                <div class="form-group row" x-data="{governorate_id: @entangle('governorate_id').defer}"
-                     x-init="$nextTick(() => {
+                    <div class="form-group row" x-data="{governorate_id: @entangle('governorate_id').defer}"
+                         x-init="$nextTick(() => {
                         $('#governorate_id').select2().on('change', (event) => {
                             governorate_id = $('#governorate_id').val();
-                            $dispatch('select-city', {governorate_id: governorate_id})
-                        })
+                            $dispatch('cities', {governorate_id: governorate_id});
+                            $dispatch('select-city', {governorate_id: governorate_id});
+                        });
+                        if (governorate_id && governorate_id !== 'none') {
+                            $dispatch('cities', {governorate_id: governorate_id});
+                            $dispatch('select-city', {governorate_id: governorate_id});
+                        }
                     })">
-                    <label class="col-form-label col-lg-2"
-                           for="governorate_id">{{__('pages/advertisers/create.content.inputs.governorate')}}</label>
+                        <label class="col-form-label col-lg-2"
+                               for="governorate_id">{{__('pages/advertisers/create.content.inputs.governorate')}}</label>
                     <div class="col-lg-10">
                         <select x-cloak x-model="governorate_id" name="governorate_id"
                                 data-placeholder="{{__('pages/advertisers/create.content.inputs.placeholders.governorate')}}"
@@ -331,6 +336,44 @@
                 @enderror
             </div>
         </div>
+        <div class="form-group row" wire:ignore
+             x-data="{package_id: @entangle('package_id').defer}"
+             x-init="$nextTick(() => {
+             select2 = $($refs.package_id).select2({
+                    placeholder: '{{__('pages/advertisers/create.content.inputs.placeholders.package')}}',
+                    allowClear: true,
+                    cache: true
+                }).val('').change();
+                select2.on('change', (event) => {
+                    package_id = event.target.value;
+                });
+            })">
+            <label class="col-form-label col-lg-2"
+                   for="package_id">{{__('pages/advertisers/create.content.inputs.package')}}</label>
+            <div class="col-lg-10">
+                <select x-cloak wire:model.defer="package_id" x-ref="package_id"
+                        x-model="package_id"
+                        data-placeholder="{{__('pages/advertisers/create.content.inputs.placeholders.package')}}"
+                        x-bind:value="package_id"
+                        class="form-control @error('package_id') is-invalid @enderror" id="package_id_create">
+                    <option></option>
+                    @foreach ($packages as $package)
+                        <option value="{{$package['id']}}">{{$package['name']}}</option>
+                    @endforeach
+                </select>
+                <small class="form-text text-muted">{{__('pages/advertisers/create.content.inputs.package_hint')}}</small>
+            </div>
+        </div>
+        @error('package_id')
+        <div class="form-group row" style="margin-top: -20px">
+            <div class="col-form-label col-lg-2"></div>
+            <div class="col-lg-10">
+                <div class="invalid-feedback d-block" role="alert">
+                    <strong>{{ $message }}</strong>
+                </div>
+            </div>
+        </div>
+        @enderror
         <div class="form-group row">
             <label class="col-form-label col-lg-2"
                    for="allowed_posts_count">{{__('pages/advertisers/create.content.inputs.allowed_posts_count')}}</label>
@@ -458,17 +501,24 @@
         });
 
         window.addEventListener('select-city', (el) => {
-            axios.get('{{route('admin.governorate.cities')}}', {
-                params: {
-                    governorate_id: el.detail.governorate_id,
+            const fillCities = () => {
+                if (!$('#city_id').length) {
+                    setTimeout(fillCities, 50);
+                    return;
                 }
-            }).then(function (response) {
-                $('#city_id').children('option').remove();
-                $('#city_id').select2({
-                    placeholder: '{{__('pages/advertisers/create.content.inputs.placeholders.city')}}',
-                    data: response.data,
-                }).val('').change();
-            })
+                axios.get('{{route('admin.governorate.cities')}}', {
+                    params: {
+                        governorate_id: el.detail.governorate_id,
+                    }
+                }).then(function (response) {
+                    $('#city_id').children('option').remove();
+                    $('#city_id').select2({
+                        placeholder: '{{__('pages/advertisers/create.content.inputs.placeholders.city')}}',
+                        data: response.data,
+                    }).val('').change();
+                });
+            };
+            fillCities();
         });
     </script>
 @endpush

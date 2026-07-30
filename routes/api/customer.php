@@ -9,6 +9,7 @@ use App\Http\Controllers\API\Customers\Users\UsersReportsController;
 use App\Http\Controllers\API\Customers\Customers\CustomersController;
 use App\Http\Controllers\API\Customers\Users\UsersBlockingsController;
 use App\Http\Controllers\API\Customers\Categories\CategoriesController;
+use App\Http\Controllers\API\Customers\Locations\LocationsController;
 use App\Http\Controllers\API\Customers\Advertisers\AdvertisersController;
 use App\Http\Controllers\API\Customers\Notifications\NotificationsController;
 use App\Http\Controllers\API\Customers\Advertisements\AdvertisementsController;
@@ -98,6 +99,18 @@ Route::post('/categories/interested', [CategoriesController::class, 'addAdvertis
 
 Route::delete('/categories/interested', [CategoriesController::class, 'deleteAdvertiserCategories'])
     ->name('categories.delete');
+
+/**
+ * Location interests
+ */
+Route::get('/locations/interested', [LocationsController::class, 'getUserLocations'])
+    ->name('locations.interested');
+
+Route::post('/locations/interested', [LocationsController::class, 'addUserLocations'])
+    ->name('locations.add');
+
+Route::delete('/locations/interested', [LocationsController::class, 'deleteUserLocations'])
+    ->name('locations.delete');
 
 
 /**

@@ -115,10 +115,27 @@ class CommunityReportedPostsInquiryComponent extends LivewireDatatable
     }
 
     /**
-     * show delete modal
+     * show delete modal for selected rows, or a single reported post by id
+     * @param int|null $id
      */
-    public function showDeleteModal()
+    public function showDeleteModal($id = null)
     {
+        if ($id !== null) {
+            $this->selected = [(string) $id];
+        }
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $this->deleteModalTexts = [
+            'title' => __('pages/community/posts/reports/reports.modal.delete.title'),
+            'content' => count($this->selected) === 1
+                ? __('pages/community/posts/reports/reports.modal.delete.content_single')
+                : __('pages/community/posts/reports/reports.modal.delete.content'),
+            'cancel' => __('pages/community/posts/reports/reports.modal.delete.cancel'),
+            'submit' => __('pages/community/posts/reports/reports.modal.delete.submit'),
+        ];
         $this->showDeleteModal = true;
     }
 
@@ -127,52 +144,50 @@ class CommunityReportedPostsInquiryComponent extends LivewireDatatable
      */
     public function deleteSelected()
     {
-        if (!Auth::guard('admin')->user()->can('posts.delete')) {
-            //send toastr alert with error
+        if (!Auth::guard('admin')->user()->can('posts.reported')) {
             $this->alert('error', __('permissions.insufficient_permissions'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
             ]);
             return null;
         }
+
+        if (empty($this->selected)) {
+            $this->showDeleteModal = false;
+            return null;
+        }
+
         DB::beginTransaction();
         try {
-            //get categories
             $reports = Report::whereIn('reported_id', $this->selected)
                 ->where('reported_type', Post::class)
                 ->get();
 
-            //set selected data to null
+            Report::whereIn('reported_id', $this->selected)
+                ->where('reported_type', Post::class)
+                ->delete();
+
             $this->selected = [];
 
-            //send toastr alert with success
             $this->alert('success', __('toastr.delete'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
             ]);
 
-            //add log
             AdminLogs::log('delete', 'reports', [
-                'reports' => $reports
-            ], "Delete: reports");
+                'reports' => $reports,
+            ], 'Delete: reports');
 
-            foreach ($reports as $report) {
-                $report->delete();
-            }
-            //close modal
             $this->showDeleteModal = false;
-
+            $this->emitUp('recountCounters');
         } catch (Throwable $e) {
-            //rollback
             DB::rollBack();
 
-            //send toastr alert with error
             $this->alert('error', __('toastr.error'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
-                 'text' => $e->getMessage(),
+                'text' => $e->getMessage(),
             ]);
 
             return null;
         }
-        //commit
         DB::commit();
     }
 

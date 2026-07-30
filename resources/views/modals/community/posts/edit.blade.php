@@ -17,6 +17,38 @@
             @enderror
         </div>
         <div class="form-group">
+            <label for="governorate_id">{{__('pages/community/posts/index.modal.edit.inputs.governorate')}}</label>
+            <select class="form-control @error('post.governorate_id') is-invalid @enderror"
+                    id="governorate_id"
+                    wire:model="post.governorate_id">
+                <option value="">{{__('pages/community/posts/index.modal.edit.inputs.select_governorate')}}</option>
+                @foreach($governorates as $id => $name)
+                    <option value="{{ $id }}">{{ $name }}</option>
+                @endforeach
+            </select>
+            @error('post.governorate_id')
+            <span class="invalid-feedback d-block" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+            @enderror
+        </div>
+        <div class="form-group">
+            <label for="city_id">{{__('pages/community/posts/index.modal.edit.inputs.city')}}</label>
+            <select class="form-control @error('post.city_id') is-invalid @enderror"
+                    id="city_id"
+                    wire:model.defer="post.city_id">
+                <option value="">{{__('pages/community/posts/index.modal.edit.inputs.select_city')}}</option>
+                @foreach($cities as $id => $name)
+                    <option value="{{ $id }}">{{ $name }}</option>
+                @endforeach
+            </select>
+            @error('post.city_id')
+            <span class="invalid-feedback d-block" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+            @enderror
+        </div>
+        <div class="form-group">
             <label for="views_count">{{__('pages/community/posts/index.modal.edit.inputs.views_count')}}</label>
             <input type="number" min="0" class="form-control @error('post.views_count') is-invalid @enderror"
                    id="views_count"

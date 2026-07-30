@@ -406,6 +406,13 @@
                                 <span>{{__('sidebar.subscriptions.payments.title')}}</span>
                             </a>
                         </li>
+                        <li class="nav-item{{Request::routeIs('admin.subscriptions.requests.*') ? ' active' : ''}}">
+                            <a href="{{route('admin.subscriptions.requests.index')}}"
+                               class="nav-link{{Request::routeIs('admin.subscriptions.requests.*') ? ' active' : ''}}">
+                                <i class="icon-stack-check"></i>
+                                <span>{{__('sidebar.subscriptions.requests')}}</span>
+                            </a>
+                        </li>
                     @endcanany
                     {{--
                     @canany(['income.inquiry'])
@@ -778,6 +785,12 @@
                                         <a href="{{route('admin.system.settings.index', 'social')}}"
                                            class="nav-link{{(isset($settingType) && $settingType === 'social') ? ' active' : ''}}">
                                             {{__('sidebar.system.settings.social')}}
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{route('admin.system.settings.index', 'payment')}}"
+                                           class="nav-link{{(isset($settingType) && $settingType === 'payment') ? ' active' : ''}}">
+                                            {{__('sidebar.system.settings.payment')}}
                                         </a>
                                     </li>
                                 @endcan

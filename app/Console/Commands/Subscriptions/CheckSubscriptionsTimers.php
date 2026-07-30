@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Subscriptions;
 
-use App\Helpers\Settings;
+use App\Helpers\Advertisers\PackageQuotas;
 use App\Models\Subscriptions\Packages\Advertisers\AdvertiserPackages;
 use Exception;
 use Illuminate\Console\Command;
@@ -43,9 +43,7 @@ class CheckSubscriptionsTimers extends Command
     {
         DB::beginTransaction();
         try {
-            //check advertisers packages
             $this->checkSubscriptions();
-
         } catch (Exception $exception) {
             DB::rollBack();
             return false;
@@ -66,31 +64,16 @@ class CheckSubscriptionsTimers extends Command
                 ->where('is_active', true)
                 ->get()
                 ->each(function ($package) {
-                    $active_packages = AdvertiserPackages::where('advertiser_id', $package->advertiser_id)
-                        ->where('is_active', true)
-                        ->where('is_ended', false)
-                        ->where('is_current', true)
-                        ->where('ends_at', '>', now())
-                        ->exists();
-                    if (!$active_packages) {
-                        $package->advertiser()
-                            ->update([
-                                'is_elite' => false,
-                                'allowed_posts_count' => Settings::Get('user.allowed.posts', 10)
-                            ]);
-                    } else {
-                        $package->advertiser()
-                            ->update([
-                                'allowed_posts_count' => $package->package->maximum_posts ?? Settings::Get('user.allowed.posts', 10),
-                            ]);
-                    }
                     $package->update([
                         'is_ended' => true,
                         'is_current' => false,
                         'is_active' => false,
                     ]);
-                });
 
+                    if ($package->advertiser) {
+                        PackageQuotas::afterSubscriptionEnded($package->advertiser);
+                    }
+                });
         } catch (Exception $exception) {
             DB::rollBack();
             return false;

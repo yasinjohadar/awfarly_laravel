@@ -28,4 +28,6 @@ return [
     'transaction-failed' => 'Transaction failed.',
     'wrong-identifier' => 'Wrong identifier',
     'has-subscription' => 'You already have an active subscription',
+    'pending-request-exists' => 'You already have a pending subscription request.',
+    'request-sent' => 'Subscription request sent successfully. It will be reviewed by admin.',
 ];

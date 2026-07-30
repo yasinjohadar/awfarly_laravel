@@ -1,7 +1,7 @@
 <div class="card">
     <div class="card-header">
         @if($contact_id)
-            <h5 class="card-title">{!! __('pages/requests/contact-us/inquiry.content.title', ['id' => $contact_id]) !!}</h5>
+            <h5 class="card-title mb-0">{{ __('pages/requests/contact-us/index.content.title') }}</h5>
         @else
             <h5 class="card-title">{{__('pages/requests/contact-us/index.content.title')}}</h5>
         @endif

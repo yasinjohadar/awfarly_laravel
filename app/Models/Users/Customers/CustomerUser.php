@@ -28,6 +28,8 @@ use App\Models\Requests\UsernameRequests;
 use App\Models\Users\Advertisers\Ratings\AdvertiserRatings;
 use App\Models\Reports\Report;
 use App\Models\Users\Customers\Categories\CustomerCategories;
+use App\Models\Users\Customers\Locations\CustomerPreferredCity;
+use App\Models\Users\Customers\Locations\CustomerPreferredGovernorate;
 use App\Models\Users\Shared\Blockings\BlockUser;
 use App\Models\Users\Shared\Followings\UserFollowings;
 use App\Models\Users\Shared\Social\SocialAccount;
@@ -496,6 +498,22 @@ class CustomerUser extends Authenticatable
     public function categories(): HasMany
     {
         return $this->hasMany(CustomerCategories::class, 'customer_id', 'id');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function preferredGovernorates(): HasMany
+    {
+        return $this->hasMany(CustomerPreferredGovernorate::class, 'customer_id', 'id');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function preferredCities(): HasMany
+    {
+        return $this->hasMany(CustomerPreferredCity::class, 'customer_id', 'id');
     }
 
     /**

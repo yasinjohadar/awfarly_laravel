@@ -11,6 +11,7 @@ use App\Http\Controllers\API\System\Countries\Governorates\GovernoratesControlle
 use App\Http\Controllers\API\System\Countries\CountriesController;
 use App\Http\Controllers\API\Shared\Followings\UsersFollowingsController;
 use App\Http\Controllers\API\System\GeoIP\GeoIPController;
+use App\Http\Controllers\API\System\Settings\SettingsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -79,6 +80,10 @@ Route::group([
     //get GeoIP
     Route::get('/geoip', [GeoIPController::class, 'getGeoIP'])
         ->name('geoip.get');
+
+    // Public site branding (logo, name)
+    Route::get('/settings', [SettingsController::class, 'getSettings'])
+        ->name('settings.get');
 });
 
 Route::group([

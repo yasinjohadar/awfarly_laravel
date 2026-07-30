@@ -130,7 +130,7 @@ class CategoriesController extends Controller
                 ->delete();
 
             //add categories foreach one
-            foreach ($data['categories'] as $category) {
+            foreach (($data['categories'] ?? []) as $category) {
                 Auth::guard('customer-api')->user()
                     ->categories()
                     ->updateOrCreate([

@@ -2,9 +2,11 @@
 
 namespace App\Http\Livewire\Advertisers;
 
+use App\Helpers\Advertisers\PackageQuotas;
 use App\Helpers\Filter;
 use App\Models\Countries\Country;
 use App\Models\Languages\Language;
+use App\Models\Subscriptions\Packages\Package;
 use App\Models\Users\Advertisers\AdvertiserUser;
 use App\Models\Users\Advertisers\BusinessTypes\AdvertiserBusinessType;
 use Hash;
@@ -47,10 +49,12 @@ class AdvertisersCreateComponent extends Component
     public ?string $allowed_posts_count = null;
     public ?string $allowed_offers_count = null;
     public ?string $maximum_monthly_offers = null;
+    public ?string $package_id = null;
     public string $status = 'active';
     public int $is_elite = 0;
     public int $is_accepted_send_notification = 0;
     private string $country_column = '';
+    public $packages = [];
 
     protected $listeners = [
         'setBusinessType' => 'setBusinessType',
@@ -69,37 +73,41 @@ class AdvertisersCreateComponent extends Component
 
     /**
      * set validation rules
-     * @var array|string[][]
+     * @return array
      */
-    protected array $rules = [
-        'name' => ['required', 'unique:admins_users,name', 'unique:advertisers_users,name', 'unique:customers_users,name'],
-        'business_type' => ['required', 'exists:advertisers_business_types,id'],
-        'email' => ['nullable', 'email:rfc,dns', 'unique:admins_users,email', 'unique:advertisers_users,email', 'unique:customers_users,email'],
-        'mobile' => ['required', 'unique:admins_users,mobile', 'unique:advertisers_users,mobile', 'unique:customers_users,mobile', 'regex:^\+\d+$^'],
-        'username' => ['nullable', 'unique:admins_users,username', 'unique:advertisers_users,username', 'unique:customers_users,username'],
-        'country_code' => ['required', 'exists:countries,code'],
-        'governorate_id' => ['required', 'exists:governorates,id'],
-        'city_id' => [
-            'required',
-            Rule::exists('cities', 'id')->where(function ($query) {
-                return $query->where('governorate_id', $this->governorate_id);
-            }),
-        ],
-        'language_code' => ['required', 'exists:languages,code'],
-        'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif'],
-        'password' => ['required'],
-        'contact_number' => ['nullable', 'regex:^\+\d+$^'],
-        'whatsapp_number' => ['nullable', 'regex:^\+\d+$^'],
-        'facebook_url' => ['nullable', 'url'],
-        'twitter_url' => ['nullable', 'url'],
-        'website_url' => ['nullable', 'url'],
-        'allowed_posts_count' => ['nullable', 'numeric', 'min:0'],
-        'allowed_offers_count' => ['nullable', 'numeric', 'min:0'],
-        'maximum_monthly_offers' => ['nullable', 'numeric', 'min:0'],
-        'status' => ['required', 'in:active,inactive,banned'],
-        'is_elite' => ['required', 'boolean'],
-        'is_accepted_send_notification' => ['required', 'boolean'],
-    ];
+    protected function rules(): array
+    {
+        return [
+            'name' => ['required', 'unique:admins_users,name', 'unique:advertisers_users,name', 'unique:customers_users,name'],
+            'business_type' => ['required', 'exists:advertisers_business_types,id'],
+            'email' => ['nullable', 'email:rfc,dns', 'unique:admins_users,email', 'unique:advertisers_users,email', 'unique:customers_users,email'],
+            'mobile' => ['required', 'unique:admins_users,mobile', 'unique:advertisers_users,mobile', 'unique:customers_users,mobile', 'regex:^\+\d+$^'],
+            'username' => ['nullable', 'unique:admins_users,username', 'unique:advertisers_users,username', 'unique:customers_users,username'],
+            'country_code' => ['required', 'exists:countries,code'],
+            'governorate_id' => ['required', 'exists:governorates,id'],
+            'city_id' => [
+                'required',
+                Rule::exists('cities', 'id')->where(function ($query) {
+                    return $query->where('governorate_id', $this->governorate_id);
+                }),
+            ],
+            'language_code' => ['required', 'exists:languages,code'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif'],
+            'password' => ['required'],
+            'contact_number' => ['nullable', 'regex:^\+\d+$^'],
+            'whatsapp_number' => ['nullable', 'regex:^\+\d+$^'],
+            'facebook_url' => ['nullable', 'url'],
+            'twitter_url' => ['nullable', 'url'],
+            'website_url' => ['nullable', 'url'],
+            'allowed_posts_count' => ['nullable', 'numeric', 'min:0'],
+            'allowed_offers_count' => ['nullable', 'numeric', 'min:0'],
+            'maximum_monthly_offers' => ['nullable', 'numeric', 'min:0'],
+            'package_id' => ['nullable', 'exists:packages,id'],
+            'status' => ['required', 'in:active,inactive,banned'],
+            'is_elite' => ['required', 'boolean'],
+            'is_accepted_send_notification' => ['required', 'boolean'],
+        ];
+    }
 
     /**
      * set rendering view with data
@@ -142,11 +150,21 @@ class AdvertisersCreateComponent extends Component
             return [$cities->id => $cities[$this->country_column]];
         });
 
+        $packages = Package::where('is_active', true)
+            ->get()
+            ->map(function ($package) {
+                return [
+                    'id' => $package->id,
+                    'name' => $package->{$this->country_column} . " (#{$package->id})",
+                ];
+            });
+
         //render data.
         return view('livewire.pages.advertisers.create', [
             'languages' => $languages,
             'countries' => $countries,
             'business_types' => $business_types,
+            'packages' => $packages,
         ]);
     }
 
@@ -241,7 +259,11 @@ class AdvertisersCreateComponent extends Component
             ];
 
             //create user
-            AdvertiserUser::create($data);
+            $advertiser = AdvertiserUser::create($data);
+
+            if ($this->package_id) {
+                PackageQuotas::assignPackage($advertiser, Package::findOrFail($this->package_id));
+            }
 
             //reset validation messages
             $this->resetValidation();
@@ -272,6 +294,7 @@ class AdvertisersCreateComponent extends Component
                 'allowed_posts_count',
                 'allowed_offers_count',
                 'maximum_monthly_offers',
+                'package_id',
                 'status',
                 'is_elite',
                 'is_accepted_send_notification',

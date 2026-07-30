@@ -10,11 +10,13 @@ use App\Http\Controllers\API\Advertisers\Users\UsersReportsController;
 use App\Http\Controllers\API\Advertisers\Customers\CustomersController;
 use App\Http\Controllers\API\Advertisers\Users\UsersBlockingsController;
 use App\Http\Controllers\API\Advertisers\Categories\CategoriesController;
+use App\Http\Controllers\API\Advertisers\Locations\LocationsController;
 use App\Http\Controllers\API\Advertisers\Advertisers\AdvertisersController;
 use App\Http\Controllers\API\Advertisers\Notifications\NotificationsController;
 use App\Http\Controllers\API\Advertisers\Advertisements\AdvertisementsController;
 use App\Http\Controllers\API\Advertisers\Community\Posts\CommunityPostsController;
 use App\Http\Controllers\API\Advertisers\Subscriptions\Packages\PackagesController;
+use App\Http\Controllers\API\Advertisers\Subscriptions\Packages\PackageSubscriptionRequestController;
 use App\Http\Controllers\API\Advertisers\Community\Offers\CommunityOffersController;
 use App\Http\Controllers\API\Advertisers\Community\Posts\Saved\SavedPostsController;
 use App\Http\Controllers\API\Advertisers\Community\Comments\CommunityCommentsController;
@@ -111,6 +113,18 @@ Route::post('/categories/interested', [CategoriesController::class, 'addAdvertis
 
 Route::delete('/categories/interested', [CategoriesController::class, 'deleteAdvertiserCategories'])
     ->name('categories.delete');
+
+/**
+ * Location interests
+ */
+Route::get('/locations/interested', [LocationsController::class, 'getUserLocations'])
+    ->name('locations.interested');
+
+Route::post('/locations/interested', [LocationsController::class, 'addUserLocations'])
+    ->name('locations.add');
+
+Route::delete('/locations/interested', [LocationsController::class, 'deleteUserLocations'])
+    ->name('locations.delete');
 
 /**
  * get Advertisers routes
@@ -473,6 +487,8 @@ Route::group([
     ], function () {
         Route::get('/', [PackagesController::class, 'getPackages']);
         Route::get('/user', [PackagesController::class, 'getUserPackage']);
+        Route::get('/payment-info', [PackageSubscriptionRequestController::class, 'paymentInfo']);
+        Route::post('/requests', [PackageSubscriptionRequestController::class, 'store']);
         Route::post('/validate', [SubscriptionsPurchasedController::class, 'addPurchase']);
         Route::get('/{id}', [PackagesController::class, 'getPackageById']);
     });

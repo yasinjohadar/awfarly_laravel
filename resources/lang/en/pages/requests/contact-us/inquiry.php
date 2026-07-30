@@ -22,6 +22,22 @@ return [
             'In-app advertising' => 'In-app advertising',
             'Report a problem' => 'Report a problem',
         ],
+        'actions' => [
+            'mark_read' => 'Mark as read',
+            'mark_unread' => 'Mark as unread',
+            'delete' => 'Delete request',
+            'call' => 'Call',
+            'whatsapp' => 'WhatsApp',
+            'email' => 'Send email',
+        ],
+        'status_labels' => [
+            'read' => 'Read',
+            'unread' => 'Unread',
+        ],
+        'sections' => [
+            'contact_info' => 'Contact details',
+            'message' => 'Message',
+        ],
     ],
     'modal' => [
         'confirm' => [
@@ -39,8 +55,9 @@ return [
         'delete' => [
             'title' => 'Delete Contact Us Requests',
             'content' => 'Are you sure you want to delete these requests?',
+            'content_single' => 'Are you sure you want to delete this request?',
             'submit' => 'Delete',
             'cancel' => 'Cancel',
         ],
-    ]
+    ],
 ];

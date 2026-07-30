@@ -61,7 +61,7 @@ class CommunityPostsController extends Controller
             });
         }
 
-        $posts = Geography::applyUserLocationFilter($posts, $data);
+        $posts = Geography::applyPostLocationFilter($posts, $data);
 
 
         //Filter city
@@ -136,7 +136,7 @@ class CommunityPostsController extends Controller
             });
         }
 
-        $posts = Geography::applyUserLocationFilter($posts, $data);
+        $posts = Geography::applyPostLocationFilter($posts, $data);
 
 
         //Filter city

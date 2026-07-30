@@ -46,8 +46,10 @@
                 <div class="col-lg-4 col-md-12 m-md-auto align-self-center">
                     <div class="block">
                         <a href="{{url('/')}}">
-                            <img src="{{asset('assets/images/frontend/logo_light.png')}}" style="height: 3.125rem;" alt="footer-logo"
-                                 class="img-fluid" width="160">
+                            <img src="{{Settings::Logo('assets/images/frontend/logo_light.png')}}"
+                                 style="width: 3.125rem; height: 3.125rem; object-fit: cover;"
+                                 alt="{{Settings::Get('site.name', 'footer-logo')}}"
+                                 class="img-fluid rounded-circle">
                         </a>
                         <ul class="social-icon list-inline">
 

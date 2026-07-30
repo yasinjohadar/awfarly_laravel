@@ -42,6 +42,14 @@ class SettingsTableSeeder extends Seeder
                 'description' => 'This is for Site keywords.',
             ],
             [
+                'name' => 'Site logo',
+                'key' => 'site.logo',
+                'type' => 'general',
+                'value' => 'assets/images/logo_light.png',
+                'value_type' => 'string',
+                'description' => 'This is for Site logo shown in admin and frontend.',
+            ],
+            [
                 'name' => 'Facebook URL',
                 'key' => 'facebook.url',
                 'type' => 'social',
@@ -210,12 +218,28 @@ class SettingsTableSeeder extends Seeder
                 'description' => 'Maximum number of offers an advertiser can create per calendar month.',
             ],
             [
+                'name' => 'Offers Auto Delete After Days',
+                'key' => 'offers.auto_delete_after_days',
+                'value' => '0',
+                'value_type' => 'integer',
+                'type' => 'offers',
+                'description' => 'Number of days after publish to permanently delete offers. 0 disables auto-delete.',
+            ],
+            [
                 'name' => 'Posts Pagination Limit',
                 'key' => 'posts.pagination.limit',
                 'value' => '12',
                 'value_type' => 'integer',
                 'type' => 'posts',
                 'description' => 'Posts Pagination Limit is how many posts sent per page while showing posts.',
+            ],
+            [
+                'name' => 'Posts Auto Delete After Days',
+                'key' => 'posts.auto_delete_after_days',
+                'value' => '0',
+                'value_type' => 'integer',
+                'type' => 'posts',
+                'description' => 'Number of days after publish to permanently delete posts. 0 disables auto-delete.',
             ],
             [
                 'name' => 'Reported Posts Pagination Limit',

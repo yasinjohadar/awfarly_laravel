@@ -59,6 +59,7 @@ return [
             'title' => 'المدفوعات',
             'transactions' => 'عمليات الدفع',
         ],
+        'requests' => 'طلبات الاشتراك',
         'income' => 'الربح',
     ],
     'requests' => [
@@ -101,6 +102,7 @@ return [
             'maintenance' => 'الصيانه',
             'apps' => 'التطبيقات',
             'social' => 'وسائل التواصل الإجتماعي',
+            'payment' => 'الدفع',
         ],
         'backup' => [
             'title' => 'النسخ الإحتياطي',

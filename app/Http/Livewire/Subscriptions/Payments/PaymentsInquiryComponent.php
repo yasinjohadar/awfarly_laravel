@@ -185,11 +185,71 @@ class PaymentsInquiryComponent extends LivewireDatatable
     }
 
     /**
-     * show delete modal
+     * show delete modal for selected rows, or a single payment by id
+     * @param int|null $id
      */
-    public function showDeleteModal()
+    public function showDeleteModal($id = null)
     {
+        if ($id !== null) {
+            $this->selected = [(string) $id];
+        }
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $this->setDeleteModalTextsForSelection();
         $this->showDeleteModal = true;
+    }
+
+    /**
+     * Set delete modal title/content based on selection
+     */
+    protected function setDeleteModalTextsForSelection(): void
+    {
+        $base = 'pages/subscriptions/payments/inquiry.modal.delete';
+
+        if (count($this->selected) === 1) {
+            $payment = AdvertiserPackages::withTrashed()
+                ->with(['package', 'advertiser'])
+                ->find($this->selected[0]);
+
+            $packageName = '-';
+            $advertiserName = '-';
+            if ($payment) {
+                if ($payment->package) {
+                    $packageName = App::currentLocale() === 'ar'
+                        ? ($payment->package->name_ar ?: $payment->package->name_en)
+                        : ($payment->package->name_en ?: $payment->package->name_ar);
+                }
+                $advertiserName = $payment->advertiser->name ?? '-';
+            }
+
+            $this->deleteModalTexts = [
+                'title' => __("$base.title"),
+                'select-option' => __("$base.select-option"),
+                'soft-delete' => __("$base.soft-delete"),
+                'permanent-delete' => __("$base.permanent-delete"),
+                'content' => __("$base.content", [
+                    'name' => $packageName,
+                    'advertiser' => $advertiserName,
+                ]),
+                'cancel' => __("$base.cancel"),
+                'submit' => __("$base.submit"),
+            ];
+
+            return;
+        }
+
+        $this->deleteModalTexts = [
+            'title' => __("$base.title_multiple"),
+            'select-option' => __("$base.select-option"),
+            'soft-delete' => __("$base.soft-delete"),
+            'permanent-delete' => __("$base.permanent-delete"),
+            'content' => __("$base.content_multiple"),
+            'cancel' => __("$base.cancel"),
+            'submit' => __("$base.submit"),
+        ];
     }
 
     /**
@@ -410,7 +470,10 @@ class PaymentsInquiryComponent extends LivewireDatatable
             'select-option' => __('pages/subscriptions/payments/inquiry.modal.delete.select-option'),
             'soft-delete' => __('pages/subscriptions/payments/inquiry.modal.delete.soft-delete'),
             'permanent-delete' => __('pages/subscriptions/payments/inquiry.modal.delete.permanent-delete'),
-            'content' => __('pages/subscriptions/payments/inquiry.modal.delete.content'),
+            'content' => __('pages/subscriptions/payments/inquiry.modal.delete.content', [
+                'name' => '',
+                'advertiser' => '',
+            ]),
             'cancel' => __('pages/subscriptions/payments/inquiry.modal.delete.cancel'),
             'submit' => __('pages/subscriptions/payments/inquiry.modal.delete.submit'),
         ];

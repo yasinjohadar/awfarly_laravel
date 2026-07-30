@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\Models\Settings\Setting;
+use Illuminate\Support\Str;
 
 class Settings extends Helper
 {
@@ -98,5 +99,31 @@ class Settings extends Helper
         }
 
         return $value;
+    }
+
+    /**
+     * Absolute URL for the site logo (admin + frontend).
+     *
+     * @param string $fallback
+     * @return string
+     */
+    public static function Logo($fallback = 'assets/images/logo_light.png')
+    {
+        $path = self::Get('site.logo');
+
+        if (!$path) {
+            return '/' . ltrim($fallback, '/');
+        }
+
+        if (is_string($path) && Str::startsWith($path, ['http://', 'https://'])) {
+            return $path;
+        }
+
+        // Uploaded logos live on the local disk (storage/app) and are served via route
+        if (is_string($path) && Str::startsWith($path, 'uploads/')) {
+            return '/image/' . $path;
+        }
+
+        return '/' . ltrim($path, '/');
     }
 }

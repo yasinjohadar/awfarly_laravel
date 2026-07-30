@@ -35,6 +35,8 @@ return [
         'delete' => [
             'title' => 'Delete Business Types',
             'content' => 'Are you sure you want to delete these business types?',
+            'content_single' => 'Are you sure you want to delete this business type?',
+            'in_use' => 'This business type cannot be deleted because advertisers are using it.',
             'submit' => 'Delete',
             'cancel' => 'Cancel',
         ],

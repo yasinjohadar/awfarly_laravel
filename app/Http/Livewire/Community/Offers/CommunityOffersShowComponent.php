@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire\Community\Offers;
 
+use App\Helpers\Admins\AdminLogs;
 use App\Helpers\Files;
 use App\Models\Categories\Category;
 use App\Models\Offers\Offer;
@@ -30,6 +31,7 @@ class CommunityOffersShowComponent extends Component
     public array $order = [];
     public $media;
     public bool $showDeleteModal = false;
+    public bool $showOfferDeleteModal = false;
     public ?int $image_id = null;
     public array $offerData = [];
     public ?int $category_id = null;
@@ -63,7 +65,7 @@ class CommunityOffersShowComponent extends Component
 
         $this->category_id = $offer['category_id'];
 
-        $offer['category_name'] = $offer->category->{$name_column} ?? null;
+        $offer['category_name'] = optional($offer->category)->{$name_column};
         $categories = Category::where('parent_category_id', null)
             ->get()
             ->map(function ($category) use ($name_column) {
@@ -342,6 +344,53 @@ class CommunityOffersShowComponent extends Component
     public function closeDeleteModal()
     {
         $this->showDeleteModal = false;
+    }
+
+    public function showOfferDeleteModal()
+    {
+        $this->showOfferDeleteModal = true;
+    }
+
+    public function closeOfferDeleteModal()
+    {
+        $this->showOfferDeleteModal = false;
+    }
+
+    public function deleteOffer()
+    {
+        if (!Auth::guard('admin')->user()->can('offers.delete')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        DB::beginTransaction();
+        try {
+            $offer = Offer::withTrashed()->findOrFail($this->offer_id);
+
+            AdminLogs::log('delete', 'offers', [
+                'offer' => $offer,
+            ], "Delete: offer #$this->offer_id");
+
+            $offer->delete();
+
+            $this->closeOfferDeleteModal();
+            $this->emitUp('recountCounters');
+            $this->emitUp('setOfferId', null);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+            return null;
+        }
+
+        DB::commit();
+        $this->alert('success', __('toastr.delete'), [
+            'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+        ]);
     }
 
     public function setOrderData()

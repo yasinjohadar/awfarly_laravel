@@ -16,13 +16,13 @@
     <meta property="og:type" content="@yield('meta-type', 'website')"/>
     <meta property="og:url" content="@yield('meta-url', url('/'))"/>
     <meta property="og:image" itemprop="image"
-          content="@yield('meta-image', asset('assets/images/frontend/logo.png'))"/>
+          content="@yield('meta-image', Settings::Logo('assets/images/frontend/logo.png'))"/>
     <meta property="og:locale" content="{{ str_replace('', '-', app()->getLocale()) }}"/>
     <meta property="og:site_name" content="{{Settings::Get('site.name')}}"/>
     <meta property="og:description" content="@yield('meta-description', Settings::Get('site.description'))"/>
     <meta name="twitter:card" content="@yield('meta-type', 'website')"/>
     <meta name="twitter:title" content="@yield('meta-title', Settings::Get('site.name'))"/>
-    <meta name="twitter:image" content="@yield('meta-image', asset('assets/images/frontend/logo.png'))"/>
+    <meta name="twitter:image" content="@yield('meta-image', Settings::Logo('assets/images/frontend/logo.png'))"/>
     <meta name="twitter:description" content="@yield('meta-description', Settings::Get('site.description'))"/>
 
     <!-- Start SmartBanner configuration -->

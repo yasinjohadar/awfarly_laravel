@@ -6,6 +6,8 @@ use App\Helpers\Admins\AdminLogs;
 use App\Helpers\FCM\FcmHelper;
 use App\Helpers\Filter;
 use App\Helpers\Notifications;
+use App\Models\Countries\Cities\City;
+use App\Models\Countries\Governorates\Governorate;
 use App\Models\Posts\Post;
 use App\Models\Users\Advertisers\AdvertiserUser;
 use App\Models\Users\Advertisers\Categories\AdvertiserCategories;
@@ -16,6 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Mediconesystems\LivewireDatatables\Column;
 use Mediconesystems\LivewireDatatables\DateColumn;
@@ -50,6 +53,9 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
     public bool $has_delete = true;
     public bool $has_restore = true;
     public ?int $restore = null;
+    private string $country_column = 'name_ar';
+    public $governorates = [];
+    public $cities = [];
 
     /**
      * @var array
@@ -103,6 +109,14 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
                 ->searchable(),*/
             Column::name('advertiser.name')
                 ->label(__('pages/community/posts/index.datatable.user_name'))
+                ->filterable()
+                ->searchable(),
+            Column::name("governorate.$this->country_column")
+                ->label(__('pages/community/posts/index.datatable.governorate'))
+                ->filterable()
+                ->searchable(),
+            Column::name("city.$this->country_column")
+                ->label(__('pages/community/posts/index.datatable.city'))
                 ->filterable()
                 ->searchable(),
             Column::callback('content', function ($content) {
@@ -291,14 +305,47 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
      */
     public function showEditModal($id)
     {
-        //get user with data
-        $this->post = Post::withTrashed()
+        $post = Post::withTrashed()
+            ->with('advertiser')
             ->where('id', $id)
-            ->first()
-            ->toArray();
+            ->firstOrFail();
 
-        //show the modal
+        $this->post = $post->toArray();
+
+        $countryCode = optional($post->advertiser)->country_code;
+
+        $this->governorates = Governorate::select("$this->country_column", 'id')
+            ->when($countryCode, fn ($q) => $q->where('country_code', $countryCode))
+            ->orderBy($this->country_column)
+            ->get()
+            ->mapWithKeys(fn ($g) => [$g->id => $g[$this->country_column]]);
+
+        $this->loadCitiesForPost($this->post['governorate_id'] ?? null);
+
         $this->showEditModal = true;
+    }
+
+    /**
+     * Reload cities when governorate changes in edit modal.
+     */
+    public function updatedPostGovernorateId($value)
+    {
+        $this->post['city_id'] = null;
+        $this->loadCitiesForPost($value);
+    }
+
+    protected function loadCitiesForPost($governorateId): void
+    {
+        if (empty($governorateId)) {
+            $this->cities = [];
+            return;
+        }
+
+        $this->cities = City::select("$this->country_column", 'id')
+            ->where('governorate_id', $governorateId)
+            ->orderBy($this->country_column)
+            ->get()
+            ->mapWithKeys(fn ($c) => [$c->id => $c[$this->country_column]]);
     }
 
     /**
@@ -311,6 +358,8 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
 
         //empty user data
         $this->post = [];
+        $this->governorates = [];
+        $this->cities = [];
 
         //reset validation messages
         $this->resetValidation();
@@ -336,6 +385,12 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
             'post.likes_count' => ['nullable', 'numeric', 'min:0'],
             'post.comments_count' => ['nullable', 'numeric', 'min:0'],
             'post.status' => ['required', 'in:pending,approved'],
+            'post.governorate_id' => ['required', 'exists:governorates,id'],
+            'post.city_id' => [
+                'required',
+                'exists:cities,id',
+                Rule::exists('cities', 'id')->where('governorate_id', $this->post['governorate_id'] ?? 0),
+            ],
         ]);
 
         //set data
@@ -344,6 +399,8 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
             'likes_count' => Filter::RemoveHtml($this->post['likes_count']),
             'comments_count' => Filter::RemoveHtml($this->post['comments_count']),
             'status' => Filter::RemoveHtml($this->post['status']),
+            'governorate_id' => $this->post['governorate_id'],
+            'city_id' => $this->post['city_id'],
         ];
 
         DB::beginTransaction();

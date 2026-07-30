@@ -12,8 +12,8 @@
             {{ $deleteModalTexts['cancel'] }}
         </x-secondary-button>
 
-        <x-primary-button wire:loading.attr="disabled" wire:click="delete()">
+        <x-danger-button wire:loading.attr="disabled" wire:click="delete()">
             {{ $deleteModalTexts['submit'] }}
-        </x-primary-button>
+        </x-danger-button>
     </x-slot>
 </x-confirmation-modal>

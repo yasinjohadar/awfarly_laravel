@@ -25,7 +25,8 @@ return [
             'city' => 'المدينة',
             'language' => 'اللغة',
             'rate' => 'التقييم',
-            'package' => 'خططة',
+            'package' => 'الباقة',
+            'no_package' => 'بدون باقة',
             'contact_number' => 'رقم التواصل',
             'whatsapp_number' => 'رقم الواتساب',
             'facebook_url' => 'رابط الفيسبوك',
@@ -34,8 +35,9 @@ return [
             'status' => 'الحالة',
             'status_type' => [
                 'active' => 'مفعل',
-                'banned' => 'مطرود',
-                'closed' => 'مغلق',
+                'banned' => 'مجمّد',
+                'closed' => 'موقوف',
+                'inactive' => 'موقوف',
             ],
             'is_elite' => 'مميز',
             'accepted_send_notification' => 'الإخطارات مقبولة',
@@ -46,6 +48,14 @@ return [
             'created_at' => 'أنشئ في',
             'updated_at' => 'عُدل في',
         ],
+    ],
+    'actions' => [
+        'edit' => 'تعديل',
+        'stop' => 'إيقاف',
+        'freeze' => 'تجميد',
+        'activate' => 'تفعيل',
+        'restore' => 'استعادة',
+        'delete' => 'حذف',
     ],
     'modal' => [
         'edit' => [
@@ -85,8 +95,8 @@ return [
                 'image' => 'الصورة',
                 'status_options' => [
                     'active' => 'مفعل',
-                    'inactive' => 'معطل',
-                    'banned' => 'مطرود',
+                    'inactive' => 'موقوف',
+                    'banned' => 'مجمّد',
                 ],
                 'placeholders' => [
                     'choose_file' => "الصورة الشخصية",
@@ -102,10 +112,35 @@ return [
             'submit' => 'حفظ التعديلات',
             'cancel' => 'إلغاء',
         ],
+        'assign_package' => [
+            'title' => 'تعيين باقة',
+            'advertiser' => 'المعلن',
+            'package' => 'الباقة',
+            'notes' => 'سيتم تطبيق حدود الباقة فوراً (المنشورات والعروض)، وإنهاء الباقة الحالية إن وُجدت. اترك الحقل فارغاً لإرجاع المعلن للحدود المجانية.',
+            'placeholders' => [
+                'package' => 'إختر باقة',
+            ],
+            'submit' => 'تطبيق الباقة',
+            'cancel' => 'إلغاء',
+        ],
         'delete' => [
-            'title' => 'حذف المعلنين',
-            'content' => 'هل انت متأكد انك تريد حذف هؤلاء المعلنين؟',
+            'title' => 'حذف المعلن',
+            'title_multiple' => 'حذف المعلنين',
+            'content' => 'هل أنت متأكد أنك تريد حذف المعلن: :name؟',
+            'content_multiple' => 'هل أنت متأكد أنك تريد حذف هؤلاء المعلنين؟',
             'submit' => 'حذف',
+            'cancel' => 'إلغاء',
+        ],
+        'stop' => [
+            'title' => 'إيقاف المعلن',
+            'content' => 'هل أنت متأكد أنك تريد إيقاف المعلن: :name؟ لن يتمكن من استخدام الحساب حتى التفعيل.',
+            'submit' => 'إيقاف',
+            'cancel' => 'إلغاء',
+        ],
+        'freeze' => [
+            'title' => 'تجميد المعلن',
+            'content' => 'هل أنت متأكد أنك تريد تجميد المعلن: :name؟ سيتم حظر الحساب.',
+            'submit' => 'تجميد',
             'cancel' => 'إلغاء',
         ],
     ]

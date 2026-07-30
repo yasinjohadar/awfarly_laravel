@@ -10,16 +10,17 @@ class OfferLimits
 {
     /**
      * Max concurrent active (non-expired) offers.
+     * allowed_offers_count is the assigned concurrent ceiling (from package/admin), not remaining credits.
      */
     public static function activeLimit(AdvertiserUser $advertiser): int
     {
-        if ($advertiser->allowed_offers_count !== null) {
-            return (int) $advertiser->allowed_offers_count;
-        }
-
         $package = self::currentPackage($advertiser);
         if ($package && $package->maximum_offers !== null) {
             return (int) $package->maximum_offers;
+        }
+
+        if ($advertiser->allowed_offers_count !== null) {
+            return (int) $advertiser->allowed_offers_count;
         }
 
         return (int) Settings::Get('max.advertiser.active.offers', 20);
@@ -30,13 +31,13 @@ class OfferLimits
      */
     public static function monthlyLimit(AdvertiserUser $advertiser): int
     {
-        if ($advertiser->maximum_monthly_offers !== null) {
-            return (int) $advertiser->maximum_monthly_offers;
-        }
-
         $package = self::currentPackage($advertiser);
         if ($package && $package->maximum_monthly_offers !== null) {
             return (int) $package->maximum_monthly_offers;
+        }
+
+        if ($advertiser->maximum_monthly_offers !== null) {
+            return (int) $advertiser->maximum_monthly_offers;
         }
 
         return (int) Settings::Get('max.advertiser.monthly.offers', 30);

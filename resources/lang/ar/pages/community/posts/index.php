@@ -21,6 +21,8 @@ return [
         'user_type' => 'نوع المستخدم',
         'user_id' => 'مستخدم #',
         'user_name' => 'إسم المعرف',
+        'governorate' => 'المحافظة',
+        'city' => 'المدينة',
         'content' => 'المضمون',
         'views_count' => 'مشاهدات',
         'likes_count' => 'إعجابات',
@@ -31,6 +33,10 @@ return [
         'edit' => [
             'title' => 'تعديل المنشورات',
             'inputs' => [
+                'governorate' => 'المحافظة',
+                'city' => 'المدينة',
+                'select_governorate' => 'اختر المحافظة',
+                'select_city' => 'اختر المدينة',
                 'views_count' => 'عدد المشاهدات',
                 'likes_count' => 'عدد الإعجابات',
                 'comments_count' => 'عدد التعليقات',

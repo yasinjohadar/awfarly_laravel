@@ -11,8 +11,10 @@
             <i class="icon-transmission"></i>
         </button>
         <a href="{{url('/')}}" class="d-inline-block">
-            <img src="{{asset('assets/images/logo_light.png')}}" class="d-none d-sm-block" style="height: 3.125rem;" alt="">
-            <img src="{{asset('assets/images/logo_icon_light.png')}}" class="d-sm-none" alt="">
+            <img src="{{Settings::Logo()}}" class="d-none d-sm-block rounded-circle"
+                 style="width: 2.35rem; height: 2.35rem; object-fit: cover;" alt="{{Settings::Get('site.name')}}">
+            <img src="{{Settings::Logo()}}" class="d-sm-none rounded-circle"
+                 style="width: 1.9rem; height: 1.9rem; object-fit: cover;" alt="{{Settings::Get('site.name')}}">
         </a>
     </div>
 

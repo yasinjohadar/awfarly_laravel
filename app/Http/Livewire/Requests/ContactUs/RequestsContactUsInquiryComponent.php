@@ -4,7 +4,6 @@ namespace App\Http\Livewire\Requests\ContactUs;
 
 use App\Helpers\Admins\AdminLogs;
 use App\Helpers\Filter;
-use App\Models\Posts\Comments\PostComments;
 use App\Models\Requests\ContactForms;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\App;
@@ -199,13 +198,24 @@ class RequestsContactUsInquiryComponent extends LivewireDatatable
     }
 
     /**
-     * show delete modal
+     * show delete modal for selected rows, or a single request by id
+     * @param int|null $id
      */
-    public function showDeleteModal()
+    public function showDeleteModal($id = null)
     {
+        if ($id !== null) {
+            $this->selected = [(string) $id];
+        }
+
+        if (empty($this->selected)) {
+            return;
+        }
+
         $this->deleteModalTexts = [
             'title' => __('pages/requests/contact-us/inquiry.modal.delete.title'),
-            'content' => __('pages/requests/contact-us/inquiry.modal.delete.content'),
+            'content' => count($this->selected) === 1
+                ? __('pages/requests/contact-us/inquiry.modal.delete.content_single')
+                : __('pages/requests/contact-us/inquiry.modal.delete.content'),
             'cancel' => __('pages/requests/contact-us/inquiry.modal.delete.cancel'),
             'submit' => __('pages/requests/contact-us/inquiry.modal.delete.submit'),
         ];
@@ -217,52 +227,47 @@ class RequestsContactUsInquiryComponent extends LivewireDatatable
      */
     public function deleteSelected()
     {
-        if (!Auth::guard('admin')->user()->can('comments.reported')) {
-            //send toastr alert with error
+        if (!Auth::guard('admin')->user()->can('requests.contact.us')) {
             $this->alert('error', __('permissions.insufficient_permissions'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
             ]);
             return null;
         }
+
+        if (empty($this->selected)) {
+            $this->showDeleteModal = false;
+            return null;
+        }
+
         DB::beginTransaction();
         try {
-            //get comments
-            $comments = PostComments::whereIn('id', $this->selected)
-                ->get();
+            $contacts = ContactForms::whereIn('id', $this->selected)->get();
 
-            //delete data
-            parent::delete($this->selected);
+            ContactForms::whereIn('id', $this->selected)->delete();
 
-            //set selected data to null
             $this->selected = [];
 
-            //send toastr alert with success
             $this->alert('success', __('toastr.delete'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
             ]);
 
-            //add log
-            AdminLogs::log('delete', 'comments', [
-                'comments' => $comments
-            ], "Delete: comments");
+            AdminLogs::log('delete', 'contact us', [
+                'contacts' => $contacts,
+            ], 'Delete: contact us requests');
 
-            //close modal
             $this->showDeleteModal = false;
 
             $this->emitUp('refreshData');
         } catch (Throwable $e) {
-            //rollback
             DB::rollBack();
 
-            //send toastr alert with error
             $this->alert('error', __('toastr.error'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
-                 'text' => $e->getMessage(),
+                'text' => $e->getMessage(),
             ]);
 
             return null;
         }
-        //commit
         DB::commit();
     }
 }

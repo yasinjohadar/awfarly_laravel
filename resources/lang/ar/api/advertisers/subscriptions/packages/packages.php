@@ -28,4 +28,6 @@ return [
     'transaction-failed' => 'فشل الاجراء.',
     'wrong-identifier' => 'معرف خاطئ',
     'has-subscription' => 'انت مشترك بالفعل في خطة!',
+    'pending-request-exists' => 'لديك طلب اشتراك قيد المراجعة بالفعل.',
+    'request-sent' => 'تم إرسال طلب الاشتراك بنجاح، سيتم مراجعته من الإدارة.',
 ];

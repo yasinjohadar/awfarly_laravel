@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Advertisers\BusinessTypes;
 
 use App\Helpers\Admins\AdminLogs;
 use App\Helpers\Filter;
+use App\Models\Users\Advertisers\AdvertiserUser;
 use App\Models\Users\Advertisers\BusinessTypes\AdvertiserBusinessType;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -94,10 +95,27 @@ class BusinessTypesInquiryComponent extends LivewireDatatable
 
 
     /**
-     * show delete modal
+     * show delete modal for selected rows, or a single business type by id
+     * @param int|null $id
      */
-    public function showDeleteModal()
+    public function showDeleteModal($id = null)
     {
+        if ($id !== null) {
+            $this->selected = [(string) $id];
+        }
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $this->deleteModalTexts = [
+            'title' => __('pages/advertisers/business-types/index.modal.delete.title'),
+            'content' => count($this->selected) === 1
+                ? __('pages/advertisers/business-types/index.modal.delete.content_single')
+                : __('pages/advertisers/business-types/index.modal.delete.content'),
+            'cancel' => __('pages/advertisers/business-types/index.modal.delete.cancel'),
+            'submit' => __('pages/advertisers/business-types/index.modal.delete.submit'),
+        ];
         $this->showDeleteModal = true;
     }
 
@@ -107,49 +125,53 @@ class BusinessTypesInquiryComponent extends LivewireDatatable
     public function deleteSelected()
     {
         if (!Auth::guard('admin')->user()->can('business.types.delete')) {
-            //send toastr alert with error
             $this->alert('error', __('permissions.insufficient_permissions'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
             ]);
             return null;
         }
+
+        if (empty($this->selected)) {
+            $this->showDeleteModal = false;
+            return null;
+        }
+
         DB::beginTransaction();
         try {
-            //get categories
-            $business_type = AdvertiserBusinessType::whereIn('id', $this->selected)
-                ->get();
+            $inUse = AdvertiserUser::whereIn('business_type', $this->selected)->exists();
+            if ($inUse) {
+                DB::rollBack();
+                $this->alert('error', __('pages/advertisers/business-types/index.modal.delete.in_use'), [
+                    'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                ]);
+                $this->showDeleteModal = false;
+                return null;
+            }
 
-            //delete data
-            parent::delete($this->selected);
+            $business_types = AdvertiserBusinessType::whereIn('id', $this->selected)->get();
 
-            //set selected data to null
+            AdvertiserBusinessType::whereIn('id', $this->selected)->delete();
+
             $this->selected = [];
 
-            //send toastr alert with success
             $this->alert('success', __('toastr.delete'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
             ]);
 
-            //add log
             AdminLogs::log('delete', 'business_types', [
-                'business_type' => $business_type
-            ], "Delete: business_type");
+                'business_type' => $business_types,
+            ], 'Delete: business_type');
 
-            //close modal
             $this->showDeleteModal = false;
-
         } catch (Throwable $e) {
-            //rollback
             DB::rollBack();
 
-            //send toastr alert with error
             $this->alert('error', __('toastr.error'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
                 'text' => $e->getMessage(),
             ]);
             return null;
         }
-        //commit
         DB::commit();
     }
 

@@ -12,9 +12,11 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Laravel\Passport\Passport;
 use Laravel\Passport\PassportUserProvider;
+use Livewire\WithFileUploads;
 use Mediconesystems\LivewireDatatables\Column;
 use Mediconesystems\LivewireDatatables\Http\Livewire\LivewireDatatable;
 use Mediconesystems\LivewireDatatables\NumberColumn;
@@ -23,6 +25,7 @@ use Str;
 class SettingsInquiryComponent extends LivewireDatatable
 {
     use LivewireAlert;
+    use WithFileUploads;
 
     public $exportable = true;
     public $hideable = 'select';
@@ -33,6 +36,7 @@ class SettingsInquiryComponent extends LivewireDatatable
     public array $editModalTexts;
     public bool $has_delete = false;
     public ?string $type = null;
+    public $logo_upload = null;
 
     /**
      * CustomersInquiryComponent constructor.
@@ -67,7 +71,18 @@ class SettingsInquiryComponent extends LivewireDatatable
                             ->label(__('pages/system/settings/settings.content.datatable.key'))
                             ->filterable()
                             ->searchable(),*/
-            Column::callback(['value', 'value_type'], function ($value, $value_type) {
+            Column::callback(['value', 'value_type', 'key'], function ($value, $value_type, $key) {
+                if ($key === 'site.logo' && $value) {
+                    if (Str::startsWith($value, ['http://', 'https://'])) {
+                        $src = $value;
+                    } elseif (Str::startsWith($value, 'uploads/')) {
+                        $src = '/image/' . $value;
+                    } else {
+                        $src = '/' . ltrim($value, '/');
+                    }
+
+                    return '<img src="' . e($src) . '" alt="logo" class="rounded-circle" style="width:40px;height:40px;object-fit:cover;">';
+                }
                 if ($value_type === 'boolean') {
                     return $value ?
                         __('pages/system/settings/settings.content.datatable.active')
@@ -136,6 +151,7 @@ class SettingsInquiryComponent extends LivewireDatatable
 
         $name = $this->setting['name'];
         $this->setting['name'] = __("pages/settings/settings.names.$name");
+        $this->logo_upload = null;
         //show the modal
         $this->showEditModal = true;
     }
@@ -147,6 +163,7 @@ class SettingsInquiryComponent extends LivewireDatatable
 
         //empty setting data
         $this->setting = [];
+        $this->logo_upload = null;
 
         //reset validation messages
         $this->resetValidation();
@@ -166,34 +183,73 @@ class SettingsInquiryComponent extends LivewireDatatable
             return null;
         }
 
-        //validate data
-        $this->validate([
-            'setting.value' => ['nullable'],
-        ]);
-        //set data
-        $data = $this->setting;
-        $data['value'] = Filter::RemoveHtml($this->setting['value']);
+        //get setting
+        $setting = Setting::findOrFail($id);
+
+        if ($setting->key === 'site.logo' || $setting->key === 'payment.qr_image') {
+            $this->validate([
+                'logo_upload' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:4096'],
+            ]);
+        } elseif (in_array($setting->key, [
+            'posts.auto_delete_after_days',
+            'offers.auto_delete_after_days',
+        ], true)) {
+            $this->validate([
+                'setting.value' => ['required', 'integer', 'min:0'],
+            ]);
+        } else {
+            $this->validate([
+                'setting.value' => ['nullable'],
+            ]);
+        }
+
         DB::beginTransaction();
         try {
-            //get setting
-            $setting = Setting::findOrFail($id);
+            if ($setting->key === 'site.logo' || $setting->key === 'payment.qr_image') {
+                if ($this->logo_upload) {
+                    $extension = strtolower($this->logo_upload->getClientOriginalExtension() ?: 'png');
+                    if (!in_array($extension, ['jpg', 'jpeg', 'png', 'gif'], true)) {
+                        $extension = 'png';
+                    }
+                    $filename = Str::random(40) . '.' . $extension;
+                    $path = 'uploads/settings/' . $filename;
+                    Storage::disk('local')->put($path, file_get_contents($this->logo_upload->getRealPath()));
+                    $dataValue = $path;
+
+                    $old = $setting->value;
+                    if ($old && Str::startsWith($old, 'uploads/') && Storage::disk('local')->exists($old)) {
+                        Storage::disk('local')->delete($old);
+                    }
+                    // cleanup mistaken public-disk uploads from earlier version
+                    if ($old && Str::startsWith($old, 'storage/uploads/settings/')) {
+                        $publicRelative = substr($old, strlen('storage/'));
+                        if (Storage::disk('public')->exists($publicRelative)) {
+                            Storage::disk('public')->delete($publicRelative);
+                        }
+                    }
+                } else {
+                    $dataValue = $setting->value;
+                }
+            } else {
+                $dataValue = Filter::RemoveHtml($this->setting['value'] ?? '');
+            }
 
             //add log
             AdminLogs::log('edit', 'customers', [
                 'old' => $setting,
-                'new' => $data,
+                'new' => ['value' => $dataValue],
             ], "Edit: customer #$id");
 
             //update setting
             $setting->update([
-                'value' => $data['value']
+                'value' => $dataValue
             ]);
 
             if(($this->type == 'posts' && $setting->key == 'user.allowed.posts') || ($this->type == 'offers' && in_array($setting->key, ['max.advertiser.active.offers', 'max.advertiser.monthly.offers'])) ){
                 Artisan::call('check:advertisers-allowed-posts');
             }
 
-            if ($setting->key === 'maintenance.mode' && $data['value']) {
+            if ($setting->key === 'maintenance.mode' && $dataValue) {
                 AdvertiserUser::all()
                     ->each(function ($user) {
                         $user->update(['fcm_token' => null, 'is_online' => false]);

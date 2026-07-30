@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Advertisers\Community\Posts;
 
 use App\Helpers\Files;
 use App\Helpers\Filter;
+use App\Helpers\Categories\CategoriesFilter;
 use App\Helpers\Geography\Geography;
 use App\Helpers\Notifications;
 use App\Helpers\Settings;
@@ -112,26 +113,23 @@ class CommunityPostsController extends Controller
             });
         }
 
-        $posts = Geography::applyUserLocationFilter($posts, $data);
+        $posts = Geography::applyPostLocationFilter($posts, $data);
 
-
-        //Filter city
-        if (isset($data['categoryId']) && $data['categoryId']) {
-            $posts = $posts->where(function ($q) use ($data) {
-                return $q->where('posts.category_id', $data['categoryId']);
-            });
-        } else if (isset($data['isGetAllCategories']) && $data['isGetAllCategories'] == false) {
-            $categories = Auth::guard('advertiser-api')->user()
-                ->categories()
-                ->pluck('category_id')
-                ->toArray();
-
-            if (sizeof($categories) > 0) {
-                $posts = $posts->where(function ($q) use ($data, $categories) {
-                    return $q->whereIn('posts.category_id', $categories);
-                });
-            }
+        if (!Geography::hasExplicitLocationFilter($data)) {
+            $posts = Geography::applyPreferredPostLocationFilter(
+                $posts,
+                Auth::guard('advertiser-api')->user()
+            );
         }
+
+
+        // Filter categories (expand parents to children; apply interests by default)
+        $posts = CategoriesFilter::applyFeedCategoryFilter(
+            $posts,
+            $data,
+            Auth::guard('advertiser-api')->user(),
+            'posts.category_id'
+        );
 
         $posts = $posts
             ->orderBy('posts.id', 'desc')
@@ -292,26 +290,23 @@ class CommunityPostsController extends Controller
             });
         }
 
-        $posts = Geography::applyUserLocationFilter($posts, $data);
+        $posts = Geography::applyPostLocationFilter($posts, $data);
 
-
-        //Filter city
-        if (isset($data['categoryId']) && $data['categoryId']) {
-            $posts = $posts->where(function ($q) use ($data) {
-                return $q->where('posts.category_id', $data['categoryId']);
-            });
-        } else if (isset($data['isGetAllCategories']) && $data['isGetAllCategories'] == false) {
-            $categories = Auth::guard('advertiser-api')->user()
-                ->categories()
-                ->pluck('category_id')
-                ->toArray();
-
-            if (sizeof($categories) > 0) {
-                $posts = $posts->where(function ($q) use ($data, $categories) {
-                    return $q->whereIn('posts.category_id', $categories);
-                });
-            }
+        if (!Geography::hasExplicitLocationFilter($data)) {
+            $posts = Geography::applyPreferredPostLocationFilter(
+                $posts,
+                Auth::guard('advertiser-api')->user()
+            );
         }
+
+
+        // Filter categories (expand parents to children; apply interests by default)
+        $posts = CategoriesFilter::applyFeedCategoryFilter(
+            $posts,
+            $data,
+            Auth::guard('advertiser-api')->user(),
+            'posts.category_id'
+        );
 
         //get the posts
         $posts = $posts
@@ -616,20 +611,35 @@ class CommunityPostsController extends Controller
         $data = $request->only([
             'categoryId',
             'content',
-            'media'
+            'media',
+            'governorateId',
+            'cityId',
         ]);
 
         //Validate course id
-        $this->apiValidate($data, [
+        $this->apiValidate($data, array_merge([
             'categoryId' => ['nullable', 'exists:categories,id'],
             'content' => ['nullable', 'string'],
             'media' => ['nullable', 'max:5'],
             'media.*.file' => ['nullable', 'mimes:jpg,jpeg,png,bmp,gif,mp4,mov,ogg,qt,avi,wmv,flv,ts,3gp', 'max:100000'],
             'media.*.startAt' => ['nullable', 'integer'],
             'media.*.endAt' => ['nullable', 'integer', 'gt:media.*.startAt'],
-        ]);
+        ], Geography::optionalLocationRules()));
 
-        $allowed_posts_count = Auth::guard('advertiser-api')->user()->allowed_posts_count;
+        $advertiser = Auth::guard('advertiser-api')->user();
+        $data['governorateId'] = $data['governorateId'] ?? $advertiser->governorate_id;
+        $data['cityId'] = $data['cityId'] ?? $advertiser->city_id;
+
+        if (empty($data['governorateId']) || empty($data['cityId'])) {
+            return $this->apiBadRequestResponse(__('api/geography/geography.location-required'));
+        }
+
+        $locationError = Geography::validateCityBelongsToGovernorate($data);
+        if ($locationError) {
+            return $this->apiBadRequestResponse($locationError);
+        }
+
+        $allowed_posts_count = $advertiser->allowed_posts_count;
 
         //check whether user is elite or not
         if (Auth::guard('advertiser-api')->user()->is_elite) {
@@ -670,6 +680,8 @@ class CommunityPostsController extends Controller
                 ->create([
                     'content' => Filter::RemoveHtml($data['content']),
                     'category_id' => $category_id ?? null,
+                    'governorate_id' => $data['governorateId'],
+                    'city_id' => $data['cityId'],
                     'status'    =>  'pending'
                 ]);
 
@@ -865,10 +877,12 @@ class CommunityPostsController extends Controller
             'deleteMedia',
             'categoryId',
             'isDeleteAllOldMedia',
+            'governorateId',
+            'cityId',
         ]);
 
         //Validate course id
-        $this->apiValidate($data, [
+        $this->apiValidate($data, array_merge([
             'content' => ['nullable', 'string'],
             'media' => ['nullable', "max:$max_count"],
             'media.*.file' => ['nullable', 'mimes:jpg,jpeg,png,bmp,gif,mp4,mov,ogg,qt,avi,wmv,flv,ts,3gp', 'max:100000'],
@@ -878,7 +892,21 @@ class CommunityPostsController extends Controller
             'deleteMedia.*' => ['nullable', 'exists:media,id'],
             'categoryId' => ['nullable', 'exists:categories,id'],
             'isDeleteAllOldMedia' => ['nullable', 'boolean'],
-        ]);
+        ], Geography::optionalLocationRules()));
+
+        if (!empty($data['governorateId']) || !empty($data['cityId'])) {
+            $data['governorateId'] = $data['governorateId'] ?? $post->governorate_id;
+            $data['cityId'] = $data['cityId'] ?? $post->city_id;
+
+            if (empty($data['governorateId']) || empty($data['cityId'])) {
+                return $this->apiBadRequestResponse(__('api/geography/geography.location-required'));
+            }
+
+            $locationError = Geography::validateCityBelongsToGovernorate($data);
+            if ($locationError) {
+                return $this->apiBadRequestResponse($locationError);
+            }
+        }
 
         if (isset($data['categoryId']) && $data['categoryId']) {
             $category_id = $data['categoryId'];
@@ -973,11 +1001,18 @@ class CommunityPostsController extends Controller
             }
 
             //update the post
-            $post->update([
+            $updatePayload = [
                 'content' => $data['content'] ? Filter::RemoveHtml($data['content']) : $post->content,
                 'category_id' => $category_id,
                 'status' => 'pending',
-            ]);
+            ];
+
+            if (!empty($data['governorateId']) && !empty($data['cityId'])) {
+                $updatePayload['governorate_id'] = $data['governorateId'];
+                $updatePayload['city_id'] = $data['cityId'];
+            }
+
+            $post->update($updatePayload);
         } catch (Exception $e) {
             //roll back
             DB::rollBack();

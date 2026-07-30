@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Advertisers\Subscriptions\Payments;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\Advertisers\PackageQuotas;
 use App\Models\Subscriptions\Packages\Package;
 use App\Models\Subscriptions\Payments\Google\GooglePurchases;
 use Carbon\Carbon;
@@ -103,13 +104,7 @@ class SubscriptionsPurchasedController extends Controller
                                     'is_active' => true,
                                 ]);
 
-                            Auth::guard('advertiser-api')->user()
-                                ->update([
-                                    'is_elite' => true,
-                                    'allowed_posts_count' => $package->maximum_posts,
-                                    'allowed_offers_count' => $package->maximum_offers,
-                                    'maximum_monthly_offers' => $package->maximum_monthly_offers,
-                                ]);
+                            PackageQuotas::applyFromPackage(Auth::guard('advertiser-api')->user(), $package);
                             Auth::guard('advertiser-api')->user()->deposit($package->maximum_points);
 
                             $name = $package->{$name_column};
@@ -165,13 +160,7 @@ class SubscriptionsPurchasedController extends Controller
                             'is_active' => true,
                         ]);
 
-                    Auth::guard('advertiser-api')->user()
-                        ->update([
-                            'is_elite' => true,
-                            'allowed_posts_count' => $package->maximum_posts,
-                            'allowed_offers_count' => $package->maximum_offers,
-                            'maximum_monthly_offers' => $package->maximum_monthly_offers,
-                        ]);
+                    PackageQuotas::applyFromPackage(Auth::guard('advertiser-api')->user(), $package);
                     Auth::guard('advertiser-api')->user()->deposit($package->maximum_points);
 
                     /*Product::googlePlay()->id($data['productId'])->token($data['identifier'])->acknowledge();*/

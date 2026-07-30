@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Posts\Comments\PostComments;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use App\Models\Advertisements\Advertisement;
+use App\Models\Countries\Cities\City;
+use App\Models\Countries\Governorates\Governorate;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Users\Advertisers\AdvertiserUser;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -38,6 +40,8 @@ class Post extends Model implements HasMedia
         'user_id',
         'advertisement_id',
         'category_id',
+        'governorate_id',
+        'city_id',
         'content',
         'views_count',
         'likes_count',
@@ -69,6 +73,22 @@ class Post extends Model implements HasMedia
     public function advertiser(): BelongsTo
     {
         return $this->belongsTo(AdvertiserUser::class, 'user_id', 'id');
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function governorate(): BelongsTo
+    {
+        return $this->belongsTo(Governorate::class, 'governorate_id', 'id');
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class, 'city_id', 'id');
     }
 
     /**

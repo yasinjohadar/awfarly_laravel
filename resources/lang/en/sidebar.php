@@ -59,6 +59,7 @@ return [
             'title' => 'Payments',
             'transactions' => 'Transactions',
         ],
+        'requests' => 'Subscription Requests',
         'income' => 'Income',
     ],
     'requests' => [
@@ -101,6 +102,7 @@ return [
             'maintenance' => 'Maintenance',
             'apps' => 'Apps',
             'social' => 'Social',
+            'payment' => 'Payment',
         ],
         'backup' => [
             'title' => 'Backup',

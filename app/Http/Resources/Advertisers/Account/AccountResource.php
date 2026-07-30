@@ -127,7 +127,7 @@ class AccountResource extends JsonResource
             ],
             'interestedCategories' => CategoriesResource::collection($userCategories),
             'isAllowAddOffer' => $isAllowAddOffer,
-            'isAllowCreatePosts' => $maximum_posts > 0,
+            'isAllowCreatePosts' => ((int) ($this->allowed_posts_count ?? 0)) > 0,
             'chatStatus' => $this->chats_privacy,
             'profilePrivacy' => $this->profile_privacy,
             'isFollowAllowed' => (bool)$this->isFollowAllowed,

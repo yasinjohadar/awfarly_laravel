@@ -85,6 +85,9 @@
                         cache: true
                     }).val(country_code).change();
                     $dispatch('governorates', {country_code: (country_code !== 'none') ? country_code : null});
+                    if (governorate_id && governorate_id !== 'none') {
+                        $dispatch('cities', {governorate_id: governorate_id});
+                    }
                     axios.get('{{route('admin.country.governorates')}}', {
                         params: { country_code: country_code }
                     }).then(function (response) {
@@ -93,10 +96,14 @@
                             placeholder: '{{__('pages/customers/index.modal.edit.inputs.placeholders.governorate')}}',
                             data: response.data,
                         }).val(governorate_id).change();
+                        if (!governorate_id || governorate_id === 'none') {
+                            return null;
+                        }
                         return axios.get('{{route('admin.governorate.cities')}}', {
                             params: { governorate_id: governorate_id }
                         });
                     }).then(function (response) {
+                        if (!response) return;
                         $('#city_id').children('option').remove();
                         $('#city_id').select2({
                             placeholder: '{{__('pages/customers/index.modal.edit.inputs.placeholders.city')}}',
@@ -147,8 +154,12 @@
                         $('#governorate_id').select2().on('select2:select', (event) => {
                             governorate_id = $('#governorate_id').val();
                             window.livewire.emit('setGovernorate', governorate_id);
+                            $dispatch('cities', {governorate_id: governorate_id});
                             $dispatch('select-city', {governorate_id: governorate_id});
-                        })
+                        });
+                        if (governorate_id && governorate_id !== 'none') {
+                            $dispatch('cities', {governorate_id: governorate_id});
+                        }
                     })">
                         <label for="governorate_id">{{__('pages/customers/index.modal.edit.inputs.governorate')}}</label>
                         <select x-cloak x-model="governorate_id" name="governorate_id"

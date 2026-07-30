@@ -6,6 +6,7 @@ use App\Helpers\Advertisers\OfferLimits;
 use App\Helpers\FCM\FcmHelper;
 use App\Helpers\Files;
 use App\Helpers\Filter;
+use App\Helpers\Categories\CategoriesFilter;
 use App\Helpers\Geography\Geography;
 use App\Helpers\Notifications;
 use App\Helpers\Settings;
@@ -123,24 +124,21 @@ class CommunityOffersController extends Controller
 
         $offers = Geography::applyUserLocationFilter($offers, $data);
 
-
-        //Filter city
-        if (isset($data['categoryId']) && $data['categoryId']) {
-            $offers = $offers->where(function ($q) use ($data) {
-                return $q->where('offers.category_id', $data['categoryId']);
-            });
-        } else if (isset($data['isGetAllCategories']) && $data['isGetAllCategories'] == false) {
-            $categories = Auth::guard('advertiser-api')->user()
-                ->categories()
-                ->pluck('category_id')
-                ->toArray();
-
-            if (sizeof($categories) > 0) {
-                $offers = $offers->where(function ($q) use ($data, $categories) {
-                    return $q->whereIn('offers.category_id', $categories);
-                });
-            }
+        if (!Geography::hasExplicitLocationFilter($data)) {
+            $offers = Geography::applyPreferredUserLocationFilter(
+                $offers,
+                Auth::guard('advertiser-api')->user()
+            );
         }
+
+
+        // Filter categories (expand parents to children; apply interests by default)
+        $offers = CategoriesFilter::applyFeedCategoryFilter(
+            $offers,
+            $data,
+            Auth::guard('advertiser-api')->user(),
+            'offers.category_id'
+        );
 
         $offers = $offers->orderBy('advertisers_users.is_elite', 'desc')
             ->orderBy('offers.id', 'desc')
@@ -311,24 +309,21 @@ class CommunityOffersController extends Controller
 
         $offers = Geography::applyUserLocationFilter($offers, $data);
 
-
-        //Filter city
-        if (isset($data['categoryId']) && $data['categoryId']) {
-            $offers = $offers->where(function ($q) use ($data) {
-                return $q->where('offers.category_id', $data['categoryId']);
-            });
-        } else if (isset($data['isGetAllCategories']) && $data['isGetAllCategories'] == false) {
-            $categories = Auth::guard('advertiser-api')->user()
-                ->categories()
-                ->pluck('category_id')
-                ->toArray();
-
-            if (sizeof($categories) > 0) {
-                $offers = $offers->where(function ($q) use ($data, $categories) {
-                    return $q->whereIn('offers.category_id', $categories);
-                });
-            }
+        if (!Geography::hasExplicitLocationFilter($data)) {
+            $offers = Geography::applyPreferredUserLocationFilter(
+                $offers,
+                Auth::guard('advertiser-api')->user()
+            );
         }
+
+
+        // Filter categories (expand parents to children; apply interests by default)
+        $offers = CategoriesFilter::applyFeedCategoryFilter(
+            $offers,
+            $data,
+            Auth::guard('advertiser-api')->user(),
+            'offers.category_id'
+        );
 
         //get the offers
         $offers = $offers->orderBy('advertisers_users.is_elite', 'desc')
@@ -514,8 +509,6 @@ class CommunityOffersController extends Controller
             ]));
         }
 
-        $allowed_offers = $limits['activeLimit'];
-
         //get auto approve status in settings
         $auto_approve = Settings::Get('offers.default.auto.approve', false);
 
@@ -609,10 +602,6 @@ class CommunityOffersController extends Controller
                         ->toMediaCollection('offers');
                 }
             }
-            Auth::guard('advertiser-api')->user()
-                ->update([
-                    'allowed_offers_count' => $allowed_offers - 1,
-                ]);
 
             if ($auto_approve) {
                 $this->sendNotificationToIntersetUser($offer);

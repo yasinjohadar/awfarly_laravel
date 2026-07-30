@@ -21,6 +21,7 @@ class PaymentsShowComponent extends Component
 
     public int $payment_id;
     public bool $showEditModal = false;
+    public bool $showDeleteModal = false;
     public array $payment = [];
 
     /**
@@ -28,8 +29,8 @@ class PaymentsShowComponent extends Component
      */
     public function render()
     {
-        //get payment
         $paymentData = AdvertiserPackages::withTrashed()
+            ->with(['package', 'advertiser'])
             ->where('id', $this->payment_id)
             ->first();
 
@@ -37,6 +38,56 @@ class PaymentsShowComponent extends Component
             'paymentData' => $paymentData,
             'showEditModal' => $this->showEditModal,
         ]);
+    }
+
+    public function showDeleteModal(): void
+    {
+        $this->showDeleteModal = true;
+    }
+
+    public function closeDeleteModal(): void
+    {
+        $this->showDeleteModal = false;
+    }
+
+    public function deletePayment()
+    {
+        if (!Auth::guard('admin')->user()->can('payments.delete')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        DB::beginTransaction();
+        try {
+            $payment = AdvertiserPackages::withTrashed()->findOrFail($this->payment_id);
+            $payment->delete();
+
+            AdminLogs::log('delete', 'payments', [
+                'payments' => [$payment],
+            ], "Delete: payment #{$this->payment_id}");
+
+            $this->showDeleteModal = false;
+
+            $this->alert('success', __('toastr.delete'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+
+            $this->emitUp('setPaymentId', null);
+            $this->emitUp('recountCounters');
+        } catch (Throwable $e) {
+            DB::rollBack();
+
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+
+        DB::commit();
     }
 
     /**

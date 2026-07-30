@@ -13,6 +13,7 @@ use App\Helpers\Filter;
 use App\Helpers\Settings;
 use Livewire\WithFileUploads;
 use App\Helpers\Admins\AdminLogs;
+use App\Helpers\Advertisers\PackageQuotas;
 use App\Models\Countries\Country;
 use App\Models\Languages\Language;
 use Illuminate\Support\Collection;
@@ -43,6 +44,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     public $hideable = 'select';
     public $beforeTableSlot = 'livewire.datatables.selected';
     public $afterTableSlot = 'modals.users.advertisers.edit';
+    public string $afterTableSlot2 = 'modals.users.advertisers.assign-package';
     public $model = AdvertiserUser::class;
     public array $user;
     public Collection $languages;
@@ -53,8 +55,12 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     public Collection $packages;
     public bool $showDeleteModal = false;
     public bool $showEditModal = false;
+    public bool $showAssignPackageModal = false;
+    public bool $showStatusModal = false;
     public array $deleteModalTexts;
     public array $editModalTexts;
+    public array $assignPackageModalTexts;
+    public array $statusModalTexts = [];
     private string $country_column = '';
     public bool $has_delete = true;
     public ?string $country_code = null;
@@ -62,6 +68,12 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     public ?string $business_type = null;
     public ?string $package_id = null;
     public ?string $user_package_id = null;
+    public ?int $assign_advertiser_id = null;
+    public ?string $assign_advertiser_name = null;
+    public ?string $assign_package_id = null;
+    public ?int $status_advertiser_id = null;
+    public ?string $status_advertiser_name = null;
+    public ?string $status_target = null;
 
     protected $listeners = [
         'setBusinessType' => 'setBusinessType',
@@ -249,11 +261,20 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                     ->where('is_active', true)
                     ->where('is_ended', false)
                     ->where('ends_at', '>', now())
+                    ->with('package')
                     ->first();
-                return $package ? $package->package->name : '-';
+
+                if (!$package || !$package->package) {
+                    return '<span class="badge badge-secondary">' . e(__('pages/advertisers/index.content.datatable.no_package')) . '</span>';
+                }
+
+                $name = $package->package->{$this->country_column}
+                    ?: ($package->package->name_ar ?: $package->package->name_en);
+
+                return '<span class="badge badge-primary">' . e($name) . '</span>';
             })
                 ->label(__('pages/advertisers/index.content.datatable.package'))
-                ->hide(),
+                ->unsortable(),
             Column::name('contact_number')
                 ->label(__('pages/advertisers/index.content.datatable.contact_number'))
                 ->filterable()
@@ -303,14 +324,15 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                 ->searchable()
                 ->filterable(),
             Column::callback('status', function ($status) {
-
                 if ($status === 'active') {
-                    return '<div class="badge badge-success">' . __('pages/customers/index.content.datatable.status_type.active') . '</div>';
-                } else if ($status === 'banned') {
-                    return '<div class="badge badge-danger">' . __('pages/customers/index.content.datatable.status_type.banned') . '</div>';
-                } else {
-                    return '<div class="badge badge-info">' . __('pages/customers/index.content.datatable.status_type.closed') . '</div>';
+                    return '<div class="badge badge-success">' . __('pages/advertisers/index.content.datatable.status_type.active') . '</div>';
                 }
+
+                if ($status === 'banned') {
+                    return '<div class="badge badge-danger">' . __('pages/advertisers/index.content.datatable.status_type.banned') . '</div>';
+                }
+
+                return '<div class="badge badge-warning">' . __('pages/advertisers/index.content.datatable.status_type.inactive') . '</div>';
             })
                 ->label(__('pages/advertisers/index.content.datatable.status'))
                 ->filterable()
@@ -346,8 +368,13 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                 ->label(__('pages/advertisers/index.content.datatable.created_at'))
                 ->searchable()
                 ->hide(),
-            Column::callback(['id', 'name'], function ($id, $name) {
-                return view('admin.pages.advertisers.table-actions', ['id' => $id, 'name' => $name]);
+            Column::callback(['id', 'name', 'status', 'deleted_at'], function ($id, $name, $status, $deleted_at) {
+                return view('admin.pages.advertisers.table-actions', [
+                    'id' => $id,
+                    'name' => $name,
+                    'status' => $status,
+                    'deleted_at' => $deleted_at,
+                ]);
             })
                 ->label(__('datatable.actions'))
                 ->excludeFromExport()
@@ -410,69 +437,211 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     }
 
     /**
-     * show delete modal
+     * show delete modal for selected rows, or a single advertiser by id
+     * @param int|null $id
      */
-    public function showDeleteModal()
+    public function showDeleteModal($id = null)
     {
+        if ($id !== null) {
+            $this->selected = [(string) $id];
+        }
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $this->setDeleteModalTextsForSelection();
         $this->showDeleteModal = true;
     }
 
-    /**
-     * delete Selected data
-     */
-    public function customForceDelete($ids)
+    protected function setDeleteModalTextsForSelection(): void
     {
-        $this->model::whereIn('id', $ids)->forceDelete();
+        $base = 'pages/advertisers/index.modal.delete';
+
+        if (count($this->selected) === 1) {
+            $advertiser = AdvertiserUser::withTrashed()->find($this->selected[0]);
+            $name = $advertiser->name ?? '';
+
+            $this->deleteModalTexts = [
+                'title' => __("$base.title"),
+                'content' => __("$base.content", ['name' => $name]),
+                'cancel' => __("$base.cancel"),
+                'submit' => __("$base.submit"),
+            ];
+
+            return;
+        }
+
+        $this->deleteModalTexts = [
+            'title' => __("$base.title_multiple"),
+            'content' => __("$base.content_multiple"),
+            'cancel' => __("$base.cancel"),
+            'submit' => __("$base.submit"),
+        ];
     }
 
+    /**
+     * Soft-delete selected advertisers
+     */
     public function deleteSelected()
     {
         if (!Auth::guard('admin')->user()->can('advertisers.delete')) {
-            //send toastr alert with error
             $this->alert('error', __('permissions.insufficient_permissions'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
             ]);
             return null;
         }
+
+        if (empty($this->selected)) {
+            $this->showDeleteModal = false;
+            return null;
+        }
+
         DB::beginTransaction();
         try {
-            //get advertisers
-            $advertisers = AdvertiserUser::withTrashed()->whereIn('id', $this->selected)
-                ->get();
+            $advertisers = AdvertiserUser::withTrashed()->whereIn('id', $this->selected)->get();
 
-            //delete data
-            parent::delete($this->selected);
+            AdvertiserUser::whereIn('id', $this->selected)->delete();
 
-            // delete record
-            $this->customForceDelete($this->selected);
-
-            //set selected data to null
             $this->selected = [];
 
-            //send toastr alert with success
             $this->alert('success', __('toastr.delete'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
             ]);
 
-            //close modal
             $this->showDeleteModal = false;
 
-            //add log
             AdminLogs::log('delete', 'advertisers', [
                 'advertisers' => $advertisers
             ], "Delete: advertisers");
         } catch (Throwable $e) {
-            //rollback
             DB::rollBack();
-
-            //send toastr alert with error
             $this->alert('error', __('toastr.error'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
                 'text' => $e->getMessage(),
             ]);
             return null;
         }
-        //commit
+        DB::commit();
+    }
+
+    public function showStatusModal($id, string $status): void
+    {
+        if (!in_array($status, ['inactive', 'banned'], true)) {
+            return;
+        }
+
+        $advertiser = AdvertiserUser::withTrashed()->findOrFail($id);
+        $this->status_advertiser_id = $advertiser->id;
+        $this->status_advertiser_name = $advertiser->name;
+        $this->status_target = $status;
+
+        $key = $status === 'banned' ? 'freeze' : 'stop';
+        $this->statusModalTexts = [
+            'title' => __("pages/advertisers/index.modal.{$key}.title"),
+            'content' => __("pages/advertisers/index.modal.{$key}.content", ['name' => $advertiser->name]),
+            'cancel' => __("pages/advertisers/index.modal.{$key}.cancel"),
+            'submit' => __("pages/advertisers/index.modal.{$key}.submit"),
+        ];
+
+        $this->showStatusModal = true;
+    }
+
+    public function closeStatusModal(): void
+    {
+        $this->showStatusModal = false;
+        $this->status_advertiser_id = null;
+        $this->status_advertiser_name = null;
+        $this->status_target = null;
+        $this->statusModalTexts = [];
+    }
+
+    public function confirmStatusChange()
+    {
+        if (!$this->status_advertiser_id || !$this->status_target) {
+            $this->closeStatusModal();
+            return null;
+        }
+
+        return $this->changeStatus($this->status_advertiser_id, $this->status_target, true);
+    }
+
+    public function changeStatus($id, string $status, bool $fromModal = false)
+    {
+        if (!Auth::guard('admin')->user()->can('advertisers.edit')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        if (!in_array($status, ['active', 'inactive', 'banned'], true)) {
+            return null;
+        }
+
+        DB::beginTransaction();
+        try {
+            $advertiser = AdvertiserUser::withTrashed()->findOrFail($id);
+            $old = $advertiser->status;
+            $advertiser->update(['status' => $status]);
+
+            AdminLogs::log('edit', 'advertisers', [
+                'advertiser_id' => $advertiser->id,
+                'old_status' => $old,
+                'new_status' => $status,
+            ], "Change advertiser #{$advertiser->id} status to {$status}");
+
+            if ($fromModal) {
+                $this->closeStatusModal();
+            }
+
+            $this->alert('success', __('toastr.success'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+            return null;
+        }
+        DB::commit();
+    }
+
+    public function restoreAdvertiser($id)
+    {
+        if (!Auth::guard('admin')->user()->can('advertisers.edit')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        DB::beginTransaction();
+        try {
+            $advertiser = AdvertiserUser::withTrashed()->findOrFail($id);
+            $advertiser->restore();
+
+            if ($advertiser->status !== 'active') {
+                $advertiser->update(['status' => 'active']);
+            }
+
+            AdminLogs::log('edit', 'advertisers', [
+                'advertiser_id' => $advertiser->id,
+            ], "Restore advertiser #{$advertiser->id}");
+
+            $this->alert('success', __('toastr.success'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+            return null;
+        }
         DB::commit();
     }
 
@@ -664,37 +833,8 @@ class AdvertisersInquiryComponent extends LivewireDatatable
             if ($this->package_id) {
                 if ($this->user_package_id) {
                     if ($this->user_package_id != $this->package_id) {
-                        //get user package
-                        $user->packages()
-                            ->where('is_current', true)
-                            ->where('is_active', true)
-                            ->where('is_ended', false)
-                            ->where('ends_at', '>', now())
-                            ->update([
-                                'is_active' => false,
-                                'is_ended' => true,
-                                'is_current' => false,
-                                'ends_at' => now(),
-                            ]);
                         $subscription_package = Package::findOrFail($this->package_id);
-                        if ($subscription_package->subscription_type === 'daily') {
-                            $ends_at = now()->addDays($subscription_package->duration);
-                        } else if ($subscription_package->subscription_type === 'weekly') {
-                            $ends_at = now()->addWeeks($subscription_package->duration);
-                        } else if (in_array($subscription_package->subscription_type, ['monthly', 'two_months', 'three_months', 'six_months'])) {
-                            $ends_at = now()->addMonths($subscription_package->duration);
-                        } else {
-                            $ends_at = now()->addYears($subscription_package->duration);
-                        }
-                        $user->packages()
-                            ->create([
-                                'package_id' => $this->package_id,
-                                'is_active' => true,
-                                'is_ended' => false,
-                                'is_current' => true,
-                                'starts_at' => now(),
-                                'ends_at' => $ends_at,
-                            ]);
+                        PackageQuotas::assignPackage($user, $subscription_package);
                         $data['is_elite'] = true;
                         $data['allowed_posts_count'] = $subscription_package->maximum_posts;
                         $data['allowed_offers_count'] = $subscription_package->maximum_offers;
@@ -702,45 +842,18 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                     }
                 } else {
                     $subscription_package = Package::findOrFail($this->package_id);
-                    if ($subscription_package->subscription_type === 'daily') {
-                        $ends_at = now()->addDays($subscription_package->duration);
-                    } else if ($subscription_package->subscription_type === 'weekly') {
-                        $ends_at = now()->addWeeks($subscription_package->duration);
-                    } else if (in_array($subscription_package->subscription_type, ['monthly', 'two_months', 'three_months', 'six_months'])) {
-                        $ends_at = now()->addMonths($subscription_package->duration);
-                    } else {
-                        $ends_at = now()->addYears($subscription_package->duration);
-                    }
-                    $user->packages()
-                        ->create([
-                            'package_id' => $this->package_id,
-                            'is_active' => true,
-                            'is_ended' => false,
-                            'is_current' => true,
-                            'starts_at' => now(),
-                            'ends_at' => $ends_at,
-                        ]);
+                    PackageQuotas::assignPackage($user, $subscription_package);
                     $data['is_elite'] = true;
                     $data['allowed_posts_count'] = $subscription_package->maximum_posts;
                     $data['allowed_offers_count'] = $subscription_package->maximum_offers;
                     $data['maximum_monthly_offers'] = $subscription_package->maximum_monthly_offers;
                 }
             } else {
-                $user->packages()
-                    ->where('is_current', true)
-                    ->where('is_active', true)
-                    ->where('is_ended', false)
-                    ->where('ends_at', '>', now())
-                    ->update([
-                        'is_active' => false,
-                        'is_ended' => true,
-                        'is_current' => false,
-                        'ends_at' => now(),
-                    ]);
+                PackageQuotas::assignPackage($user, null);
                 $data['is_elite'] = false;
                 $data['allowed_posts_count'] = Settings::Get('user.allowed.posts', 10);
-                $data['allowed_offers_count'] = $this->user['allowed_offers_count'];
-
+                $data['allowed_offers_count'] = Settings::Get('max.advertiser.active.offers', 20);
+                $data['maximum_monthly_offers'] = Settings::Get('max.advertiser.monthly.offers', 30);
             }
             //check if admin chosen image or not then upload it
             if (isset($this->user['new_image']) && $this->user['new_image'] != null) {
@@ -805,7 +918,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     {
         $this->deleteModalTexts = [
             'title' => __('pages/advertisers/index.modal.delete.title'),
-            'content' => __('pages/advertisers/index.modal.delete.content'),
+            'content' => __('pages/advertisers/index.modal.delete.content', ['name' => '']),
             'cancel' => __('pages/advertisers/index.modal.delete.cancel'),
             'submit' => __('pages/advertisers/index.modal.delete.submit'),
         ];
@@ -814,6 +927,83 @@ class AdvertisersInquiryComponent extends LivewireDatatable
             'cancel' => __('pages/advertisers/index.modal.edit.cancel'),
             'submit' => __('pages/advertisers/index.modal.edit.submit'),
         ];
+        $this->assignPackageModalTexts = [
+            'title' => __('pages/advertisers/index.modal.assign_package.title'),
+            'cancel' => __('pages/advertisers/index.modal.assign_package.cancel'),
+            'submit' => __('pages/advertisers/index.modal.assign_package.submit'),
+        ];
+    }
+
+    public function showAssignPackageModal($id): void
+    {
+        $advertiser = AdvertiserUser::withTrashed()->findOrFail($id);
+
+        $current = $advertiser->packages()
+            ->where('is_current', true)
+            ->where('is_active', true)
+            ->where('is_ended', false)
+            ->where('ends_at', '>', now())
+            ->first();
+
+        $this->assign_advertiser_id = $advertiser->id;
+        $this->assign_advertiser_name = $advertiser->name;
+        $this->assign_package_id = $current ? (string) $current->package_id : null;
+        $this->showAssignPackageModal = true;
+        $this->dispatchBrowserEvent('change-assign-package-id', $this->assign_package_id);
+    }
+
+    public function closeAssignPackageModal(): void
+    {
+        $this->showAssignPackageModal = false;
+        $this->assign_advertiser_id = null;
+        $this->assign_advertiser_name = null;
+        $this->assign_package_id = null;
+        $this->resetValidation();
+    }
+
+    public function assignPackage()
+    {
+        if (!Auth::guard('admin')->user()->can('advertisers.edit')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        $this->validate([
+            'assign_advertiser_id' => ['required', 'exists:advertisers_users,id'],
+            'assign_package_id' => ['nullable', 'exists:packages,id'],
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $advertiser = AdvertiserUser::withTrashed()->findOrFail($this->assign_advertiser_id);
+            $package = $this->assign_package_id
+                ? Package::findOrFail($this->assign_package_id)
+                : null;
+
+            PackageQuotas::assignPackage($advertiser, $package);
+
+            AdminLogs::log('edit', 'advertisers', [
+                'advertiser_id' => $advertiser->id,
+                'package_id' => $this->assign_package_id,
+            ], "Assign package to advertiser #{$advertiser->id}");
+
+            $this->closeAssignPackageModal();
+
+            $this->alert('success', __('toastr.success'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+            return null;
+        }
+
+        DB::commit();
     }
 
     /**

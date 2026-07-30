@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Customers\Advertisers;
 
 use App\Helpers\Filter;
+use App\Helpers\Categories\CategoriesFilter;
 use App\Helpers\Geography\Geography;
 use App\Helpers\Notifications;
 use App\Helpers\Settings;
@@ -86,24 +87,21 @@ class AdvertisersController extends Controller
 
         $advertisers = Geography::applyUserLocationFilter($advertisers, $data);
 
-
-        //Filter Categories
-        if (isset($data['categoryId']) && $data['categoryId']) {
-            $advertisers = $advertisers->where(function ($q) use ($data) {
-                return $q->where('advertiser_categories.category_id', $data['categoryId']);
-            });
-        } else if (isset($data['isGetAllCategories']) && $data['isGetAllCategories'] == false) {
-            $categories = Auth::guard('customer-api')->user()
-                ->categories()
-                ->pluck('category_id')
-                ->toArray();
-
-            if (sizeof($categories) > 0) {
-                $advertisers = $advertisers->where(function ($q) use ($data, $categories) {
-                    return $q->whereIn('advertiser_categories.category_id', $categories);
-                });
-            }
+        if (!Geography::hasExplicitLocationFilter($data)) {
+            $advertisers = Geography::applyPreferredUserLocationFilter(
+                $advertisers,
+                Auth::guard('customer-api')->user()
+            );
         }
+
+
+        // Filter categories (expand parents to children; apply interests by default)
+        $advertisers = CategoriesFilter::applyFeedCategoryFilter(
+            $advertisers,
+            $data,
+            Auth::guard('customer-api')->user(),
+            'advertiser_categories.category_id'
+        );
 
         //get the advertisers
         $advertisers = $advertisers->orderBy('advertisers_users.is_elite', 'desc')
@@ -185,24 +183,21 @@ class AdvertisersController extends Controller
 
         $advertisers = Geography::applyUserLocationFilter($advertisers, $data);
 
-
-        //Filter Categories
-        if (isset($data['categoryId']) && $data['categoryId']) {
-            $advertisers = $advertisers->where(function ($q) use ($data) {
-                return $q->where('advertiser_categories.category_id', $data['categoryId']);
-            });
-        } else if (isset($data['isGetAllCategories']) && $data['isGetAllCategories'] == false) {
-            $categories = Auth::guard('customer-api')->user()
-                ->categories()
-                ->pluck('category_id')
-                ->toArray();
-
-            if (sizeof($categories) > 0) {
-                $advertisers = $advertisers->where(function ($q) use ($data, $categories) {
-                    return $q->whereIn('advertiser_categories.category_id', $categories);
-                });
-            }
+        if (!Geography::hasExplicitLocationFilter($data)) {
+            $advertisers = Geography::applyPreferredUserLocationFilter(
+                $advertisers,
+                Auth::guard('customer-api')->user()
+            );
         }
+
+
+        // Filter categories (expand parents to children; apply interests by default)
+        $advertisers = CategoriesFilter::applyFeedCategoryFilter(
+            $advertisers,
+            $data,
+            Auth::guard('customer-api')->user(),
+            'advertiser_categories.category_id'
+        );
 
         //get the advertisers
         $advertisers = $advertisers->orderBy('advertisers_users.is_elite', 'desc')
@@ -271,24 +266,21 @@ class AdvertisersController extends Controller
 
         $advertisers = Geography::applyUserLocationFilter($advertisers, $data);
 
-
-        //Filter Categories
-        if (isset($data['categoryId']) && $data['categoryId']) {
-            $advertisers = $advertisers->where(function ($q) use ($data) {
-                return $q->where('advertiser_categories.category_id', $data['categoryId']);
-            });
-        } else if (isset($data['isGetAllCategories']) && $data['isGetAllCategories'] == false) {
-            $categories = Auth::guard('customer-api')->user()
-                ->categories()
-                ->pluck('category_id')
-                ->toArray();
-
-            if (sizeof($categories) > 0) {
-                $advertisers = $advertisers->where(function ($q) use ($data, $categories) {
-                    return $q->whereIn('advertiser_categories.category_id', $categories);
-                });
-            }
+        if (!Geography::hasExplicitLocationFilter($data)) {
+            $advertisers = Geography::applyPreferredUserLocationFilter(
+                $advertisers,
+                Auth::guard('customer-api')->user()
+            );
         }
+
+
+        // Filter categories (expand parents to children; apply interests by default)
+        $advertisers = CategoriesFilter::applyFeedCategoryFilter(
+            $advertisers,
+            $data,
+            Auth::guard('customer-api')->user(),
+            'advertiser_categories.category_id'
+        );
 
         //get the advertisers
         $advertisers = $advertisers->orderBy('advertisers_users.is_elite', 'desc')

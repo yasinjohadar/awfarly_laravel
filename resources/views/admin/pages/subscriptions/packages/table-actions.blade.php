@@ -12,4 +12,11 @@
             <i class="icon-pencil7"></i>
         </button>
     </div>
+    <div class="mx-2">
+        <button title="{{__('datatable.delete')}}" @cannot('packages.delete') disabled
+                @endcannot wire:click="showDeleteModal({{ $id }})"
+                class="btn btn-danger mx-1">
+            <i class="icon-trash"></i>
+        </button>
+    </div>
 </div>

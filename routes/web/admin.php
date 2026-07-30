@@ -30,6 +30,7 @@ use App\Http\Controllers\Admins\MarketingTools\Modals\MarketingToolsModalControl
 use App\Http\Controllers\Admins\MarketingTools\Emails\MarketingToolsEmailsController;
 use App\Http\Controllers\Admins\Subscriptions\Packages\SubscriptionsPackagesController;
 use App\Http\Controllers\Admins\Subscriptions\Payments\SubscriptionsPaymentsController;
+use App\Http\Controllers\Admins\Subscriptions\Requests\SubscriptionRequestsController;
 use App\Http\Controllers\Admins\Advertisements\Comments\AdvertisementsCommentsController;
 use App\Http\Controllers\Admins\Community\Offers\Comments\CommunityOffersCommentsController;
 use App\Http\Controllers\Admins\MarketingTools\Notifications\MarketingToolsNotificationsController;
@@ -393,4 +394,7 @@ Route::group([
         ->only([
             'index',
         ]);
+
+    Route::get('requests', [SubscriptionRequestsController::class, 'index'])
+        ->name('requests.index');
 });

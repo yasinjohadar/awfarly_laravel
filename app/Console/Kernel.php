@@ -31,6 +31,9 @@ class Kernel extends ConsoleKernel
         // Force delete Soft deleted items exceeded 30 days with its media
         $schedule->command('check:deleted-items')->daily();
 
+        // Permanently delete posts/offers older than configured retention days
+        $schedule->command('check:expired-content')->daily();
+
         // check users subscriptions to set packages as expired once it exceeds its end time
         $schedule->command('check:subscriptions-timers')->everyTenMinutes();
 

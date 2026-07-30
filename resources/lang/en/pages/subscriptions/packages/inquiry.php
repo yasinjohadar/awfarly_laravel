@@ -52,10 +52,13 @@ return [
     ],
     'modal' => [
         'delete' => [
-            'title' => 'Delete Packages',
-            'content' => 'Are you sure you want to delete these packages?',
+            'title' => 'Delete Plan',
+            'content' => 'Are you sure you want to delete the plan: :name?',
+            'title_multiple' => 'Delete Plans',
+            'content_multiple' => 'Are you sure you want to delete these plans?',
             'submit' => 'Delete',
             'cancel' => 'Cancel',
+            'in_use' => 'Cannot delete this package because it is linked to advertisers.',
         ],
     ],
 ];

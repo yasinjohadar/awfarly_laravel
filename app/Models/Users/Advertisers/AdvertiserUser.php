@@ -19,6 +19,8 @@ use App\Models\Posts\Comments\Likes\PostsCommentLikes;
 use App\Models\Posts\Comments\PostComments;
 use App\Models\Subscriptions\Packages\Advertisers\AdvertiserPackages;
 use App\Models\Users\Advertisers\Categories\AdvertiserCategories;
+use App\Models\Users\Advertisers\Locations\AdvertiserPreferredCity;
+use App\Models\Users\Advertisers\Locations\AdvertiserPreferredGovernorate;
 use App\Models\Users\Advertisers\Hidden\HiddenAdvertiser;
 use App\Models\Posts\Likes\PostLikes;
 use App\Models\Posts\Post;
@@ -570,6 +572,22 @@ class AdvertiserUser extends Authenticatable implements Wallet
     public function categories(): HasMany
     {
         return $this->hasMany(AdvertiserCategories::class, 'advertiser_id', 'id');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function preferredGovernorates(): HasMany
+    {
+        return $this->hasMany(AdvertiserPreferredGovernorate::class, 'advertiser_id', 'id');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function preferredCities(): HasMany
+    {
+        return $this->hasMany(AdvertiserPreferredCity::class, 'advertiser_id', 'id');
     }
 
     /**

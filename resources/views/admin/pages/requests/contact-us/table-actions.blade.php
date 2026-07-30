@@ -18,4 +18,11 @@
             <i class="icon-eye-blocked"></i>
         </button>
     @endif
+    <div class="mx-2">
+        <button title="{{__('datatable.delete')}}" @cannot('requests.contact.us') disabled
+                @endcannot wire:click="showDeleteModal({{ $id }})"
+                class="btn btn-danger mx-1">
+            <i class="icon-trash"></i>
+        </button>
+    </div>
 </div>

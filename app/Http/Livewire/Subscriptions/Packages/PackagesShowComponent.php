@@ -19,6 +19,7 @@ class PackagesShowComponent extends Component
 
     public int $package_id;
     public bool $showEditModal = false;
+    public string $features_lang = 'ar';
     public ?string $product_id = null;
     public ?string $name_en = null;
     public ?string $name_ar = null;
@@ -35,20 +36,30 @@ class PackagesShowComponent extends Component
     public $is_active = true;
     public $is_trial = false;
 
-    /**
-     * @return Application|Factory|View
-     */
+    public function mount(): void
+    {
+        $this->features_lang = App::currentLocale() === 'en' ? 'en' : 'ar';
+    }
+
+    public function setFeaturesLang(string $lang): void
+    {
+        if (!in_array($lang, ['ar', 'en'], true)) {
+            return;
+        }
+
+        $this->features_lang = $lang;
+    }
+
     public function render()
     {
-        //get package
         $package = Package::where('id', $this->package_id)
+            ->withCount('advertisers')
             ->first();
 
-        $package['current_price'] = "$package->price $package->currency / " . __("pages/subscriptions/packages/show.content.duration_types.$package->subscription_type");
-        $package['full_price'] = "$package->old_price $package->currency / " . __("pages/subscriptions/packages/show.content.duration_types.$package->subscription_type");
         return view('admin.pages.subscriptions.packages.show', [
             'package' => $package,
             'showEditModal' => $this->showEditModal,
+            'features_lang' => $this->features_lang,
         ]);
     }
 

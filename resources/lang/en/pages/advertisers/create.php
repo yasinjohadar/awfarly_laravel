@@ -26,6 +26,8 @@ return [
             'facebook_url' => 'Facebook URL',
             'twitter_url' => 'Twitter URL',
             'website_url' => 'Website URL',
+            'package' => 'Package',
+            'package_hint' => 'Selecting a package applies its quotas and permissions immediately.',
             'allowed_posts_count' => 'Allowed Posts Count',
             'status' => 'Status',
             'is_elite' => 'Elite',
@@ -45,6 +47,7 @@ return [
             'placeholders' => [
                 'choose_file' => "Choose file",
                 'business_type' => "Choose business type",
+                'package' => "Choose a package",
                 'country' => 'Choose a country',
                 'governorate' => 'Choose a governorate',
                 'city' => 'Choose a city',

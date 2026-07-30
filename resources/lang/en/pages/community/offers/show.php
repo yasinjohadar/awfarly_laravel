@@ -4,6 +4,8 @@ return [
     'content' => [
         'title' => 'Offer #<strong>:id</strong> Inquiry',
         'back' => 'Back',
+        'edit' => 'Edit',
+        'delete_offer' => 'Delete offer',
         'user_id' => 'Advertiser #',
         'user_name' => 'Advertiser Name',
         'category' => 'Category',
@@ -19,7 +21,12 @@ return [
         'views_count' => 'Views',
         'comments_count' => 'Comments',
         'media' => 'Media',
-        'save' => 'Save',
+        'save' => 'Save media order',
+        'sections' => [
+            'advertiser' => 'Advertiser details',
+            'content' => 'Offer content',
+            'media' => 'Attached media',
+        ],
     ],
     'modal' => [
         'edit' => [
@@ -48,5 +55,11 @@ return [
             'submit' => 'Delete',
             'cancel' => 'Cancel',
         ],
-    ]
+        'delete_offer' => [
+            'title' => 'Delete offer',
+            'content' => 'Are you sure you want to delete this offer?',
+            'submit' => 'Delete',
+            'cancel' => 'Cancel',
+        ],
+    ],
 ];
