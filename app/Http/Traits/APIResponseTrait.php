@@ -257,10 +257,31 @@ trait APIResponseTrait
 
         //Set extra response data
         if (!!sizeof($extra)) {
-            $response = array_merge_recursive_distinct($response, $extra);
+            $response = $this->mergeResponseExtra($response, $extra);
         }
 
         return response($response, $status_code);
+    }
+
+    /**
+     * Merge pagination/extra payload into the API envelope.
+     * Uses global helper when available; otherwise merges inline.
+     */
+    private function mergeResponseExtra(array $response, array $extra): array
+    {
+        if (function_exists('array_merge_recursive_distinct')) {
+            return \array_merge_recursive_distinct($response, $extra);
+        }
+
+        foreach ($extra as $key => $value) {
+            if (is_array($value) && isset($response[$key]) && is_array($response[$key])) {
+                $response[$key] = $this->mergeResponseExtra($response[$key], $value);
+            } else {
+                $response[$key] = $value;
+            }
+        }
+
+        return $response;
     }
 
     //Check and get the type
