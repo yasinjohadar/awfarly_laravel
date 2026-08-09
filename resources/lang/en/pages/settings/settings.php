@@ -47,6 +47,10 @@ return [
         "Payment Code" => "Payment Code",
         "Payment QR Image" => "Payment QR Image",
         "Payment Instructions" => "Payment Instructions",
+        "Advertisers Default Package" => "Advertisers Default Package",
+        "Posts Auto Delete After Days" => "Auto-Delete Posts After (Days)",
+        "Offers Auto Delete After Days" => "Auto-Delete Offers After (Days)",
+        "Maximum Advertiser Monthly Offers" => "Maximum Advertiser Monthly Offers",
     ],
     'descriptions' => [
         "Site name" => "This is for Site name.",
@@ -95,5 +99,9 @@ return [
         "Payment Code" => "Long payment reference code shown to advertisers.",
         "Payment QR Image" => "QR code image for package payments.",
         "Payment Instructions" => "Instructions shown on the package payment screen.",
+        "Advertisers Default Package" => "Package automatically granted to every newly registered advertiser. Leave empty to disable.",
+        "Posts Auto Delete After Days" => "Number of days after publish to permanently delete posts. 0 disables auto-delete.",
+        "Offers Auto Delete After Days" => "Number of days after publish to permanently delete offers. 0 disables auto-delete.",
+        "Maximum Advertiser Monthly Offers" => "Maximum number of offers an advertiser can create per calendar month.",
     ]
 ];

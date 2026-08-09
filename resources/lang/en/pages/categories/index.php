@@ -57,10 +57,13 @@ return [
             'cancel' => 'Cancel',
         ],
         'delete' => [
-            'title' => 'Delete Categories',
-            'content' => 'Are you sure you want to delete these categories?',
+            'title' => 'Delete Category',
+            'content' => 'Are you sure you want to delete the category: :name?',
+            'title_multiple' => 'Delete Categories',
+            'content_multiple' => 'Are you sure you want to delete these categories?',
             'submit' => 'Delete',
             'cancel' => 'Cancel',
+            'in_use' => 'This category cannot be deleted because it has sub categories.',
         ],
     ]
 ];

@@ -5,6 +5,24 @@
     </x-slot>
     <x-slot name="content">
         <div class="form-group">
+            <label for="governorate_id">{{__('pages/countries/cities/index.modal.edit.inputs.governorate')}}</label>
+            <select class="form-control @error('city.governorate_id') is-invalid @enderror"
+                    id="governorate_id"
+                    wire:model.defer="city.governorate_id">
+                <option value="">{{__('pages/countries/cities/create.content.inputs.placeholders.select_governorate')}}</option>
+                @foreach(\App\Models\Countries\Governorates\Governorate::orderBy('country_code')->orderBy('order')->get() as $governorate)
+                    <option value="{{ $governorate->id }}">
+                        {{ app()->getLocale() === 'ar' ? $governorate->name_ar : $governorate->name_en }}
+                    </option>
+                @endforeach
+            </select>
+            @error('city.governorate_id')
+            <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+            @enderror
+        </div>
+        <div class="form-group">
             <label for="name_en">{{__('pages/countries/cities/index.modal.edit.inputs.name_en')}}</label>
             <input type="text" class="form-control @error('city.name_en') is-invalid @enderror" id="name_en"
                    name="name"

@@ -27,8 +27,8 @@ class CategoryInquiryComponent extends LivewireDatatable
     public $exportable = true;
     public $hideable = 'select';
     public $beforeTableSlot = 'livewire.datatables.selected';
-   // public $afterTableSlot = 'modals.categories.category';
-    //public string $afterTableSlot2 = 'modals.categories.sub-categories.add';
+    public $afterTableSlot = 'modals.categories.category';
+    public string $afterTableSlot2 = 'modals.categories.sub-categories.add';
     public $model = Category::class;
     public array $category;
     public bool $showDeleteModal = false;
@@ -129,11 +129,55 @@ class CategoryInquiryComponent extends LivewireDatatable
     }
 
     /**
-     * show delete modal
+     * show delete modal for selected rows, or a single category by id
+     * @param int|null $id
      */
-    public function showDeleteModal()
+    public function showDeleteModal($id = null)
     {
+        if ($id !== null) {
+            $this->selected = [(string) $id];
+        }
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $this->setDeleteModalTextsForSelection();
         $this->showDeleteModal = true;
+    }
+
+    /**
+     * Set delete modal title/content based on selection count and category name
+     */
+    protected function setDeleteModalTextsForSelection(): void
+    {
+        $base = 'pages/categories/index.modal.delete';
+
+        if (count($this->selected) === 1) {
+            $category = Category::find($this->selected[0]);
+            $name = '';
+            if ($category) {
+                $name = App::currentLocale() === 'ar'
+                    ? ($category->name_ar ?: $category->name_en)
+                    : ($category->name_en ?: $category->name_ar);
+            }
+
+            $this->deleteModalTexts = [
+                'title' => __("$base.title"),
+                'content' => __("$base.content", ['name' => $name]),
+                'cancel' => __("$base.cancel"),
+                'submit' => __("$base.submit"),
+            ];
+
+            return;
+        }
+
+        $this->deleteModalTexts = [
+            'title' => __("$base.title_multiple"),
+            'content' => __("$base.content_multiple"),
+            'cancel' => __("$base.cancel"),
+            'submit' => __("$base.submit"),
+        ];
     }
 
     /**
@@ -148,11 +192,32 @@ class CategoryInquiryComponent extends LivewireDatatable
             ]);
             return null;
         }
+
+        if (empty($this->selected)) {
+            $this->showDeleteModal = false;
+            return null;
+        }
+
         DB::beginTransaction();
         try {
             //get categories
             $categories = Category::whereIn('id', $this->selected)
+                ->withCount('childCategories')
                 ->get();
+
+            //block delete if a category still has sub categories
+            $inUse = $categories->first(function ($category) {
+                return $category->child_categories_count > 0;
+            });
+
+            if ($inUse) {
+                DB::rollBack();
+                $this->alert('error', __('pages/categories/index.modal.delete.in_use'), [
+                    'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                ]);
+                $this->showDeleteModal = false;
+                return null;
+            }
 
             //delete data
             parent::delete($this->selected);

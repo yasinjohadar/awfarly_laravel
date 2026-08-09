@@ -78,7 +78,7 @@ class AccountResource extends JsonResource
             'isOnline' => $this->is_online,
             'addressLatitude' => $this->address_latitude ?? null,
             'addressLongitude' => $this->address_longitude ?? null,
-            'isProfileCompleted' => (bool)($this->username  && $this->location && $this->gender),
+            'isProfileCompleted' => (bool)($this->username && $this->gender),
             'accountStatus' => $this->status,
             'fcm_token' => $this->fcm_token,
             'isAllowEditName' => (bool)Settings::Get('allow.users.change.name', true),

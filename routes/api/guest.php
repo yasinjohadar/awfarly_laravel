@@ -5,6 +5,8 @@ use App\Http\Controllers\API\Guests\Modals\ModalController;
 use App\Http\Controllers\API\Guests\Users\UsersReportsController;
 use App\Http\Controllers\API\Guests\Customers\CustomersController;
 use App\Http\Controllers\API\Guests\Categories\CategoriesController;
+use App\Http\Controllers\API\Guests\Interests\InterestsController;
+use App\Http\Controllers\API\Guests\Currencies\CurrenciesController;
 use App\Http\Controllers\API\Guests\Advertisers\AdvertisersController;
 use App\Http\Controllers\API\Guests\Advertisements\AdvertisementsController;
 use App\Http\Controllers\API\Guests\Community\Posts\CommunityPostsController;
@@ -41,6 +43,21 @@ Route::get('/categories', [CategoriesController::class, 'getCategories'])
 
 Route::get('/categories/{id}', [CategoriesController::class, 'getCategoryById'])
     ->name('category.get');
+
+/**
+ * get Interests Routes
+ */
+Route::get('/interests', [InterestsController::class, 'getInterests'])
+    ->name('interests.get');
+
+Route::get('/interests/{id}', [InterestsController::class, 'getInterestById'])
+    ->name('interest.get');
+
+/**
+ * get Currencies Routes
+ */
+Route::get('/currencies', [CurrenciesController::class, 'getCurrencies'])
+    ->name('currencies.get');
 
 
 /**

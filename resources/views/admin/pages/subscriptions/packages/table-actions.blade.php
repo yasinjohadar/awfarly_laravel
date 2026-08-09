@@ -6,11 +6,16 @@
         </button>
     </div>
     <div class="mx-2">
-        <button title="Edit" @cannot('packages.edit') disabled
-                @endcannot  wire:click="showEditModal({{ $id }})"
-                class="btn btn-secondary mx-1">
-            <i class="icon-pencil7"></i>
-        </button>
+        @can('packages.edit')
+            <a title="Edit" href="{{ route('admin.subscriptions.packages.edit', $id) }}"
+               class="btn btn-secondary mx-1">
+                <i class="icon-pencil7"></i>
+            </a>
+        @else
+            <button title="Edit" disabled class="btn btn-secondary mx-1">
+                <i class="icon-pencil7"></i>
+            </button>
+        @endcan
     </div>
     <div class="mx-2">
         <button title="{{__('datatable.delete')}}" @cannot('packages.delete') disabled

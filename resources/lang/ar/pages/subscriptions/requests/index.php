@@ -18,6 +18,7 @@ return [
             'advertiser' => 'المعلن',
             'package' => 'الباقة',
             'status' => 'الحالة',
+            'receipt' => 'إيصال الدفع',
             'created_at' => 'تاريخ الطلب',
             'actions' => 'إجراءات',
         ],
@@ -29,6 +30,7 @@ return [
         'actions' => [
             'approve' => 'موافقة',
             'reject' => 'رفض',
+            'view_receipt' => 'عرض الإيصال',
         ],
         'empty' => 'لا توجد طلبات.',
     ],

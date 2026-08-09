@@ -50,4 +50,22 @@ class Package extends Model
     {
         return $this->hasMany(AdvertiserPackages::class, 'package_id', 'id');
     }
+
+    /**
+     * Number of days a subscription of the given type lasts. `duration` is always
+     * stored in days, regardless of subscription_type.
+     */
+    public static function durationDaysForType(string $subscriptionType): int
+    {
+        return match ($subscriptionType) {
+            'daily' => 1,
+            'weekly' => 7,
+            'monthly' => 30,
+            'two_months' => 60,
+            'three_months' => 90,
+            'six_months' => 180,
+            'yearly' => 365,
+            default => 30,
+        };
+    }
 }

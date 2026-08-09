@@ -61,22 +61,11 @@ class PackageQuotas
 
     /**
      * Calculate subscription end date from package duration settings.
+     * `duration` is always stored in days.
      */
     public static function endsAt(Package $package)
     {
-        if ($package->subscription_type === 'daily') {
-            return now()->addDays($package->duration);
-        }
-
-        if ($package->subscription_type === 'weekly') {
-            return now()->addWeeks($package->duration);
-        }
-
-        if (in_array($package->subscription_type, ['monthly', 'two_months', 'three_months', 'six_months'], true)) {
-            return now()->addMonths($package->duration);
-        }
-
-        return now()->addYears($package->duration ?: 1);
+        return now()->addDays($package->duration);
     }
 
     /**

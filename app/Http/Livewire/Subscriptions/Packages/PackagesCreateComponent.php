@@ -4,10 +4,12 @@ namespace App\Http\Livewire\Subscriptions\Packages;
 
 use App\Helpers\Admins\AdminLogs;
 use App\Helpers\Filter;
+use App\Models\Currencies\Currency;
 use App\Models\Subscriptions\Packages\Package;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Livewire\Component;
 use Throwable;
@@ -35,30 +37,35 @@ class PackagesCreateComponent extends Component
     public int $is_active = 1;
     public int $is_trial = 0;
 
-    protected array $rules = [
-        'product_id' => ['nullable', 'string', 'unique:packages,product_id'],
-        'name_en' => ['required', 'string', 'unique:packages,name_en'],
-        'name_ar' => ['required', 'string', 'unique:packages,name_ar'],
-        'maximum_posts' => ['required', 'integer'],
-        'maximum_offers' => ['required', 'integer', 'min:0'],
-        'maximum_monthly_offers' => ['required', 'integer', 'min:0'],
-        'description_en' => ['nullable', 'string'],
-        'description_ar' => ['nullable', 'string'],
-        'specifications_en' => ['required', 'string'],
-        'specifications_ar' => ['required', 'string'],
-        'price' => ['required', 'numeric'],
-        'old_price' => ['required', 'numeric'],
-        /*'duration' => ['required', 'int'],*/
-        'subscription_type' => ['required', 'in:daily,weekly,monthly,two_months,three_months,six_months,yearly'],
-        'currency' => ['required', 'in:SAR'], //usd too
-        'is_visible' => ['required', 'boolean'],
-        'is_active' => ['required', 'boolean'],
-        'is_trial' => ['required', 'boolean'],
-    ];
+    protected function rules(): array
+    {
+        return [
+            'product_id' => ['nullable', 'string', 'unique:packages,product_id'],
+            'name_en' => ['required', 'string', 'unique:packages,name_en'],
+            'name_ar' => ['required', 'string', 'unique:packages,name_ar'],
+            'maximum_posts' => ['required', 'integer'],
+            'maximum_offers' => ['required', 'integer', 'min:0'],
+            'maximum_monthly_offers' => ['required', 'integer', 'min:0'],
+            'description_en' => ['nullable', 'string'],
+            'description_ar' => ['nullable', 'string'],
+            'specifications_en' => ['required', 'string'],
+            'specifications_ar' => ['required', 'string'],
+            'price' => ['required', 'numeric'],
+            'old_price' => ['nullable', 'numeric'],
+            /*'duration' => ['required', 'int'],*/
+            'subscription_type' => ['required', 'in:daily,weekly,monthly,two_months,three_months,six_months,yearly'],
+            'currency' => ['required', Rule::exists('currencies', 'code')->where('is_active', true)],
+            'is_visible' => ['required', 'boolean'],
+            'is_active' => ['required', 'boolean'],
+            'is_trial' => ['required', 'boolean'],
+        ];
+    }
 
     public function render()
     {
-        return view('livewire.pages.subscriptions.packages.create');
+        return view('livewire.pages.subscriptions.packages.create', [
+            'currencies' => Currency::where('is_active', true)->orderBy('order')->get(),
+        ]);
     }
 
     public function store()
@@ -92,19 +99,7 @@ class PackagesCreateComponent extends Component
             $specifications_ar = preg_replace("/[\r\n]+/", "\n", $specifications_ar);
             $specifications_ar = explode("\n", $specifications_ar);
 
-            if ($this->subscription_type === 'monthly') {
-                $duration = 1;
-            } else if ($this->subscription_type === 'two_months') {
-                $duration = 2;
-            } else if ($this->subscription_type === 'three_months') {
-                $duration = 3;
-            } else if ($this->subscription_type === 'six_months') {
-                $duration = 6;
-            } else if ($this->subscription_type === 'yearly') {
-                $duration = 1;
-            } else {
-                $duration = 1;
-            }
+            $duration = Package::durationDaysForType($this->subscription_type);
             Package::create([
                 'product_id' => $this->product_id ? Filter::RemoveHtml($this->product_id) : null,
                 'name_en' => Filter::RemoveHtml($this->name_en),

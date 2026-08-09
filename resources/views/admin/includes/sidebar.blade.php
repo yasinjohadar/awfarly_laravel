@@ -14,14 +14,8 @@
 
                 {{--Users --}}
                 @canany(['admins.inquiry', 'admins.add','admins.roles.inquiry', 'admins.roles.add','customers.inquiry', 'customers.add','advertisers.inquiry', 'advertisers.add','business.types.inquiry', 'business.types.add','ratings.inquiry'])
-                    <li id="users" class="nav-item-header">
-                        <div class="text-uppercase font-size-xs line-height-xs">
-                            {{__('sidebar.users.title')}}
-                        </div>
-                        <i class="icon-menu" title="{{__('sidebar.users.title')}}"></i>
-                    </li>
                     @canany(['admins.inquiry', 'admins.add','admins.roles.inquiry', 'admins.roles.add',])
-                        <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.admins.*') || Request::routeIs('admin.roles.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
+                        <li id="users" class="nav-item nav-item-submenu{{(Request::routeIs('admin.admins.*') || Request::routeIs('admin.roles.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
                             <a class="nav-link cursor-pointer">
                                 <i class="icon-user-tie"></i>
                                 <span>{{__('sidebar.users.admins.title')}}</span>
@@ -111,34 +105,10 @@
                 @endcanany
                 {{--/Users--}}
 
-                {{--Categories --}}
-                @canany(['categories.inquiry', 'categories.add'])
-                    <li id="categories" class="nav-item-header">
-                        <div class="text-uppercase font-size-xs line-height-xs">
-                            {{__('sidebar.categories')}}
-                        </div>
-                        <i class="icon-menu" title="{{__('sidebar.categories')}}"></i>
-                    </li>
-                    <li class="nav-item{{Request::routeIs('admin.categories.*') ? ' active' : ''}}">
-                        <a href="{{route('admin.categories.index')}}"
-                           class="nav-link{{Request::routeIs('admin.categories.*') ? ' active' : ''}}">
-                            <i class="icon-stack2"></i>
-                            <span>{{__('sidebar.categories')}}</span>
-                        </a>
-                    </li>
-                @endcanany
-                {{--/Categories--}}
-
                 {{--Community--}}
                 @canany(['posts.inquiry','posts.reported','comments.inquiry','comments.reported','offers.inquiry','offers.reported','proposals.inquiry','proposals.reported','chats.inquiry'])
-                    <li id="community" class="nav-item-header">
-                        <div class="text-uppercase font-size-xs line-height-xs">
-                            {{__('sidebar.community.title')}}
-                        </div>
-                        <i class="icon-menu" title="{{__('sidebar.community.title')}}"></i>
-                    </li>
                     @canany(['posts.inquiry','posts.reported','comments.inquiry','comments.reported'])
-                        <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.community.posts.*') || Request::routeIs('admin.community.comments.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
+                        <li id="community" class="nav-item nav-item-submenu{{(Request::routeIs('admin.community.posts.*') || Request::routeIs('admin.community.comments.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
                             <a class="nav-link cursor-pointer">
                                 <i class="icon-insert-template"></i>
                                 <span>{{__('sidebar.community.posts.title')}}</span>
@@ -356,14 +326,8 @@
 
                 {{--Subscriptions --}}
                 @canany(['packages.inquiry','packages.add','promotions.inquiry','promotions.add','payments.inquiry','income.inquiry'])
-                    <li id="subscriptions" class="nav-item-header">
-                        <div class="text-uppercase font-size-xs line-height-xs">
-                            {{__('sidebar.subscriptions.title')}}
-                        </div>
-                        <i class="icon-menu" title="{{__('sidebar.subscriptions.title')}}"></i>
-                    </li>
                     @canany(['packages.inquiry','packages.add'])
-                        <li class="nav-item{{Request::routeIs('admin.subscriptions.packages.*') ? ' active' : ''}}">
+                        <li id="subscriptions" class="nav-item{{Request::routeIs('admin.subscriptions.packages.*') ? ' active' : ''}}">
                             <a href="{{route('admin.subscriptions.packages.index')}}"
                                class="nav-link{{Request::routeIs('admin.subscriptions.packages.*') ? ' active' : ''}}">
                                 <i class="icon-package"></i>
@@ -436,51 +400,156 @@
                 @endcanany
                 {{--/Subscriptions--}}
 
-                {{--Requests --}}
-                @canany(['requests.contact.us','requests.username.change',])
-                    <li id="requests" class="nav-item-header">
-                        <div class="text-uppercase font-size-xs line-height-xs">
-                            {{__('sidebar.requests.title')}}
-                        </div>
-                        <i class="icon-menu" title="{{__('sidebar.requests.title')}}"></i>
+                {{--Categories --}}
+                @canany(['categories.inquiry', 'categories.add'])
+                    <li id="categories" class="nav-item{{Request::routeIs('admin.categories.*') ? ' active' : ''}}">
+                        <a href="{{route('admin.categories.index')}}"
+                           class="nav-link{{Request::routeIs('admin.categories.*') ? ' active' : ''}}">
+                            <i class="icon-stack2"></i>
+                            <span>{{__('sidebar.categories')}}</span>
+                        </a>
                     </li>
-                    <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.requests.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
+                @endcanany
+                {{--/Categories--}}
+
+                {{--Interests --}}
+                @canany(['interests.inquiry', 'interests.add'])
+                    <li class="nav-item{{Request::routeIs('admin.interests.*') ? ' active' : ''}}">
+                        <a href="{{route('admin.interests.index')}}"
+                           class="nav-link{{Request::routeIs('admin.interests.*') ? ' active' : ''}}">
+                            <i class="icon-heart5"></i>
+                            <span>{{__('sidebar.interests')}}</span>
+                        </a>
+                    </li>
+                @endcanany
+                {{--/Interests--}}
+
+                {{--Currencies --}}
+                @canany(['currencies.inquiry', 'currencies.add'])
+                    <li class="nav-item{{Request::routeIs('admin.currencies.*') ? ' active' : ''}}">
+                        <a href="{{route('admin.currencies.index')}}"
+                           class="nav-link{{Request::routeIs('admin.currencies.*') ? ' active' : ''}}">
+                            <i class="icon-coin-dollar"></i>
+                            <span>{{__('sidebar.currencies')}}</span>
+                        </a>
+                    </li>
+                @endcanany
+                {{--/Currencies--}}
+
+                {{--Advertisements--}}
+                @canany(['advertisements.inquiry', 'advertisements.add'])
+                    <li id="advertisements" class="nav-item nav-item-submenu{{(Request::routeIs('admin.advertisements.*') || Request::routeIs('admin.slider.advertisements.*') || Request::routeIs('admin.side.advertisements.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
                         <a class="nav-link cursor-pointer">
-                            <i class="icon-mailbox"></i>
-                            <span>{{__('sidebar.requests.title')}}</span>
+                            <i class="icon-newspaper"></i>
+                            <span>{{__('sidebar.advertisements.title')}}</span>
                         </a>
                         <ul class="nav nav-group-sub"
-                            data-submenu-title="{{__('sidebar.requests.title')}}">
-                            @can('requests.contact.us')
-                                <li class="nav-item">
-                                    <a href="{{route('admin.requests.contact-us.index')}}"
-                                       class="nav-link{{Request::routeIs('admin.requests.contact-us.index') ? ' active' : ''}}">
-                                        {{__('sidebar.requests.contact-us')}}
-                                    </a>
-                                </li>
-                            @endcan
-                            @can('requests.username.change')
-                                <li class="nav-item">
-                                    <a href="{{route('admin.requests.change-name.index')}}"
-                                       class="nav-link{{Request::routeIs('admin.requests.change-name.index') ? ' active' : ''}}">
-                                        {{__('sidebar.requests.username-change')}}
-                                    </a>
-                                </li>
-                            @endcan
+                            data-submenu-title="{{__('sidebar.advertisements.title')}}">
+                            <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.advertisements.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
+                                <a class="nav-link cursor-pointer">
+                                    <i class="icon-newspaper"></i>
+                                    <span>{{__('sidebar.advertisements.targeted-advertisements')}}</span>
+                                </a>
+                                <ul class="nav nav-group-sub"
+                                    data-submenu-title="{{__('sidebar.advertisements.targeted-advertisements')}}">
+                                    @can('advertisements.inquiry')
+                                        <li class="nav-item">
+                                            <a href="{{route('admin.advertisements.index')}}"
+                                               class="nav-link{{Request::routeIs('admin.advertisements.index') || Request::routeIs('admin.advertisements.edit') ? ' active' : ''}}">
+                                                {{__('sidebar.inquiry')}}
+                                            </a>
+                                        </li>
+                                    @endcan
+                                    @can('advertisements.add')
+                                        <li class="nav-item">
+                                            <a href="{{route('admin.advertisements.create')}}"
+                                               class="nav-link{{Request::routeIs('admin.advertisements.create') ? ' active' : ''}}">
+                                                {{__('sidebar.create')}}
+                                            </a>
+                                        </li>
+                                    @endcan
+                                    @can('comments.inquiry')
+                                        <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.advertisements.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
+                                            <a class="nav-link cursor-pointer">
+                                                <span>{{__('sidebar.community.posts.comments.title')}}</span>
+                                            </a>
+                                            <ul class="nav nav-group-sub"
+                                                data-submenu-title="{{__('sidebar.advertisements.targeted-advertisements')}}">
+                                                <li class="nav-item">
+                                                    <a href="{{route('admin.advertisements.comments.index')}}"
+                                                       class="nav-link{{Request::routeIs('admin.advertisements.comments.index') ? ' active' : ''}}">
+                                                        {{__('sidebar.inquiry')}}
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a href="{{route('admin.advertisements.comments.reports')}}"
+                                                       class="nav-link{{Request::routeIs('admin.advertisements.comments.reports') ? ' active' : ''}}">
+                                                        {{__('sidebar.community.posts.comments.reported')}}
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    @endcan
+                                </ul>
+                            </li>
+                            <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.slider.advertisements.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
+                                <a class="nav-link cursor-pointer">
+                                    <i class="icon-newspaper"></i>
+                                    <span>{{__('sidebar.advertisements.slider-advertisements')}}</span>
+                                </a>
+                                <ul class="nav nav-group-sub"
+                                    data-submenu-title="{{__('sidebar.advertisements.slider-advertisements')}}">
+                                    @can('advertisements.inquiry')
+                                        <li class="nav-item">
+                                            <a href="{{route('admin.slider.advertisements.index')}}"
+                                               class="nav-link{{Request::routeIs('admin.slider.advertisements.index') ? ' active' : ''}}">
+                                                {{__('sidebar.inquiry')}}
+                                            </a>
+                                        </li>
+                                    @endcan
+                                    @can('advertisements.add')
+                                        <li class="nav-item">
+                                            <a href="{{route('admin.slider.advertisements.create')}}"
+                                               class="nav-link{{Request::routeIs('admin.slider.advertisements.create') ? ' active' : ''}}">
+                                                {{__('sidebar.create')}}
+                                            </a>
+                                        </li>
+                                    @endcan
+                                </ul>
+                            </li>
+                            <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.side.advertisements.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
+                                <a class="nav-link cursor-pointer">
+                                    <i class="icon-newspaper"></i>
+                                    <span>{{__('sidebar.advertisements.side-advertisements')}}</span>
+                                </a>
+                                <ul class="nav nav-group-sub"
+                                    data-submenu-title="{{__('sidebar.advertisements.side-advertisements')}}">
+                                    @can('advertisements.inquiry')
+                                        <li class="nav-item">
+                                            <a href="{{route('admin.side.advertisements.index')}}"
+                                               class="nav-link{{Request::routeIs('admin.side.advertisements.index') ? ' active' : ''}}">
+                                                {{__('sidebar.inquiry')}}
+                                            </a>
+                                        </li>
+                                    @endcan
+                                    @can('advertisements.add')
+                                        <li class="nav-item">
+                                            <a href="{{route('admin.side.advertisements.create')}}"
+                                               class="nav-link{{Request::routeIs('admin.side.advertisements.create') ? ' active' : ''}}">
+                                                {{__('sidebar.create')}}
+                                            </a>
+                                        </li>
+                                    @endcan
+                                </ul>
+                            </li>
                         </ul>
                     </li>
                 @endcanany
-                {{--/Requests --}}
+                {{--/Advertisements--}}
 
                 {{--Pages--}}
                 @canany(['pages.inquiry','pages.add',])
-                    <li id="pages" class="nav-item-header">
-                        <div class="text-uppercase font-size-xs line-height-xs">
-                            {{__('sidebar.pages')}}
-                        </div>
-                        <i class="icon-menu" title="{{__('sidebar.pages')}}"></i>
-                    </li>
-                    <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.pages.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
+                    <li id="pages" class="nav-item nav-item-submenu{{(Request::routeIs('admin.pages.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
                         <a class="nav-link cursor-pointer">
                             <i class="icon-file-text"></i>
                             <span>{{__('sidebar.pages')}}</span>
@@ -509,124 +578,10 @@
                 @endcanany
                 {{--/Pages--}}
 
-                {{--Advertisements--}}
-                @canany(['advertisements.inquiry', 'advertisements.add'])
-                    <li id="advertisements" class="nav-item-header">
-                        <div class="text-uppercase font-size-xs line-height-xs">
-                            {{__('sidebar.advertisements.title')}}
-                        </div>
-                        <i class="icon-menu" title="{{__('sidebar.advertisements.title')}}"></i>
-                    </li>
-                    <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.advertisements.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
-                        <a class="nav-link cursor-pointer">
-                            <i class="icon-newspaper"></i>
-                            <span>{{__('sidebar.advertisements.targeted-advertisements')}}</span>
-                        </a>
-                        <ul class="nav nav-group-sub"
-                            data-submenu-title="{{__('sidebar.advertisements.targeted-advertisements')}}">
-                            @can('advertisements.inquiry')
-                                <li class="nav-item">
-                                    <a href="{{route('admin.advertisements.index')}}"
-                                       class="nav-link{{Request::routeIs('admin.advertisements.index') || Request::routeIs('admin.advertisements.edit') ? ' active' : ''}}">
-                                        {{__('sidebar.inquiry')}}
-                                    </a>
-                                </li>
-                            @endcan
-                            @can('advertisements.add')
-                                <li class="nav-item">
-                                    <a href="{{route('admin.advertisements.create')}}"
-                                       class="nav-link{{Request::routeIs('admin.advertisements.create') ? ' active' : ''}}">
-                                        {{__('sidebar.create')}}
-                                    </a>
-                                </li>
-                            @endcan
-                            @can('comments.inquiry')
-                                <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.advertisements.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
-                                    <a class="nav-link cursor-pointer">
-                                        <span>{{__('sidebar.community.posts.comments.title')}}</span>
-                                    </a>
-                                    <ul class="nav nav-group-sub"
-                                        data-submenu-title="{{__('sidebar.advertisements.targeted-advertisements')}}">
-                                        <li class="nav-item">
-                                            <a href="{{route('admin.advertisements.comments.index')}}"
-                                               class="nav-link{{Request::routeIs('admin.advertisements.comments.index') ? ' active' : ''}}">
-                                                {{__('sidebar.inquiry')}}
-                                            </a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a href="{{route('admin.advertisements.comments.reports')}}"
-                                               class="nav-link{{Request::routeIs('admin.advertisements.comments.reports') ? ' active' : ''}}">
-                                                {{__('sidebar.community.posts.comments.reported')}}
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                            @endcan
-                        </ul>
-                    </li>
-                    <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.slider.advertisements.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
-                        <a class="nav-link cursor-pointer">
-                            <i class="icon-newspaper"></i>
-                            <span>{{__('sidebar.advertisements.slider-advertisements')}}</span>
-                        </a>
-                        <ul class="nav nav-group-sub"
-                            data-submenu-title="{{__('sidebar.advertisements.slider-advertisements')}}">
-                            @can('advertisements.inquiry')
-                                <li class="nav-item">
-                                    <a href="{{route('admin.slider.advertisements.index')}}"
-                                       class="nav-link{{Request::routeIs('admin.slider.advertisements.index') ? ' active' : ''}}">
-                                        {{__('sidebar.inquiry')}}
-                                    </a>
-                                </li>
-                            @endcan
-                            @can('advertisements.add')
-                                <li class="nav-item">
-                                    <a href="{{route('admin.slider.advertisements.create')}}"
-                                       class="nav-link{{Request::routeIs('admin.slider.advertisements.create') ? ' active' : ''}}">
-                                        {{__('sidebar.create')}}
-                                    </a>
-                                </li>
-                            @endcan
-                        </ul>
-                    </li>
-                    <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.side.advertisements.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
-                        <a class="nav-link cursor-pointer">
-                            <i class="icon-newspaper"></i>
-                            <span>{{__('sidebar.advertisements.side-advertisements')}}</span>
-                        </a>
-                        <ul class="nav nav-group-sub"
-                            data-submenu-title="{{__('sidebar.advertisements.side-advertisements')}}">
-                            @can('advertisements.inquiry')
-                                <li class="nav-item">
-                                    <a href="{{route('admin.side.advertisements.index')}}"
-                                       class="nav-link{{Request::routeIs('admin.side.advertisements.index') ? ' active' : ''}}">
-                                        {{__('sidebar.inquiry')}}
-                                    </a>
-                                </li>
-                            @endcan
-                            @can('advertisements.add')
-                                <li class="nav-item">
-                                    <a href="{{route('admin.side.advertisements.create')}}"
-                                       class="nav-link{{Request::routeIs('admin.side.advertisements.create') ? ' active' : ''}}">
-                                        {{__('sidebar.create')}}
-                                    </a>
-                                </li>
-                            @endcan
-                        </ul>
-                    </li>
-                @endcanany
-                {{--/Advertisements--}}
-
                 {{--Marketing Tools--}}
                 @canany(['send.emails','send.sms','send.notifications','modal.inquiry'])
-                    <li id="marketing-tools" class="nav-item-header">
-                        <div class="text-uppercase font-size-xs line-height-xs">
-                            {{__('sidebar.marketing.title')}}
-                        </div>
-                        <i class="icon-menu" title="{{__('sidebar.marketing.title')}}"></i>
-                    </li>
                     @can('send.emails')
-                        <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.send.emails.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
+                        <li id="marketing-tools" class="nav-item nav-item-submenu{{(Request::routeIs('admin.send.emails.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
                             <a class="nav-link cursor-pointer">
                                 <i class="icon-mail5"></i>
                                 <span>{{__('sidebar.marketing.send-email')}}</span>
@@ -709,16 +664,40 @@
                 @endcanany
                 {{--/Marketing Tools--}}
 
+                {{--Requests --}}
+                @canany(['requests.contact.us','requests.username.change',])
+                    <li id="requests" class="nav-item nav-item-submenu{{(Request::routeIs('admin.requests.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
+                        <a class="nav-link cursor-pointer">
+                            <i class="icon-mailbox"></i>
+                            <span>{{__('sidebar.requests.title')}}</span>
+                        </a>
+                        <ul class="nav nav-group-sub"
+                            data-submenu-title="{{__('sidebar.requests.title')}}">
+                            @can('requests.contact.us')
+                                <li class="nav-item">
+                                    <a href="{{route('admin.requests.contact-us.index')}}"
+                                       class="nav-link{{Request::routeIs('admin.requests.contact-us.index') ? ' active' : ''}}">
+                                        {{__('sidebar.requests.contact-us')}}
+                                    </a>
+                                </li>
+                            @endcan
+                            @can('requests.username.change')
+                                <li class="nav-item">
+                                    <a href="{{route('admin.requests.change-name.index')}}"
+                                       class="nav-link{{Request::routeIs('admin.requests.change-name.index') ? ' active' : ''}}">
+                                        {{__('sidebar.requests.username-change')}}
+                                    </a>
+                                </li>
+                            @endcan
+                        </ul>
+                    </li>
+                @endcanany
+                {{--/Requests --}}
+
                 {{--System--}}
                 @canany(['settings.inquiry', 'export.database', 'logs.inquiry', 'countries.inquiry', 'countries.add', 'governorates.inquiry', 'governorates.add', 'cities.inquiry', 'cities.add'])
-                    <li id="system" class="nav-item-header">
-                        <div class="text-uppercase font-size-xs line-height-xs">
-                            {{__('sidebar.system.title')}}
-                        </div>
-                        <i class="icon-menu" title="{{__('sidebar.system.title')}}"></i>
-                    </li>
                     @canany(['settings.inquiry', 'countries.inquiry', 'countries.add', 'governorates.inquiry', 'governorates.add', 'cities.inquiry', 'cities.add'])
-                        <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.system.settings.index') || Request::routeIs('admin.countries.*') || Request::routeIs('admin.governorates.*') || Request::routeIs('admin.cities.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
+                        <li id="system" class="nav-item nav-item-submenu{{(Request::routeIs('admin.system.settings.index') || Request::routeIs('admin.countries.*') || Request::routeIs('admin.governorates.*') || Request::routeIs('admin.cities.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
                             <a class="nav-link cursor-pointer">
                                 <i class="icon-cog"></i>
                                 <span>{{__('sidebar.system.settings.title')}}</span>

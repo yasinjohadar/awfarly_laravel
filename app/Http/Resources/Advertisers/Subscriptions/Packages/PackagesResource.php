@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Advertisers\Subscriptions\Packages;
 
+use App\Models\Currencies\Currency;
 use Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -33,8 +34,25 @@ class PackagesResource extends JsonResource
                     ->orWhere('ends_at', null);
             })
             ->first();
-        $currency = __("api/advertisers/subscriptions/packages/packages.currencies.$this->currency");
+        $currencyModel = Currency::where('code', $this->currency)->first();
         $subscription_type = __("api/advertisers/subscriptions/packages/packages.subscription_types.$this->subscription_type");
+
+        //optionally convert the displayed price into a currency requested by the client
+        $displayCurrency = $currencyModel;
+        $price = $this->price;
+        $oldPrice = $this->old_price;
+        $requestedCurrency = $request->query('currency');
+        if ($requestedCurrency) {
+            $requested = Currency::where('code', strtoupper($requestedCurrency))
+                ->where('is_active', true)
+                ->first();
+            if ($requested) {
+                $displayCurrency = $requested;
+                $price = Currency::convert((float) $this->price, $this->currency, $requested->code);
+                $oldPrice = $this->old_price !== null ? Currency::convert((float) $this->old_price, $this->currency, $requested->code) : null;
+            }
+        }
+        $currency = $displayCurrency ? $displayCurrency->{$name} : $this->currency;
 
         $ends_at = $is_subscribed ? $is_subscribed->ends_at : null;
         return [
@@ -46,11 +64,13 @@ class PackagesResource extends JsonResource
             'maximumPosts' => $this->maximum_posts,
             'maximumOffers' => $this->maximum_offers,
             'maximumMonthlyOffers' => $this->maximum_monthly_offers,
-            'price' => $this->price,
-            'oldPrice' => $this->old_price,
+            'price' => round($price, 2),
+            'oldPrice' => $oldPrice !== null ? round($oldPrice, 2) : null,
             'duration' => $this->duration,
             'subscriptionType' => $subscription_type,
             'currency' => $currency,
+            'currencyCode' => $displayCurrency->code ?? $this->currency,
+            'currencySymbol' => $displayCurrency->symbol ?? null,
             'isSubscribed' => (bool)$is_subscribed,
             'isTrial' => (bool)$this->is_trial,
             'endsAt' => $ends_at ? Carbon::make($ends_at)->locale(App::currentLocale())->translatedFormat('d F Y') : null,

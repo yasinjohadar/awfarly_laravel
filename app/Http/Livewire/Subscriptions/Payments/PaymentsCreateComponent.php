@@ -8,6 +8,7 @@ use App\Models\Subscriptions\Packages\Package;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Livewire\Component;
 use Throwable;
@@ -27,18 +28,21 @@ class PaymentsCreateComponent extends Component
     public bool $is_visible = true;
     public bool $is_active = true;
 
-    protected array $rules = [
-        'name' => ['required', 'string', 'unique:packages,name'],
-        'maximum_posts' => ['required', 'integer'],
-        'description' => ['nullable', 'string'],
-        'specifications' => ['required', 'string'],
-        'price' => ['required', 'int'],
-        'old_price' => ['required', 'int'],
-        'subscription_type' => ['required', 'in:daily,weekly,monthly,two_months,three_months,six_months,yearly'],
-        'currency' => ['required', 'in:SAR,USD'],
-        'is_visible' => ['required', 'boolean'],
-        'is_active' => ['required', 'boolean'],
-    ];
+    protected function rules(): array
+    {
+        return [
+            'name' => ['required', 'string', 'unique:packages,name'],
+            'maximum_posts' => ['required', 'integer'],
+            'description' => ['nullable', 'string'],
+            'specifications' => ['required', 'string'],
+            'price' => ['required', 'int'],
+            'old_price' => ['required', 'int'],
+            'subscription_type' => ['required', 'in:daily,weekly,monthly,two_months,three_months,six_months,yearly'],
+            'currency' => ['required', Rule::exists('currencies', 'code')->where('is_active', true)],
+            'is_visible' => ['required', 'boolean'],
+            'is_active' => ['required', 'boolean'],
+        ];
+    }
 
     public function render()
     {
@@ -66,19 +70,7 @@ class PaymentsCreateComponent extends Component
             $specifications = Filter::RemoveHtml($this->specifications);
             $specifications = preg_replace("/[\r\n]+/", "\n", $specifications);
             $specifications = explode("\n", $specifications);
-            if ($this->subscription_type === 'monthly') {
-                $duration = 1;
-            } else if ($this->subscription_type === 'two_months') {
-                $duration = 2;
-            } else if ($this->subscription_type === 'three_months') {
-                $duration = 3;
-            } else if ($this->subscription_type === 'six_months') {
-                $duration = 6;
-            } else if ($this->subscription_type === 'yearly') {
-                $duration = 1;
-            } else {
-                $duration = 1;
-            }
+            $duration = Package::durationDaysForType($this->subscription_type);
             Package::create([
                 'name' => Filter::RemoveHtml($this->name),
                 'maximum_posts' => $this->maximum_posts,

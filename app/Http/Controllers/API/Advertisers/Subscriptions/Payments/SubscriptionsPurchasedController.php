@@ -137,15 +137,7 @@ class SubscriptionsPurchasedController extends Controller
                     $package = Package::where('product_id', $data['productId'])
                         ->first();
 
-                    if ($package->subscription_type === 'daily') {
-                        $ends_at = now()->addDays($package->duration);
-                    } else if ($package->subscription_type === 'weekly') {
-                        $ends_at = now()->addWeeks($package->duration);
-                    } else if (in_array($package->subscription_type, ['monthly', 'two_months', 'three_months', 'six_months'])) {
-                        $ends_at = now()->addMonths($package->duration);
-                    } else {
-                        $ends_at = now()->addYears($package->duration);
-                    }
+                    $ends_at = PackageQuotas::endsAt($package);
 
                     Auth::guard('advertiser-api')->user()
                         ->packages()

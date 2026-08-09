@@ -4,6 +4,7 @@ namespace App\Http\Livewire\Advertisers;
 
 use App\Helpers\Advertisers\PackageQuotas;
 use App\Helpers\Filter;
+use App\Helpers\Settings;
 use App\Models\Countries\Country;
 use App\Models\Languages\Language;
 use App\Models\Subscriptions\Packages\Package;
@@ -263,6 +264,19 @@ class AdvertisersCreateComponent extends Component
 
             if ($this->package_id) {
                 PackageQuotas::assignPackage($advertiser, Package::findOrFail($this->package_id));
+            } else {
+                //no package explicitly chosen: fall back to the configured default, if any
+                $defaultPackageId = Settings::Get('advertisers.default_package_id');
+                if ($defaultPackageId) {
+                    $defaultPackage = Package::where('id', $defaultPackageId)
+                        ->where('is_active', true)
+                        ->where('is_visible', true)
+                        ->first();
+
+                    if ($defaultPackage) {
+                        PackageQuotas::assignPackage($advertiser, $defaultPackage);
+                    }
+                }
             }
 
             //reset validation messages

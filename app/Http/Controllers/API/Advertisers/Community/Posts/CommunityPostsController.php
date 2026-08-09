@@ -639,43 +639,56 @@ class CommunityPostsController extends Controller
             return $this->apiBadRequestResponse($locationError);
         }
 
-        $allowed_posts_count = $advertiser->allowed_posts_count;
-
-        //check whether user is elite or not
-        if (Auth::guard('advertiser-api')->user()->is_elite) {
-            //get user package
-            $package = Auth::guard('advertiser-api')->user()
-                ->packages()
-                ->where('is_current', true)
-                ->where('is_active', true)
-                ->where('is_ended', false)
-                ->where('ends_at', '>', now())
-                ->first();
-
-            //return maximum posts quantity
-            $allowed_posts = ($allowed_posts_count >= 0) ? $allowed_posts_count : ($package->package->maximum_posts ?? Settings::Get('user.allowed.posts', 10));
-        } else {
-            //return maximum posts quantity
-            $allowed_posts = ($allowed_posts_count >= 0) ? $allowed_posts_count : Settings::Get('user.allowed.posts', 20);
-        }
-        //return error of posts equals or more than allowed posts
-        if ($allowed_posts == 0) {
-            return $this->apiBadRequestResponse(__('api/advertisers/community/posts/posts.exceeded-limit'));
-        }
-
-        if (isset($data['categoryId']) && $data['categoryId']) {
-            $category_id = $data['categoryId'];
-        } else {
-            $user_categories = AdvertiserCategories::where('advertiser_id', Auth::guard('advertiser-api')->id())
-                ->first();
-
-            $category_id = $user_categories->category_id ?? null;
-        }
-
         DB::beginTransaction();
         try {
+            //lock the advertiser row to serialize concurrent post-creation attempts
+            //and read a fresh, up-to-date quota value
+            $lockedAdvertiser = AdvertiserUser::where('id', $advertiser->id)
+                ->lockForUpdate()
+                ->first();
+
+            $allowed_posts_count = $lockedAdvertiser->allowed_posts_count;
+
+            //check whether user is elite or not
+            if ($lockedAdvertiser->is_elite) {
+                //get user package
+                $package = $lockedAdvertiser
+                    ->packages()
+                    ->where('is_current', true)
+                    ->where('is_active', true)
+                    ->where('is_ended', false)
+                    ->where('ends_at', '>', now())
+                    ->first();
+
+                //return maximum posts quantity
+                $allowed_posts = ($allowed_posts_count !== null) ? $allowed_posts_count : ($package->package->maximum_posts ?? Settings::Get('user.allowed.posts', 10));
+            } else {
+                //return maximum posts quantity
+                $allowed_posts = ($allowed_posts_count !== null) ? $allowed_posts_count : Settings::Get('user.allowed.posts', 20);
+            }
+            //return error of posts equals or more than allowed posts
+            if ($allowed_posts <= 0) {
+                DB::rollBack();
+                return $this->apiBadRequestResponse(__('api/advertisers/community/posts/posts.exceeded-limit'));
+            }
+
+            //require at least some text or media, not a fully empty post
+            if (empty($data['content']) && empty($data['media'])) {
+                DB::rollBack();
+                return $this->apiBadRequestResponse(__('api/advertisers/community/posts/posts.content-or-media-required'));
+            }
+
+            if (isset($data['categoryId']) && $data['categoryId']) {
+                $category_id = $data['categoryId'];
+            } else {
+                $user_categories = AdvertiserCategories::where('advertiser_id', $lockedAdvertiser->id)
+                    ->first();
+
+                $category_id = $user_categories->category_id ?? null;
+            }
+
             //create post
-            $post = Auth::guard('advertiser-api')->user()
+            $post = $lockedAdvertiser
                 ->posts()
                 ->create([
                     'content' => Filter::RemoveHtml($data['content']),
@@ -740,10 +753,10 @@ class CommunityPostsController extends Controller
                             $file = storage_path("app/uploads/$filename");
                         }
                     } else if (strstr($mime_type, 'image/')) {
-                        $file_width = Image::load($file)->getWidth();
-                        $file_height = Image::load($file)->getHeight();
                         $temp_image = Files::uploadTempImage($request, 'uploads/media', "media.{$index}.file");
                         $file = storage_path("app/$temp_image");
+                        $file_width = Image::load($file)->getWidth();
+                        $file_height = Image::load($file)->getHeight();
                     } else {
                         $file_width = null;
                         $file_height = null;
@@ -754,10 +767,13 @@ class CommunityPostsController extends Controller
                 }
             }
 
-            Auth::guard('advertiser-api')->user()
-                ->update([
-                    'allowed_posts_count' => $allowed_posts - 1,
-                ]);
+            $lockedAdvertiser->update([
+                'allowed_posts_count' => $allowed_posts - 1,
+            ]);
+        } catch (\Illuminate\Http\Exceptions\HttpResponseException $e) {
+            //bad-request responses (exceeded-limit, content-or-media-required) throw this by design; let it propagate
+            DB::rollBack();
+            throw $e;
         } catch (Exception $e) {
             DB::rollBack();
             return $this->apiExceptionResponse(__('api/advertisers/community/posts/posts.something-wrong'));
@@ -986,10 +1002,10 @@ class CommunityPostsController extends Controller
                             $file = storage_path("app/uploads/$filename");
                         }
                     } else if (strstr($mime_type, 'image/')) {
-                        $file_width = Image::load($file)->getWidth();
-                        $file_height = Image::load($file)->getHeight();
                         $temp_image = Files::uploadTempImage($request, 'uploads/media', "media.{$index}.file");
                         $file = storage_path("app/$temp_image");
+                        $file_width = Image::load($file)->getWidth();
+                        $file_height = Image::load($file)->getHeight();
                     } else {
                         $file_width = null;
                         $file_height = null;

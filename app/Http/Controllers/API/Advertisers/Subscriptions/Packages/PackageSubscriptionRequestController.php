@@ -46,6 +46,7 @@ class PackageSubscriptionRequestController extends Controller
         $data = $request->validate([
             'packageId' => ['required', 'exists:packages,id'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'receipt' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ]);
 
         $advertiser = Auth::guard('advertiser-api')->user();
@@ -71,11 +72,16 @@ class PackageSubscriptionRequestController extends Controller
             );
         }
 
+        $receiptPath = $request->hasFile('receipt')
+            ? $request->file('receipt')->store('uploads/subscriptions/receipts', 'local')
+            : null;
+
         $subscriptionRequest = PackageSubscriptionRequest::create([
             'advertiser_id' => $advertiser->id,
             'package_id' => $package->id,
             'status' => 'pending',
             'notes' => $data['notes'] ?? null,
+            'receipt' => $receiptPath,
         ]);
 
         return $this->apiResponse([

@@ -12,6 +12,7 @@ return [
     'disliked' => 'Disliked',
     'liked' => 'Liked',
     'no-permission' => "Sorry, you don't have permission to perform this action to this offer.",
+    'content-empty' => "Please write some content for the offer!",
     'user-unfollowed' => 'Unfollowed',
     'reports' => [
         'no-report' => 'There is no report with that id!',

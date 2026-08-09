@@ -6,6 +6,9 @@ use App\Helpers\Admins\AdminLogs;
 use App\Helpers\Filter;
 use App\Models\Countries\Cities\City;
 use App\Models\Countries\Governorates\Governorate;
+use App\Models\Posts\Post;
+use App\Models\Users\Advertisers\AdvertiserUser;
+use App\Models\Users\Customers\CustomerUser;
 use Exception;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
@@ -97,9 +100,56 @@ class CitiesInquiryComponent extends LivewireDatatable
         return $query;
     }
 
-    public function showDeleteModal()
+    /**
+     * show delete modal for selected rows, or a single city by id
+     * @param int|null $id
+     */
+    public function showDeleteModal($id = null)
     {
+        if ($id !== null) {
+            $this->selected = [(string) $id];
+        }
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $this->setDeleteModalTextsForSelection();
         $this->showDeleteModal = true;
+    }
+
+    /**
+     * Set delete modal title/content based on selection count and city name
+     */
+    protected function setDeleteModalTextsForSelection(): void
+    {
+        $base = 'pages/countries/cities/index.modal.delete';
+
+        if (count($this->selected) === 1) {
+            $city = City::find($this->selected[0]);
+            $name = '';
+            if ($city) {
+                $name = App::currentLocale() === 'ar'
+                    ? ($city->name_ar ?: $city->name_en)
+                    : ($city->name_en ?: $city->name_ar);
+            }
+
+            $this->deleteModalTexts = [
+                'title' => __("$base.title"),
+                'content' => __("$base.content", ['name' => $name]),
+                'cancel' => __("$base.cancel"),
+                'submit' => __("$base.submit"),
+            ];
+
+            return;
+        }
+
+        $this->deleteModalTexts = [
+            'title' => __("$base.title_multiple"),
+            'content' => __("$base.content_multiple"),
+            'cancel' => __("$base.cancel"),
+            'submit' => __("$base.submit"),
+        ];
     }
 
     public function deleteSelected()
@@ -112,9 +162,30 @@ class CitiesInquiryComponent extends LivewireDatatable
             return null;
         }
 
+        if (empty($this->selected)) {
+            $this->showDeleteModal = false;
+            return null;
+        }
+
         DB::beginTransaction();
         try {
             $cities = City::whereIn('id', $this->selected)->get();
+
+            //block delete if a city is still referenced by users/posts
+            $ids = $cities->pluck('id');
+            $inUse = AdvertiserUser::whereIn('city_id', $ids)->exists()
+                || CustomerUser::whereIn('city_id', $ids)->exists()
+                || Post::whereIn('city_id', $ids)->exists();
+
+            if ($inUse) {
+                DB::rollBack();
+                $this->alert('error', __('pages/countries/cities/index.modal.delete.in_use'), [
+                    'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                ]);
+                $this->showDeleteModal = false;
+                return null;
+            }
+
             parent::delete($this->selected);
             $this->selected = [];
 
@@ -164,6 +235,7 @@ class CitiesInquiryComponent extends LivewireDatatable
         }
 
         $this->validate([
+            'city.governorate_id' => ['required', 'exists:governorates,id'],
             'city.name_en' => ['required'],
             'city.name_ar' => ['required'],
         ]);

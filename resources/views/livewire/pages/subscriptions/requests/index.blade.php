@@ -39,6 +39,7 @@
                         <th>{{ __('pages/subscriptions/requests/index.content.table.advertiser') }}</th>
                         <th>{{ __('pages/subscriptions/requests/index.content.table.package') }}</th>
                         <th>{{ __('pages/subscriptions/requests/index.content.table.status') }}</th>
+                        <th>{{ __('pages/subscriptions/requests/index.content.table.receipt') }}</th>
                         <th>{{ __('pages/subscriptions/requests/index.content.table.created_at') }}</th>
                         <th>{{ __('pages/subscriptions/requests/index.content.table.actions') }}</th>
                     </tr>
@@ -61,6 +62,16 @@
                                     {{ __('pages/subscriptions/requests/index.content.status.'.$item->status) }}
                                 </span>
                             </td>
+                            <td>
+                                @if($item->receipt)
+                                    <a href="{{ route('admin.subscriptions.requests.receipt', $item->id) }}"
+                                       target="_blank" class="btn btn-sm btn-secondary">
+                                        {{ __('pages/subscriptions/requests/index.content.actions.view_receipt') }}
+                                    </a>
+                                @else
+                                    —
+                                @endif
+                            </td>
                             <td>{{ optional($item->created_at)->format('Y-m-d H:i') }}</td>
                             <td>
                                 @if($item->status === 'pending')
@@ -81,7 +92,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center">
+                            <td colspan="7" class="text-center">
                                 {{ __('pages/subscriptions/requests/index.content.empty') }}
                             </td>
                         </tr>

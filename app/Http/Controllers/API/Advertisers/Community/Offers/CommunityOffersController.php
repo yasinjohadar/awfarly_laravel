@@ -483,7 +483,15 @@ class CommunityOffersController extends Controller
         //Validate course id
         $this->apiValidate($data, [
             'categoryId' => ['nullable', 'exists:categories,id'],
-            'content' => ['required', 'string'],
+            'content' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    if (trim($value) === '') {
+                        $fail(__('api/advertisers/community/offers/offers.content-empty'));
+                    }
+                },
+            ],
             'currency' => ['required', 'string'],
             'amount'    => ['required', 'numeric','min:0'],
             'salePercentage' => ['required', 'integer', 'min:0', 'max:100'],
@@ -495,19 +503,6 @@ class CommunityOffersController extends Controller
             'media.*.endAt' => ['nullable', 'integer', 'gt:media.*.startAt'],
         ]);
         $advertiser = Auth::guard('advertiser-api')->user();
-        $limits = OfferLimits::evaluate($advertiser);
-
-        if ($limits['reason'] === 'active') {
-            return $this->apiBadRequestResponse(__('api/advertisers/community/offers/offers.exceeded-limit', [
-                'count' => $limits['activeLimit'],
-            ]));
-        }
-
-        if ($limits['reason'] === 'monthly') {
-            return $this->apiBadRequestResponse(__('api/advertisers/community/offers/offers.exceeded-monthly-limit', [
-                'count' => $limits['monthlyLimit'],
-            ]));
-        }
 
         //get auto approve status in settings
         $auto_approve = Settings::Get('offers.default.auto.approve', false);
@@ -520,14 +515,46 @@ class CommunityOffersController extends Controller
 
         DB::beginTransaction();
         try {
+            //lock the advertiser row to serialize concurrent offer-creation attempts
+            //and evaluate limits against a fresh, up-to-date state
+            $lockedAdvertiser = AdvertiserUser::where('id', $advertiser->id)
+                ->lockForUpdate()
+                ->first();
+
+            $limits = OfferLimits::evaluate($lockedAdvertiser);
+
+            if ($limits['reason'] === 'active') {
+                DB::rollBack();
+                return $this->apiBadRequestResponse(__('api/advertisers/community/offers/offers.exceeded-limit', [
+                    'count' => $limits['activeLimit'],
+                ]));
+            }
+
+            if ($limits['reason'] === 'monthly') {
+                DB::rollBack();
+                return $this->apiBadRequestResponse(__('api/advertisers/community/offers/offers.exceeded-monthly-limit', [
+                    'count' => $limits['monthlyLimit'],
+                ]));
+            }
+
+            //fallback to advertiser's own category when none was provided
+            if (isset($data['categoryId']) && $data['categoryId']) {
+                $category_id = $data['categoryId'];
+            } else {
+                $user_categories = AdvertiserCategories::where('advertiser_id', $lockedAdvertiser->id)
+                    ->first();
+
+                $category_id = $user_categories->category_id ?? null;
+            }
+
             //create offer
-            $offer = Auth::guard('advertiser-api')->user()
+            $offer = $lockedAdvertiser
                 ->offers()
                 ->create([
-                    'category_id' => $data['categoryId'] ?? null,
+                    'category_id' => $category_id,
                     'content' => $data['content'] ? Filter::RemoveHtml($data['content']) : null,
                     'sale_percentage' => $data['salePercentage'] ?? null,
-                    'advertisement_url' => $data['advertisementUrl'] ? Filter::RemoveHtml($data['advertisementUrl']) : null,
+                    'advertisement_url' => !empty($data['advertisementUrl']) ? Filter::RemoveHtml($data['advertisementUrl']) : null,
                     'expires_at' => $data['expires_at'] ?? null,
                     'expires_in' => $data['expiresIn'] ?? null,
                     'amount' => $data['amount'] ?? null,
@@ -589,10 +616,10 @@ class CommunityOffersController extends Controller
                             $file = storage_path("app/uploads/$filename");
                         }
                     } else if (strstr($mime_type, 'image/')) {
-                        $file_width = Image::load($file)->getWidth();
-                        $file_height = Image::load($file)->getHeight();
                         $temp_image = Files::uploadTempImage($request, 'uploads/media', "media.{$index}.file");
                         $file = storage_path("app/$temp_image");
+                        $file_width = Image::load($file)->getWidth();
+                        $file_height = Image::load($file)->getHeight();
                     } else {
                         $file_width = null;
                         $file_height = null;
@@ -606,6 +633,10 @@ class CommunityOffersController extends Controller
             if ($auto_approve) {
                 $this->sendNotificationToIntersetUser($offer);
             }
+        } catch (\Illuminate\Http\Exceptions\HttpResponseException $e) {
+            //bad-request responses (exceeded-limit) throw this by design; let it propagate
+            DB::rollBack();
+            throw $e;
         } catch (Exception $e) {
             DB::rollBack();
             return $this->apiExceptionResponse(__('api/advertisers/community/offers/offers.something-wrong'));
@@ -800,10 +831,10 @@ class CommunityOffersController extends Controller
                             $file = storage_path("app/uploads/$filename");
                         }
                     } else if (strstr($mime_type, 'image/')) {
-                        $file_width = Image::load($file)->getWidth();
-                        $file_height = Image::load($file)->getHeight();
                         $temp_image = Files::uploadTempImage($request, 'uploads/media', "media.{$index}.file");
                         $file = storage_path("app/$temp_image");
+                        $file_width = Image::load($file)->getWidth();
+                        $file_height = Image::load($file)->getHeight();
                     } else {
                         $file_width = null;
                         $file_height = null;
@@ -1174,7 +1205,7 @@ class CommunityOffersController extends Controller
 
     private function sendNotificationToIntersetUser($offer)
     {
-        $advertiserCategories = $offer->advertiser()->categories()->pluck('category_id')->toArray();
+        $advertiserCategories = $offer->advertiser->categories()->pluck('category_id')->toArray();
 
         $users_ids = CustomerCategories::whereIn('category_id',$advertiserCategories)->pluck('customer_id')->toArray();
         $advertiser_ids = AdvertiserCategories::whereIn('category_id',$advertiserCategories)->pluck('advertiser_id')->toArray();

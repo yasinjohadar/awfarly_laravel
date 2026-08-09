@@ -19,6 +19,8 @@ return [
         ],
     ],
     'categories' => 'الأقسام',
+    'interests' => 'الاهتمامات',
+    'currencies' => 'العملات',
     'community' => [
         'title' => 'المجتمع',
         'posts' => [

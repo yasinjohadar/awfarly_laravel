@@ -11,6 +11,7 @@ return [
     'disliked' => 'Disliked',
     'liked' => 'Liked',
     'no-permission' => "Sorry, you don't have permission to perform this action to this post.",
+    'content-or-media-required' => "Please write some content or add an image/video to the post!",
     'user-unfollowed' => 'Unfollowed',
     'reports' => [
         'no-report' => 'There is no report with that id!',

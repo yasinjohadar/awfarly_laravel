@@ -63,6 +63,7 @@ return [
                 'name' => 'Name',
                 'value' => 'Value',
                 'logo_hint' => 'Leave empty to keep the current logo.',
+                'no_default_package' => '-- No default package --',
                 'boolean' => [
                     'yes' => 'Yes',
                     'no' => 'No',

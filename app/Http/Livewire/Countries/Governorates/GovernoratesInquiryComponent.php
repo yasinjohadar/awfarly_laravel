@@ -6,6 +6,9 @@ use App\Helpers\Admins\AdminLogs;
 use App\Helpers\Filter;
 use App\Models\Countries\Country;
 use App\Models\Countries\Governorates\Governorate;
+use App\Models\Posts\Post;
+use App\Models\Users\Advertisers\AdvertiserUser;
+use App\Models\Users\Customers\CustomerUser;
 use Exception;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
@@ -100,9 +103,56 @@ class GovernoratesInquiryComponent extends LivewireDatatable
         return $query;
     }
 
-    public function showDeleteModal()
+    /**
+     * show delete modal for selected rows, or a single governorate by id
+     * @param int|null $id
+     */
+    public function showDeleteModal($id = null)
     {
+        if ($id !== null) {
+            $this->selected = [(string) $id];
+        }
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $this->setDeleteModalTextsForSelection();
         $this->showDeleteModal = true;
+    }
+
+    /**
+     * Set delete modal title/content based on selection count and governorate name
+     */
+    protected function setDeleteModalTextsForSelection(): void
+    {
+        $base = 'pages/countries/governorates/index.modal.delete';
+
+        if (count($this->selected) === 1) {
+            $governorate = Governorate::find($this->selected[0]);
+            $name = '';
+            if ($governorate) {
+                $name = App::currentLocale() === 'ar'
+                    ? ($governorate->name_ar ?: $governorate->name_en)
+                    : ($governorate->name_en ?: $governorate->name_ar);
+            }
+
+            $this->deleteModalTexts = [
+                'title' => __("$base.title"),
+                'content' => __("$base.content", ['name' => $name]),
+                'cancel' => __("$base.cancel"),
+                'submit' => __("$base.submit"),
+            ];
+
+            return;
+        }
+
+        $this->deleteModalTexts = [
+            'title' => __("$base.title_multiple"),
+            'content' => __("$base.content_multiple"),
+            'cancel' => __("$base.cancel"),
+            'submit' => __("$base.submit"),
+        ];
     }
 
     public function deleteSelected()
@@ -115,9 +165,42 @@ class GovernoratesInquiryComponent extends LivewireDatatable
             return null;
         }
 
+        if (empty($this->selected)) {
+            $this->showDeleteModal = false;
+            return null;
+        }
+
         DB::beginTransaction();
         try {
-            $governorates = Governorate::whereIn('id', $this->selected)->get();
+            $governorates = Governorate::whereIn('id', $this->selected)
+                ->withCount('cities')
+                ->get();
+
+            //block delete if a governorate still has cities or referenced users/posts
+            $inUse = $governorates->first(function ($governorate) {
+                return $governorate->cities_count > 0;
+            });
+
+            if (!$inUse) {
+                $ids = $governorates->pluck('id');
+                $hasUsage = AdvertiserUser::whereIn('governorate_id', $ids)->exists()
+                    || CustomerUser::whereIn('governorate_id', $ids)->exists()
+                    || Post::whereIn('governorate_id', $ids)->exists();
+
+                if ($hasUsage) {
+                    $inUse = true;
+                }
+            }
+
+            if ($inUse) {
+                DB::rollBack();
+                $this->alert('error', __('pages/countries/governorates/index.modal.delete.in_use'), [
+                    'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                ]);
+                $this->showDeleteModal = false;
+                return null;
+            }
+
             parent::delete($this->selected);
             $this->selected = [];
 

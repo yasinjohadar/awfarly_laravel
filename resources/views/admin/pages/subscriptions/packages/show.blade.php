@@ -387,12 +387,17 @@
             <i class="icon-arrow-right13 mr-1"></i>
             {{ __('pages/subscriptions/packages/show.content.back') }}
         </button>
-        <button title="Edit" @cannot('packages.edit') disabled @endcannot
-                wire:click="showEditModal({{ $package_id }})"
-                class="btn btn-primary">
-            <i class="icon-pencil7 mr-1"></i>
-            {{ __('pages/subscriptions/packages/show.content.edit') }}
-        </button>
+        @can('packages.edit')
+            <a title="Edit" href="{{ route('admin.subscriptions.packages.edit', $package_id) }}" class="btn btn-primary">
+                <i class="icon-pencil7 mr-1"></i>
+                {{ __('pages/subscriptions/packages/show.content.edit') }}
+            </a>
+        @else
+            <button title="Edit" disabled class="btn btn-primary">
+                <i class="icon-pencil7 mr-1"></i>
+                {{ __('pages/subscriptions/packages/show.content.edit') }}
+            </button>
+        @endcan
     </div>
 
     <div class="package-show__hero">
@@ -572,6 +577,4 @@
             </div>
         </div>
     </div>
-
-    @include('modals.subscriptions.packages.edit')
 </div>

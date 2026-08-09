@@ -55,4 +55,19 @@ class SubscriptionsPackagesController extends Controller
 
         return view('admin.pages.subscriptions.packages.create');
     }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param $id
+     * @return Application|Factory|View|void
+     */
+    public function edit($id)
+    {
+        if (!Auth::guard('admin')->user()->can('packages.edit')) {
+            return abort(404);
+        }
+
+        return view('admin.pages.subscriptions.packages.edit', ['id' => $id]);
+    }
 }

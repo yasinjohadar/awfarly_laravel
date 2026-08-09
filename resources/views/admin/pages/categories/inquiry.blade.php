@@ -20,8 +20,10 @@
                         @else
                         wire:click="$emitSelf('setCategoryId', null)" @endisset>{{__('pages/categories/index.content.back')}}</button>
                 @empty($order)
-                    {{--<button class="btn btn-primary"
-                            wire:click="$emitTo('categories.category-inquiry-component', 'showAddModal')">{{__('pages/categories/index.content.add')}}</button>--}}
+                    @can('categories.add')
+                        <button class="btn btn-primary"
+                                wire:click="$emitTo('categories.category-inquiry-component', 'showAddModal')">{{__('pages/categories/index.content.add')}}</button>
+                    @endcan
                     @if($category->childCategories()->count() > 0)
                         <button class="btn btn-secondary"
                                 wire:click="$emitSelf('setCategoryId', {{$category->id}}, true)">{{__('pages/categories/index.content.sort')}}</button>

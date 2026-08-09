@@ -18,6 +18,7 @@ return [
             'advertiser' => 'Advertiser',
             'package' => 'Package',
             'status' => 'Status',
+            'receipt' => 'Payment Receipt',
             'created_at' => 'Created At',
             'actions' => 'Actions',
         ],
@@ -29,6 +30,7 @@ return [
         'actions' => [
             'approve' => 'Approve',
             'reject' => 'Reject',
+            'view_receipt' => 'View Receipt',
         ],
         'empty' => 'No requests found.',
     ],

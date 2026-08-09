@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\API\Auth;
 
 use Exception;
+use App\Helpers\Advertisers\PackageQuotas;
 use App\Helpers\Filter;
 use App\Helpers\Geography\Geography;
 use App\Helpers\Settings;
+use App\Models\Subscriptions\Packages\Package;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -61,6 +63,7 @@ class RegisterController extends Controller
             'provider',
             'providerId',
             'interestedCategories',
+            'interestedInterests',
             'birth_date',
             'gender',
             'discount_percentage',
@@ -94,9 +97,11 @@ class RegisterController extends Controller
             'provider' => 'nullable|required_with:providerId',
             'providerId' => 'nullable|required_with:provider',
             'interestedCategories' => ['nullable','sometimes', 'array'],
+            'interestedInterests' => ['nullable','sometimes', 'array'],
             'gender' => ['nullable','sometimes', 'string','in:male,female'],
             'birth_date' => ['nullable','sometimes', 'date'],
-            'interestedCategories.*' => ['nullable','sometimes']
+            'interestedCategories.*' => ['nullable','sometimes'],
+            'interestedInterests.*' => ['nullable','sometimes']
         ]);
         // Set guard
         $this->guard = $data['type'];
@@ -171,6 +176,21 @@ class RegisterController extends Controller
                 'last_login_at' => now(),
             ]);
 
+            // Grant the configured default package to newly registered advertisers
+            if ($data['type'] === 'advertiser') {
+                $defaultPackageId = Settings::Get('advertisers.default_package_id');
+                if ($defaultPackageId) {
+                    $defaultPackage = Package::where('id', $defaultPackageId)
+                        ->where('is_active', true)
+                        ->where('is_visible', true)
+                        ->first();
+
+                    if ($defaultPackage) {
+                        PackageQuotas::assignPackage($user, $defaultPackage);
+                    }
+                }
+            }
+
             //change category id
             if ($request->has('interestedCategories') && is_array($request->interestedCategories) && count($request->interestedCategories) > 0) {
                 $user->categories()
@@ -180,6 +200,20 @@ class RegisterController extends Controller
                         $user->categories()
                             ->updateOrCreate([
                                 'category_id' => $category,
+                            ]);
+                    }
+                }
+            }
+
+            //set interest ids
+            if ($request->has('interestedInterests') && is_array($request->interestedInterests) && count($request->interestedInterests) > 0) {
+                $user->interests()
+                    ->delete();
+                foreach ($data['interestedInterests'] as $interest) {
+                    if ($interest != null && $interest !== '' && $interest !== '0') {
+                        $user->interests()
+                            ->updateOrCreate([
+                                'interest_id' => $interest,
                             ]);
                     }
                 }

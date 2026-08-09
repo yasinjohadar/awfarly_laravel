@@ -15,7 +15,19 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => [
+        'api/*',
+        'sanctum/csrf-cookie',
+        // Publicly-servable file routes (routes/web/user.php) — consumed cross-origin
+        // by the Flutter web app and any browser-based frontend (logo, avatars, chat
+        // images, category images, media downloads), so they need CORS headers too.
+        'image/*',
+        'user/profile/image',
+        'users/profile/image/*',
+        'admin/chats/*',
+        'categories/*',
+        'media/*',
+    ],
 
     'allowed_methods' => ['*'],
 

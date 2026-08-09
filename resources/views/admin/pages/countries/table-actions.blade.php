@@ -7,4 +7,8 @@
             class="btn btn-secondary">
         <i class="icon-folder-open"></i>
     </button>
+    <button title="{{__('datatable.delete')}}" @cannot('countries.delete') disabled @endcannot
+            wire:click="showDeleteModal({{ $id }})" class="btn btn-danger mx-1">
+        <i class="icon-trash"></i>
+    </button>
 </div>

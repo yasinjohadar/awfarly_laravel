@@ -5,6 +5,8 @@ namespace App\Http\Livewire\Countries;
 use App\Helpers\Admins\AdminLogs;
 use App\Helpers\Filter;
 use App\Models\Countries\Country;
+use App\Models\Users\Advertisers\AdvertiserUser;
+use App\Models\Users\Customers\CustomerUser;
 use Exception;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
@@ -105,11 +107,55 @@ class CountriesInquiryComponent extends LivewireDatatable
     }
 
     /**
-     * show delete modal
+     * show delete modal for selected rows, or a single country by id
+     * @param int|null $id
      */
-    public function showDeleteModal()
+    public function showDeleteModal($id = null)
     {
+        if ($id !== null) {
+            $this->selected = [(string) $id];
+        }
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $this->setDeleteModalTextsForSelection();
         $this->showDeleteModal = true;
+    }
+
+    /**
+     * Set delete modal title/content based on selection count and country name
+     */
+    protected function setDeleteModalTextsForSelection(): void
+    {
+        $base = 'pages/countries/index.modal.delete';
+
+        if (count($this->selected) === 1) {
+            $country = Country::find($this->selected[0]);
+            $name = '';
+            if ($country) {
+                $name = App::currentLocale() === 'ar'
+                    ? ($country->name_ar ?: $country->name_en)
+                    : ($country->name_en ?: $country->name_ar);
+            }
+
+            $this->deleteModalTexts = [
+                'title' => __("$base.title"),
+                'content' => __("$base.content", ['name' => $name]),
+                'cancel' => __("$base.cancel"),
+                'submit' => __("$base.submit"),
+            ];
+
+            return;
+        }
+
+        $this->deleteModalTexts = [
+            'title' => __("$base.title_multiple"),
+            'content' => __("$base.content_multiple"),
+            'cancel' => __("$base.cancel"),
+            'submit' => __("$base.submit"),
+        ];
     }
 
     /**
@@ -124,11 +170,42 @@ class CountriesInquiryComponent extends LivewireDatatable
             ]);
             return null;
         }
+
+        if (empty($this->selected)) {
+            $this->showDeleteModal = false;
+            return null;
+        }
+
         DB::beginTransaction();
         try {
             //get countries
             $countries = Country::whereIn('id', $this->selected)
+                ->withCount('governorates')
                 ->get();
+
+            //block delete if a country still has governorates or referenced users
+            $inUse = $countries->first(function ($country) {
+                return $country->governorates_count > 0;
+            });
+
+            if (!$inUse) {
+                $codes = $countries->pluck('code');
+                $hasUsers = AdvertiserUser::whereIn('country_code', $codes)->exists()
+                    || CustomerUser::whereIn('country_code', $codes)->exists();
+
+                if ($hasUsers) {
+                    $inUse = true;
+                }
+            }
+
+            if ($inUse) {
+                DB::rollBack();
+                $this->alert('error', __('pages/countries/index.modal.delete.in_use'), [
+                    'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                ]);
+                $this->showDeleteModal = false;
+                return null;
+            }
 
             //delete data
             parent::delete($this->selected);

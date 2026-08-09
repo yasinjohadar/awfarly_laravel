@@ -37,20 +37,24 @@ class CustomersInquiryComponent extends LivewireDatatable
     public $hideable = 'select';
     public $beforeTableSlot = 'livewire.datatables.selected';
     public $afterTableSlot = 'modals.users.customers.edit';
+    public string $afterTableSlot2 = 'modals.users.customers.interests';
     public $model = CustomerUser::class;
     public array $user;
     public Collection $languages;
     public Collection $countries;
     public Collection $governorates;
     public Collection $cities;
+    public Collection $viewed_interests;
     public bool $showDeleteModal = false;
     public bool $showEditModal = false;
+    public bool $showInterestsModal = false;
     public array $deleteModalTexts;
     public array $editModalTexts;
     private string $country_column = '';
     public bool $has_delete = true;
     public ?string $country_code = null;
     public ?string $governorate_id = null;
+    public ?string $viewed_user_name = null;
 
     protected $listeners = [
         'setCountry',
@@ -67,6 +71,7 @@ class CustomersInquiryComponent extends LivewireDatatable
         $this->getAdminLanguage();
 
         $this->country_code = 'SA';
+        $this->viewed_interests = new Collection();
 
         //set modal texts
         $this->setModalTexts();
@@ -625,6 +630,31 @@ class CustomersInquiryComponent extends LivewireDatatable
             'cancel' => __('pages/customers/index.modal.edit.cancel'),
             'submit' => __('pages/customers/index.modal.edit.submit'),
         ];
+    }
+
+    /**
+     * show a read-only modal listing the customer's interests
+     * @param $id
+     */
+    public function showInterestsModal($id)
+    {
+        $customer = CustomerUser::withTrashed()->findOrFail($id);
+
+        $this->viewed_user_name = $customer->name;
+        $this->viewed_interests = $customer->interests()
+            ->with('interest')
+            ->get()
+            ->pluck('interest')
+            ->filter();
+
+        $this->showInterestsModal = true;
+    }
+
+    public function closeInterestsModal()
+    {
+        $this->showInterestsModal = false;
+        $this->viewed_user_name = null;
+        $this->viewed_interests = new Collection();
     }
 
     /**

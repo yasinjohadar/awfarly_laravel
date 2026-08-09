@@ -208,4 +208,11 @@
             </div>
         @endif
     @endisset
+    @isset($afterTableSlot3)
+        @if($afterTableSlot3)
+            <div class="mt-5">
+                @include($afterTableSlot3)
+            </div>
+        @endif
+    @endisset
 </div>

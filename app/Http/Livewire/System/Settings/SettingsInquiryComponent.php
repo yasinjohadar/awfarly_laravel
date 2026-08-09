@@ -197,6 +197,10 @@ class SettingsInquiryComponent extends LivewireDatatable
             $this->validate([
                 'setting.value' => ['required', 'integer', 'min:0'],
             ]);
+        } elseif ($setting->key === 'advertisers.default_package_id') {
+            $this->validate([
+                'setting.value' => ['nullable', 'exists:packages,id'],
+            ]);
         } else {
             $this->validate([
                 'setting.value' => ['nullable'],

@@ -51,6 +51,9 @@ return [
             'updated_at' => 'Updated At',
         ],
     ],
+    'actions' => [
+        'view_interests' => 'View Interests',
+    ],
     'modal' => [
         'edit' => [
             'title' => 'Edit Customers Users',
@@ -101,6 +104,11 @@ return [
             'content' => 'Are you sure you want to delete these users?',
             'submit' => 'Delete',
             'cancel' => 'Cancel',
+        ],
+        'interests' => [
+            'title' => 'Interests: :name',
+            'empty' => 'This customer has no interests recorded.',
+            'close' => 'Close',
         ],
     ]
 ];

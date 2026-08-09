@@ -86,6 +86,10 @@
                     <i class="icon-pencil7 mr-2 text-secondary"></i>
                     {{ __('pages/advertisers/index.actions.edit') }}
                 </button>
+                <button type="button" wire:click="showInterestsModal({{ $id }})">
+                    <i class="icon-heart5 mr-2 text-secondary"></i>
+                    {{ __('pages/advertisers/index.actions.view_interests') }}
+                </button>
                 <div class="divider"></div>
                 @if($status === 'active')
                     <button type="button" wire:click="showStatusModal({{ $id }}, 'inactive')">

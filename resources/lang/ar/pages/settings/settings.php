@@ -47,6 +47,10 @@ return [
         "Payment Code" => "رمز الدفع",
         "Payment QR Image" => "صورة QR للدفع",
         "Payment Instructions" => "تعليمات الدفع",
+        "Advertisers Default Package" => "الباقة الافتراضية للمعلنين",
+        "Posts Auto Delete After Days" => "حذف المنشورات تلقائياً بعد (أيام)",
+        "Offers Auto Delete After Days" => "حذف العروض تلقائياً بعد (أيام)",
+        "Maximum Advertiser Monthly Offers" => "الحد الأقصى الشهري لعروض المعلن",
     ],
     'descriptions' => [
         "Site name" => "هذا لإسم الموقع.",
@@ -95,5 +99,9 @@ return [
         "Payment Code" => "رمز الدفع الطويل الذي يظهر للمعلنين.",
         "Payment QR Image" => "صورة رمز QR الخاصة بالدفع.",
         "Payment Instructions" => "التعليمات الظاهرة في شاشة دفع الباقة.",
+        "Advertisers Default Package" => "الباقة التي تُمنح تلقائياً لكل معلن جديد يسجل حساباً. اتركها فارغة لتعطيل هذه الميزة.",
+        "Posts Auto Delete After Days" => "عدد الأيام بعد نشر المنشور ليتم حذفه نهائياً بشكل تلقائي. القيمة 0 تعطّل الحذف التلقائي.",
+        "Offers Auto Delete After Days" => "عدد الأيام بعد نشر العرض ليتم حذفه نهائياً بشكل تلقائي. القيمة 0 تعطّل الحذف التلقائي.",
+        "Maximum Advertiser Monthly Offers" => "الحد الأقصى لعدد العروض التي يمكن للمعلن إضافتها خلال الشهر الواحد.",
     ]
 ];

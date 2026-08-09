@@ -50,6 +50,7 @@ return [
     ],
     'actions' => [
         'edit' => 'Edit',
+        'view_interests' => 'View Interests',
         'stop' => 'Stop',
         'freeze' => 'Freeze',
         'activate' => 'Activate',
@@ -118,6 +119,11 @@ return [
             ],
             'submit' => 'Apply package',
             'cancel' => 'Cancel',
+        ],
+        'interests' => [
+            'title' => 'Interests: :name',
+            'empty' => 'This advertiser has no interests recorded.',
+            'close' => 'Close',
         ],
         'delete' => [
             'title' => 'Delete Advertiser',

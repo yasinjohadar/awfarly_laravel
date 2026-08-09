@@ -7,8 +7,10 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use App\Http\Controllers\Admins\Admins\AdminsController;
 use App\Http\Controllers\Admins\Account\AccountController;
 use App\Http\Controllers\Admins\Countries\CountriesController;
+use App\Http\Controllers\Admins\Currencies\CurrenciesController;
 use App\Http\Controllers\Admins\Customers\CustomersController;
 use App\Http\Controllers\Admins\Categories\CategoriesController;
+use App\Http\Controllers\Admins\Interests\InterestsController;
 use App\Http\Controllers\Admins\System\Logs\SystemLogsController;
 use App\Http\Controllers\Admins\Advertisers\AdvertisersController;
 use App\Http\Controllers\Admins\Admins\Roles\AdminsRolesController;
@@ -165,6 +167,24 @@ Route::group([
  * Show Admins Logs
  */
 Route::resource('/categories', CategoriesController::class)
+    ->only([
+        'index',
+        'create'
+    ]);
+
+/**
+ * Interests routes
+ */
+Route::resource('/interests', InterestsController::class)
+    ->only([
+        'index',
+        'create'
+    ]);
+
+/**
+ * Currencies routes
+ */
+Route::resource('/currencies', CurrenciesController::class)
     ->only([
         'index',
         'create'
@@ -387,7 +407,8 @@ Route::group([
         ->only([
             'index',
             'show',
-            'create'
+            'create',
+            'edit'
         ]);
 
     Route::resource('payments', SubscriptionsPaymentsController::class)
@@ -397,4 +418,7 @@ Route::group([
 
     Route::get('requests', [SubscriptionRequestsController::class, 'index'])
         ->name('requests.index');
+
+    Route::get('requests/{subscriptionRequest}/receipt', [SubscriptionRequestsController::class, 'receipt'])
+        ->name('requests.receipt');
 });

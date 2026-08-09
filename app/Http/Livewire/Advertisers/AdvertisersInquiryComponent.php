@@ -45,6 +45,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     public $beforeTableSlot = 'livewire.datatables.selected';
     public $afterTableSlot = 'modals.users.advertisers.edit';
     public string $afterTableSlot2 = 'modals.users.advertisers.assign-package';
+    public string $afterTableSlot3 = 'modals.users.advertisers.interests';
     public $model = AdvertiserUser::class;
     public array $user;
     public Collection $languages;
@@ -53,14 +54,17 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     public Collection $cities;
     public Collection $business_types;
     public Collection $packages;
+    public Collection $viewed_interests;
     public bool $showDeleteModal = false;
     public bool $showEditModal = false;
     public bool $showAssignPackageModal = false;
     public bool $showStatusModal = false;
+    public bool $showInterestsModal = false;
     public array $deleteModalTexts;
     public array $editModalTexts;
     public array $assignPackageModalTexts;
     public array $statusModalTexts = [];
+    public ?string $viewed_user_name = null;
     private string $country_column = '';
     public bool $has_delete = true;
     public ?string $country_code = null;
@@ -91,6 +95,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
         $this->getAdminLanguage();
 
         $this->country_code = 'SA';
+        $this->viewed_interests = new Collection();
         //set modal texts
         $this->setModalTexts();
 
@@ -192,10 +197,6 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                 ->label(__('pages/advertisers/index.content.datatable.name'))
                 ->filterable()
                 ->searchable(),
-            Column::name('fcm_token')
-                ->label(__('pages/advertisers/index.content.datatable.fcm_token'))
-                ->filterable()
-                ->searchable(),
             Column::name('discount_percentage')
                 ->label(__('pages/advertisements/inquiry.content.datatable.discount_percentage'))
                 ->filterable()
@@ -226,10 +227,6 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                 ->filterable()
                 ->searchable()
                 ->hide(),
-            Column::name("countries.$this->country_column")
-                ->label(__('pages/advertisers/index.content.datatable.country'))
-                ->filterable($this->all_countries)
-                ->searchable(),
             Column::name("governorates.$this->country_column")
                 ->label(__('pages/advertisers/index.content.datatable.governorate'))
                 ->filterable($this->all_governorates)
@@ -315,41 +312,6 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                 ->label(__('pages/advertisers/index.content.datatable.last_login_at'))
                 ->searchable()
                 ->hide(),
-            DateColumn::callback('last_online_at', function ($online) {
-                $humans = $online ? Carbon::make($online)->diffForHumans() : '-';
-                $datetime = $online ? Carbon::make($online)->format("Y-m-d h:i A") : '-';
-                return $online ? "<div title='{$datetime}'>{$humans}</div>" : '-';
-            })
-                ->label(__('pages/advertisers/index.content.datatable.last_online_at'))
-                ->searchable()
-                ->filterable(),
-            Column::callback('status', function ($status) {
-                if ($status === 'active') {
-                    return '<div class="badge badge-success">' . __('pages/advertisers/index.content.datatable.status_type.active') . '</div>';
-                }
-
-                if ($status === 'banned') {
-                    return '<div class="badge badge-danger">' . __('pages/advertisers/index.content.datatable.status_type.banned') . '</div>';
-                }
-
-                return '<div class="badge badge-warning">' . __('pages/advertisers/index.content.datatable.status_type.inactive') . '</div>';
-            })
-                ->label(__('pages/advertisers/index.content.datatable.status'))
-                ->filterable()
-                ->searchable(),
-            Column::callback('deleted_at', function ($deleted_at) {
-                $humans = $deleted_at ? Carbon::make($deleted_at)->diffForHumans() : '-';
-
-                if ($deleted_at == null) {
-                    return '<div class="badge badge-success">' . __('pages/customers/index.modal.edit.inputs.boolean.no') . '</div>';
-                } else {
-                    return '<div class="badge badge-danger">' . __('pages/customers/index.modal.edit.inputs.boolean.yes') . ' ' . $humans . '</div>';
-                }
-            })
-                ->label(__('pages/customers/index.content.datatable.deleted'))
-                ->filterable()
-                ->searchable(),
-
             Column::callback('is_accepted_send_notifications', function ($is_accepted_send_notifications) {
                 if ($is_accepted_send_notifications) {
                     return '<div class="badge badge-success">' . __('pages/customers/index.content.datatable.notifications_types.allowed') . '</div>';
@@ -1004,6 +966,31 @@ class AdvertisersInquiryComponent extends LivewireDatatable
         }
 
         DB::commit();
+    }
+
+    /**
+     * show a read-only modal listing the advertiser's interests
+     * @param $id
+     */
+    public function showInterestsModal($id)
+    {
+        $advertiser = AdvertiserUser::withTrashed()->findOrFail($id);
+
+        $this->viewed_user_name = $advertiser->name;
+        $this->viewed_interests = $advertiser->interests()
+            ->with('interest')
+            ->get()
+            ->pluck('interest')
+            ->filter();
+
+        $this->showInterestsModal = true;
+    }
+
+    public function closeInterestsModal()
+    {
+        $this->showInterestsModal = false;
+        $this->viewed_user_name = null;
+        $this->viewed_interests = new Collection();
     }
 
     /**

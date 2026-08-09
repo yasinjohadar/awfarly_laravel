@@ -38,10 +38,13 @@ return [
             'cancel' => 'Cancel',
         ],
         'delete' => [
-            'title' => 'Delete Countries',
-            'content' => 'Are you sure you want to delete these countries?',
+            'title' => 'Delete Country',
+            'content' => 'Are you sure you want to delete the country: :name?',
+            'title_multiple' => 'Delete Countries',
+            'content_multiple' => 'Are you sure you want to delete these countries?',
             'submit' => 'Delete',
             'cancel' => 'Cancel',
+            'in_use' => 'This country cannot be deleted because it has governorates or is linked to users.',
         ],
     ]
 ];

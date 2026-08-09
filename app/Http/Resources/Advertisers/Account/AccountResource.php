@@ -140,7 +140,7 @@ class AccountResource extends JsonResource
             'discount_percentage' => $this->discount_percentage,
             'addressLatitude' => $this->address_latitude ?? null,
             'addressLongitude' => $this->address_longitude ?? null,
-            'isProfileCompleted' => (bool)($this->username && $this->bio && $has_categories && $this->location && $this->gender),
+            'isProfileCompleted' => (bool)($this->username && $this->bio && $has_categories && $this->gender),
             'accountStatus' => $this->status,
             'points' => $this->balance,
             'isAllowEditName' => (bool)Settings::Get('allow.users.change.name', true),

@@ -10,6 +10,7 @@ use App\Http\Controllers\API\Advertisers\Users\UsersReportsController;
 use App\Http\Controllers\API\Advertisers\Customers\CustomersController;
 use App\Http\Controllers\API\Advertisers\Users\UsersBlockingsController;
 use App\Http\Controllers\API\Advertisers\Categories\CategoriesController;
+use App\Http\Controllers\API\Advertisers\Interests\InterestsController;
 use App\Http\Controllers\API\Advertisers\Locations\LocationsController;
 use App\Http\Controllers\API\Advertisers\Advertisers\AdvertisersController;
 use App\Http\Controllers\API\Advertisers\Notifications\NotificationsController;
@@ -113,6 +114,24 @@ Route::post('/categories/interested', [CategoriesController::class, 'addAdvertis
 
 Route::delete('/categories/interested', [CategoriesController::class, 'deleteAdvertiserCategories'])
     ->name('categories.delete');
+
+/**
+ * get Interests Routes
+ */
+Route::get('/interests', [InterestsController::class, 'getInterests'])
+    ->name('interests.get');
+
+Route::get('/interests/interested', [InterestsController::class, 'getUserInterests'])
+    ->name('interests.interested');
+
+Route::get('/interests/{id}', [InterestsController::class, 'getInterestById'])
+    ->name('interest.get');
+
+Route::post('/interests/interested', [InterestsController::class, 'addAdvertiserInterests'])
+    ->name('interests.add');
+
+Route::delete('/interests/interested', [InterestsController::class, 'deleteAdvertiserInterests'])
+    ->name('interests.delete');
 
 /**
  * Location interests

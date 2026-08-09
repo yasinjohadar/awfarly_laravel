@@ -41,6 +41,17 @@
                         </span>
                         @enderror
                         <small class="form-text text-muted">{{__('pages/system/settings/settings.modal.edit.inputs.logo_hint')}}</small>
+                    @elseif(($setting['key'] ?? null) === 'advertisers.default_package_id')
+                        <select class="form-control @error('setting.value') is-invalid @enderror"
+                                wire:model.defer="setting.value"
+                                id="value">
+                            <option value="">{{__('pages/system/settings/settings.modal.edit.inputs.no_default_package')}}</option>
+                            @foreach(\App\Models\Subscriptions\Packages\Package::where('is_active', true)->where('is_visible', true)->get() as $package)
+                                <option value="{{ $package->id }}">
+                                    {{ app()->getLocale() === 'ar' ? $package->name_ar : $package->name_en }}
+                                </option>
+                            @endforeach
+                        </select>
                     @elseif(($setting['value_type'] ?? null) === 'boolean')
                         <select class="form-control @error('setting.value') is-invalid @enderror"
                                 wire:model.defer="setting.value"

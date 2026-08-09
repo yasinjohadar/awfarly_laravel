@@ -20,6 +20,7 @@ class PackageSubscriptionRequest extends Model
         'package_id',
         'status',
         'notes',
+        'receipt',
         'reviewed_by',
         'reviewed_at',
     ];
