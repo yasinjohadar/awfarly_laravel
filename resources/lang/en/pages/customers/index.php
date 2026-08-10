@@ -52,7 +52,7 @@ return [
         ],
     ],
     'actions' => [
-        'view_interests' => 'View Interests',
+        'view_categories' => 'View Interests',
     ],
     'modal' => [
         'edit' => [
@@ -105,7 +105,7 @@ return [
             'submit' => 'Delete',
             'cancel' => 'Cancel',
         ],
-        'interests' => [
+        'categories' => [
             'title' => 'Interests: :name',
             'empty' => 'This customer has no interests recorded.',
             'close' => 'Close',

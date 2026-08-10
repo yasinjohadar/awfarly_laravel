@@ -1,7 +1,0 @@
-<?php
-return [
-    'wrong-id' => 'There is no interest found with that id.',
-    'something-wrong' => 'Something went wrong, Please try again later!',
-    'added' => 'Interests data has been added successfully.',
-    'deleted' => 'Interests data has been deleted successfully.',
-];

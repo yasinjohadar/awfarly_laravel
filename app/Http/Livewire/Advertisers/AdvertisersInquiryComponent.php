@@ -45,7 +45,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     public $beforeTableSlot = 'livewire.datatables.selected';
     public $afterTableSlot = 'modals.users.advertisers.edit';
     public string $afterTableSlot2 = 'modals.users.advertisers.assign-package';
-    public string $afterTableSlot3 = 'modals.users.advertisers.interests';
+    public string $afterTableSlot3 = 'modals.users.advertisers.categories';
     public $model = AdvertiserUser::class;
     public array $user;
     public Collection $languages;
@@ -54,12 +54,12 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     public Collection $cities;
     public Collection $business_types;
     public Collection $packages;
-    public Collection $viewed_interests;
+    public Collection $viewed_categories;
     public bool $showDeleteModal = false;
     public bool $showEditModal = false;
     public bool $showAssignPackageModal = false;
     public bool $showStatusModal = false;
-    public bool $showInterestsModal = false;
+    public bool $showCategoriesModal = false;
     public array $deleteModalTexts;
     public array $editModalTexts;
     public array $assignPackageModalTexts;
@@ -95,7 +95,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
         $this->getAdminLanguage();
 
         $this->country_code = 'SA';
-        $this->viewed_interests = new Collection();
+        $this->viewed_categories = new Collection();
         //set modal texts
         $this->setModalTexts();
 
@@ -969,28 +969,28 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     }
 
     /**
-     * show a read-only modal listing the advertiser's interests
+     * show a read-only modal listing the advertiser's categories
      * @param $id
      */
-    public function showInterestsModal($id)
+    public function showCategoriesModal($id)
     {
         $advertiser = AdvertiserUser::withTrashed()->findOrFail($id);
 
         $this->viewed_user_name = $advertiser->name;
-        $this->viewed_interests = $advertiser->interests()
-            ->with('interest')
+        $this->viewed_categories = $advertiser->categories()
+            ->with('category')
             ->get()
-            ->pluck('interest')
+            ->pluck('category')
             ->filter();
 
-        $this->showInterestsModal = true;
+        $this->showCategoriesModal = true;
     }
 
-    public function closeInterestsModal()
+    public function closeCategoriesModal()
     {
-        $this->showInterestsModal = false;
+        $this->showCategoriesModal = false;
         $this->viewed_user_name = null;
-        $this->viewed_interests = new Collection();
+        $this->viewed_categories = new Collection();
     }
 
     /**

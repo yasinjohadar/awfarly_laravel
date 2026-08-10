@@ -48,28 +48,9 @@ class Notifications
 
                 } finally {
                     if (!$item->is_online && $item->fcm_token && $type !== 'chats') {
-                        if ($type === 'admin.notification') {
-                            $fcm_message = $message;
-                        } else {
-                            if ($customProperties['userType'] === 'advertiser') {
-                                $user_data = AdvertiserUser::where('id', $customProperties['userId'])
-                                    ->first();
-                            } else {
-                                $user_data = CustomerUser::where('id', $customProperties['userId'])
-                                    ->first();
-                            }
-                            if ($message === 'posts.comment_add_subscription' && isset($customProperties['postId'])) {
-                                $post = Post::where('id', $customProperties['postId'])
-                                    ->first();
-                                $fcm_message = __("api/notifications/notifications.{$message}", ['name' => $user_data->name, 'owner' => $post->user->name]);
-                            } else {
-                                $fcm_message = __("api/notifications/notifications.{$message}", ['name' => $item->name]);
-                            }
-                        }
-                        FcmHelper::sendFcmNotification([
-                            'title' => __("api/notifications/notification.{$type}.title"),
-                            'body' => $fcm_message,
-                        ], [$item->fcm_token], $customProperties);
+                        $fcmData = self::buildFcmMessage($item, $type, $message, $customProperties);
+
+                        FcmHelper::sendFcmNotification($fcmData, [$item->fcm_token], $customProperties);
                     }
                 }
             }
@@ -98,31 +79,58 @@ class Notifications
 
             } finally {
                 if (!$user->is_online && $user->fcm_token && $type !== 'chats') {
-                    if ($type === 'admin.notification') {
-                        $fcm_message = $message;
-                    } else {
-                        if ($customProperties['userType'] === 'advertiser') {
-                            $user_data = AdvertiserUser::where('id', $customProperties['userId'])
-                                ->first();
-                        } else {
-                            $user_data = CustomerUser::where('id', $customProperties['userId'])
-                                ->first();
-                        }
-                        if ($message === 'posts.comment_add_subscription' && isset($customProperties['postId'])) {
-                            $post = Post::where('id', $customProperties['postId'])
-                                ->first();
-                            $fcm_message = __("api/notifications/notifications.{$message}", ['name' => $user_data->name, 'owner' => $post->user->name]);
-                        } else {
-                            $fcm_message = __("api/notifications/notifications.{$message}", ['name' => $user_data->name]);
-                        }
-                    }
-                    FcmHelper::sendFcmNotification([
-                        'title' => __("api/notifications/notifications.{$type}.title"),
-                        'body' => $fcm_message,
-                    ], [$user->fcm_token], $customProperties);
+                    $fcmData = self::buildFcmMessage($user, $type, $message, $customProperties);
+
+                    FcmHelper::sendFcmNotification($fcmData, [$user->fcm_token], $customProperties);
                 }
             }
         }
+    }
+
+    /**
+     * Build the Arabic + English title/body for a notification, regardless of the
+     * app's currently-active locale (which reflects the triggering request, not the
+     * recipient's own `notify_language`).
+     *
+     * @param AdvertiserUser|CustomerUser $recipient
+     * @param array|null $customProperties
+     * @return array{title: string, title_en: string, body: string, body_en: string}
+     */
+    private static function buildFcmMessage($recipient, string $type, string $message, ?array $customProperties): array
+    {
+        $result = [];
+
+        foreach (['ar' => 'title', 'en' => 'title_en'] as $locale => $key) {
+            $result[$key] = trans("api/notifications/notifications.{$type}.title", [], $locale);
+        }
+
+        foreach (['ar' => 'body', 'en' => 'body_en'] as $locale => $key) {
+            if ($type === 'admin.notification') {
+                $result[$key] = $message;
+                continue;
+            }
+
+            $userData = null;
+            if (isset($customProperties['userId'])) {
+                $userData = ($customProperties['userType'] ?? null) === 'advertiser'
+                    ? AdvertiserUser::where('id', $customProperties['userId'])->first()
+                    : CustomerUser::where('id', $customProperties['userId'])->first();
+            }
+
+            if ($message === 'posts.comment_add_subscription' && isset($customProperties['postId'])) {
+                $post = Post::where('id', $customProperties['postId'])->first();
+                $result[$key] = trans("api/notifications/notifications.{$message}", [
+                    'name' => $userData->name ?? $recipient->name,
+                    'owner' => $post->user->name ?? '',
+                ], $locale);
+            } else {
+                $result[$key] = trans("api/notifications/notifications.{$message}", [
+                    'name' => $userData->name ?? $recipient->name,
+                ], $locale);
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -148,14 +156,32 @@ class Notifications
     }
 
     /**
+     * Notify users from an admin-triggered action, persisting the notification and
+     * updating the Firestore unread-count, then pushing an FCM notification to any
+     * user with a registered token. Centralizes what was previously duplicated
+     * ad-hoc (a separate `foreach` + `FcmHelper::sendFcmNotification` loop) at every
+     * call site.
+     *
+     * Callers may pass `title`/`title_en`/`body_en`/`image` inside $customProperties
+     * to override the defaults; otherwise the title falls back to a translated
+     * "{$type}.title" lookup and the English body falls back to the Arabic $message.
+     *
      * @param AdvertiserUser|CustomerUser|Collection $users
      * @param string $type
      * @param string $message
      * @param string $action
      * @param array|null $customProperties
+     * @return int number of pushes actually delivered
      */
-    public static function sendFromAdmin($users, string $type, string $message, string $action, array $customProperties = null)
+    public static function sendFromAdmin($users, string $type, string $message, string $action, array $customProperties = null): int
     {
+        $sentCount = 0;
+
+        $title = $customProperties['title'] ?? trans("api/notifications/notifications.{$type}.title", [], 'ar');
+        $titleEn = $customProperties['title_en'] ?? trans("api/notifications/notifications.{$type}.title", [], 'en');
+        $bodyEn = $customProperties['body_en'] ?? $message;
+        $image = $customProperties['image'] ?? null;
+
         foreach ($users as $user) {
             $user->notify(new CommunityNotifications([
                     'type' => $type,
@@ -180,6 +206,22 @@ class Notifications
             } catch (Exception $e) {
 
             }
+
+            if ($user->fcm_token) {
+                $delivered = FcmHelper::sendFcmNotification([
+                    'title' => $title,
+                    'title_en' => $titleEn,
+                    'body' => $message,
+                    'body_en' => $bodyEn,
+                    'image' => $image,
+                ], [$user->fcm_token], $customProperties);
+
+                if ($delivered) {
+                    $sentCount++;
+                }
+            }
         }
+
+        return $sentCount;
     }
 }

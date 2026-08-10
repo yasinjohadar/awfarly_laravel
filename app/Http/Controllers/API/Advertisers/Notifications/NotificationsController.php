@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\API\Advertisers\Notifications;
 
-use App\Helpers\FCM\FcmHelper;
 use App\Helpers\Notifications;
 use App\Helpers\Settings;
 use App\Http\Controllers\Controller;
@@ -121,11 +120,7 @@ class NotificationsController extends Controller
             'notify_link'       => null,
         ];
 
-        Notifications::sendFromAdmin($users, $request->type ?? 'admin.notification', $request->description, 'add', $customProperties);
-        foreach($users->pluck('fcm_token')->toArray() as $token){
-
-            $is_notifications_sent = FcmHelper::sendFcmNotification($customProperties, [$token]);
-        }
+        $sentCount = Notifications::sendFromAdmin($users, $request->type ?? 'admin.notification', $request->description, 'add', $customProperties);
 
         $advertisers = AdvertiserUser::when($request->country_code,fn($q)=>$q->where('country_code',$request->country_code))
             ->when($request->city_id,fn($q)=>$q->where('city_id',$request->city_id))
@@ -136,12 +131,13 @@ class NotificationsController extends Controller
             ->when($request->age_from && $request->age_to,fn($q)=>$q->whereRaw("TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) BETWEEN ? AND ?", [$request->age_from, $request->age_to]))
             ->get();
 
-        Notifications::sendFromAdmin($advertisers, $request->type ?? 'admin.notification', $request->description, 'add', $customProperties);
-        foreach($advertisers->pluck('fcm_token')->toArray() as $token){
+        $sentCount += Notifications::sendFromAdmin($advertisers, $request->type ?? 'admin.notification', $request->description, 'add', $customProperties);
 
-            $is_notifications_sent = FcmHelper::sendFcmNotification($customProperties, [$token]);
+        if ($sentCount === 0) {
+            return $this->apiResponse([
+                'message' => 'لم يتم إيجاد أي مستخدم مطابق لإرسال إشعار له.',
+            ]);
         }
-
 
         $user->withdraw(10);
 

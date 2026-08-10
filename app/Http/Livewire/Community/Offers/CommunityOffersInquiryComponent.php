@@ -3,7 +3,6 @@
 namespace App\Http\Livewire\Community\Offers;
 
 use App\Helpers\Admins\AdminLogs;
-use App\Helpers\FCM\FcmHelper;
 use App\Helpers\Filter;
 use App\Helpers\Notifications;
 use App\Models\Offers\Offer;
@@ -458,35 +457,6 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
 
         Notifications::sendFromAdmin($users, 'offers', $offer->content, 'add', $customProperties);
         Notifications::sendFromAdmin($advertisers, 'offers', $offer->content, 'add', $customProperties);
-        foreach($users->pluck('fcm_token')->toArray() as $token){
-
-            FcmHelper::sendFcmNotification([
-                'title'         => " اعلان جديد - $name",
-                'title_en'         => " اعلان جديد - $name",
-                'body'              => $offer->content,
-                'body_en'         => $offer->content,
-                'type'  =>  'offers',
-                'offerId' => $offer->id,
-                'message' => "offers.add",
-                'action' => "like",
-                'customProperties' => $customProperties,
-            ], [$token]);
-        }
-
-        foreach($advertisers->pluck('fcm_token')->toArray() as $token) {
-
-            FcmHelper::sendFcmNotification([
-                'title' => " اعلان جديد - $name",
-                'title_en' => " اعلان جديد - $name",
-                'body' => $offer->content,
-                'body_en' => $offer->content,
-                'type' => 'offers',
-                'offerId' => $offer->id,
-                'message' => "offers.add",
-                'action' => "like",
-                'customProperties' => $customProperties,
-            ], [$token]);
-        }
     }
     /**
      * set modal texts

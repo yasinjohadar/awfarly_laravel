@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API\Customers\Community\Offers;
 use App\Helpers\Filter;
 use App\Helpers\Categories\CategoriesFilter;
 use App\Helpers\Geography\Geography;
-use App\Helpers\Interests\InterestsFilter;
 use App\Helpers\Notifications;
 use App\Helpers\Settings;
 use App\Http\Controllers\Controller;
@@ -52,8 +51,6 @@ class CommunityOffersController extends Controller
             'cityId',
             'categoryId',
             'isGetAllCategories',
-            'interestId',
-            'isGetAllInterests'
         ]);
 
         $this->apiValidate($data, [
@@ -62,8 +59,6 @@ class CommunityOffersController extends Controller
             'cityId' => 'nullable|string|exists:cities,id',
             'categoryId' => 'nullable|string|exists:categories,id',
             'isGetAllCategories' => ['nullable'],
-            'interestId' => 'nullable|string|exists:interests,id',
-            'isGetAllInterests' => ['nullable'],
         ]);
 
         $blocked_advertisers = Auth::guard('customer-api')->user()
@@ -122,8 +117,8 @@ class CommunityOffersController extends Controller
             'offers.category_id'
         );
 
-        // Filter by interests (matches advertisers whose own selected interests overlap with the customer's)
-        $offers = InterestsFilter::applyFeedInterestFilter(
+        // Filter by advertiser categories (matches advertisers whose own selected categories overlap with the customer's)
+        $offers = CategoriesFilter::applyFeedAdvertiserCategoryFilter(
             $offers,
             $data,
             Auth::guard('customer-api')->user(),
@@ -222,8 +217,6 @@ class CommunityOffersController extends Controller
             'cityId',
             'categoryId',
             'isGetAllCategories',
-            'interestId',
-            'isGetAllInterests',
         ]);
 
         $this->apiValidate($data, [
@@ -233,8 +226,6 @@ class CommunityOffersController extends Controller
             'cityId' => 'nullable|string|exists:cities,id',
             'categoryId' => 'nullable|string|exists:categories,id',
             'isGetAllCategories' => ['nullable'],
-            'interestId' => 'nullable|string|exists:interests,id',
-            'isGetAllInterests' => ['nullable'],
         ]);
 
         //get limit
@@ -322,8 +313,8 @@ class CommunityOffersController extends Controller
             'offers.category_id'
         );
 
-        // Filter by interests (matches advertisers whose own selected interests overlap with the customer's)
-        $offers = InterestsFilter::applyFeedInterestFilter(
+        // Filter by advertiser categories (matches advertisers whose own selected categories overlap with the customer's)
+        $offers = CategoriesFilter::applyFeedAdvertiserCategoryFilter(
             $offers,
             $data,
             Auth::guard('customer-api')->user(),

@@ -5,6 +5,7 @@ namespace App\Helpers\FCM;
 use App\Helpers\Files;
 use App\Models\Users\Advertisers\AdvertiserUser;
 use App\Models\Users\Customers\CustomerUser;
+use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Exception\FirebaseException;
 use Kreait\Firebase\Exception\MessagingException;
 use Kreait\Firebase\Messaging\AndroidConfig;
@@ -24,58 +25,72 @@ class FcmHelper
      */
     public static function sendFcmNotification($data, $fcm_tokens, $customProperties = null): bool
     {
+        $sentCount = 0;
+
         try {
             $messaging = app('firebase.messaging');
-
-            $notification = Notification::fromArray([
-                "title" => $data['title'] ?? null,
-                "title_en" => $data['title_en'] ?? null,
-                "body" => $data['body'] ?? null,
-                "body_en" => $data['body_en'] ?? null,
-                "image" => $data['image'] ?? null,
+        } catch (\Throwable $e) {
+            Log::error('FcmHelper: failed to resolve firebase.messaging service', [
+                'exception' => $e->getMessage(),
             ]);
-            $newData = [
-                "title" => $data['title'] ?? null,
-                "content" => $data['body'] ?? null,
-            ];
 
-            if ($customProperties) {
-                if (isset($customProperties['chatToken'])) {
-                    $newData['chatToken'] = $customProperties['chatToken'];
-                }
-                if (isset($customProperties['postId'])) {
-                    $newData['postId'] = $customProperties['postId'];
-                }
-                if (isset($customProperties['commentId'])) {
-                    $newData['commentId'] = $customProperties['commentId'];
-                }
-                if (isset($customProperties['offerId'])) {
-                    $newData['offerId'] = $customProperties['offerId'];
-                }
-                if (isset($customProperties['status'])) {
-                    $newData['status'] = $customProperties['status'];
-                }
-                if (isset($customProperties['type'])) {
-                    $newData['type'] = $customProperties['type'];
-                }
-                if (isset($customProperties['action'])) {
-                    $newData['action'] = $customProperties['action'];
-                }
+            return false;
+        }
+
+        $notification = Notification::fromArray([
+            "title" => $data['title'] ?? null,
+            "title_en" => $data['title_en'] ?? null,
+            "body" => $data['body'] ?? null,
+            "body_en" => $data['body_en'] ?? null,
+            "image" => $data['image'] ?? null,
+        ]);
+        $newData = [
+            "title" => $data['title'] ?? null,
+            "content" => $data['body'] ?? null,
+        ];
+
+        if ($customProperties) {
+            if (isset($customProperties['chatToken'])) {
+                $newData['chatToken'] = $customProperties['chatToken'];
             }
-            foreach ($fcm_tokens as $token) {
-                if(!$token) continue;
-                $user = AdvertiserUser::where('fcm_token', $token)
+            if (isset($customProperties['postId'])) {
+                $newData['postId'] = $customProperties['postId'];
+            }
+            if (isset($customProperties['commentId'])) {
+                $newData['commentId'] = $customProperties['commentId'];
+            }
+            if (isset($customProperties['offerId'])) {
+                $newData['offerId'] = $customProperties['offerId'];
+            }
+            if (isset($customProperties['status'])) {
+                $newData['status'] = $customProperties['status'];
+            }
+            if (isset($customProperties['type'])) {
+                $newData['type'] = $customProperties['type'];
+            }
+            if (isset($customProperties['action'])) {
+                $newData['action'] = $customProperties['action'];
+            }
+        }
+
+        foreach ($fcm_tokens as $token) {
+            if (!$token) {
+                continue;
+            }
+
+            $user = AdvertiserUser::where('fcm_token', $token)
+                ->where('status', 'active')
+                ->first();
+            if (!$user) {
+                $user = CustomerUser::where('fcm_token', $token)
                     ->where('status', 'active')
                     ->first();
                 if (!$user) {
-                    $user = CustomerUser::where('fcm_token', $token)
-                        ->where('status', 'active')
-                        ->first();
-                    if (!$user) {
-                        continue;
-                    }
+                    continue;
                 }
+            }
 
+            try {
                 $badgesCount = $user->unreadNotifications()->count();
                 $message = CloudMessage::withTarget('token', $token)
                     ->withNotification($notification)
@@ -110,9 +125,16 @@ class FcmHelper
                     ]));
 
                 $messaging->send($message);
+                $sentCount++;
+            } catch (MessagingException | FirebaseException $e) {
+                Log::error('FcmHelper: failed to send push notification', [
+                    'token' => $token,
+                    'user_id' => $user->id,
+                    'exception' => $e->getMessage(),
+                ]);
             }
-        } catch (MessagingException | FirebaseException $e) {
         }
-        return true;
+
+        return $sentCount > 0;
     }
 }

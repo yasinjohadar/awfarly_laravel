@@ -51,9 +51,11 @@ return [
     ],
     'actions' => [
         'edit' => 'تعديل',
-        'view_interests' => 'عرض الاهتمامات',
+        'view_categories' => 'عرض الأقسام',
         'stop' => 'إيقاف',
+        'stop_hint' => 'مؤقت، الدخول مسموح',
         'freeze' => 'تجميد',
+        'freeze_hint' => 'حظر كامل، ممنوع الدخول',
         'activate' => 'تفعيل',
         'restore' => 'استعادة',
         'delete' => 'حذف',
@@ -124,9 +126,9 @@ return [
             'submit' => 'تطبيق الباقة',
             'cancel' => 'إلغاء',
         ],
-        'interests' => [
-            'title' => 'اهتمامات: :name',
-            'empty' => 'لا توجد اهتمامات مسجّلة لهذا المعلن.',
+        'categories' => [
+            'title' => 'أقسام: :name',
+            'empty' => 'لا توجد أقسام مسجّلة لهذا المعلن.',
             'close' => 'إغلاق',
         ],
         'delete' => [

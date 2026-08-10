@@ -250,6 +250,7 @@ class GovernoratesInquiryComponent extends LivewireDatatable
         }
 
         $this->validate([
+            'governorate.country_code' => ['required', 'exists:countries,code'],
             'governorate.name_en' => ['required'],
             'governorate.name_ar' => ['required'],
         ]);

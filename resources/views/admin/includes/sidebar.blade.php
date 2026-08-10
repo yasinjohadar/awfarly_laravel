@@ -412,18 +412,6 @@
                 @endcanany
                 {{--/Categories--}}
 
-                {{--Interests --}}
-                @canany(['interests.inquiry', 'interests.add'])
-                    <li class="nav-item{{Request::routeIs('admin.interests.*') ? ' active' : ''}}">
-                        <a href="{{route('admin.interests.index')}}"
-                           class="nav-link{{Request::routeIs('admin.interests.*') ? ' active' : ''}}">
-                            <i class="icon-heart5"></i>
-                            <span>{{__('sidebar.interests')}}</span>
-                        </a>
-                    </li>
-                @endcanany
-                {{--/Interests--}}
-
                 {{--Currencies --}}
                 @canany(['currencies.inquiry', 'currencies.add'])
                     <li class="nav-item{{Request::routeIs('admin.currencies.*') ? ' active' : ''}}">

@@ -19,7 +19,6 @@ return [
         ],
     ],
     'categories' => 'Categories',
-    'interests' => 'Interests',
     'currencies' => 'Currencies',
     'community' => [
         'title' => 'Community',

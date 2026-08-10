@@ -63,7 +63,6 @@ class RegisterController extends Controller
             'provider',
             'providerId',
             'interestedCategories',
-            'interestedInterests',
             'birth_date',
             'gender',
             'discount_percentage',
@@ -97,11 +96,9 @@ class RegisterController extends Controller
             'provider' => 'nullable|required_with:providerId',
             'providerId' => 'nullable|required_with:provider',
             'interestedCategories' => ['nullable','sometimes', 'array'],
-            'interestedInterests' => ['nullable','sometimes', 'array'],
             'gender' => ['nullable','sometimes', 'string','in:male,female'],
             'birth_date' => ['nullable','sometimes', 'date'],
             'interestedCategories.*' => ['nullable','sometimes'],
-            'interestedInterests.*' => ['nullable','sometimes']
         ]);
         // Set guard
         $this->guard = $data['type'];
@@ -200,20 +197,6 @@ class RegisterController extends Controller
                         $user->categories()
                             ->updateOrCreate([
                                 'category_id' => $category,
-                            ]);
-                    }
-                }
-            }
-
-            //set interest ids
-            if ($request->has('interestedInterests') && is_array($request->interestedInterests) && count($request->interestedInterests) > 0) {
-                $user->interests()
-                    ->delete();
-                foreach ($data['interestedInterests'] as $interest) {
-                    if ($interest != null && $interest !== '' && $interest !== '0') {
-                        $user->interests()
-                            ->updateOrCreate([
-                                'interest_id' => $interest,
                             ]);
                     }
                 }

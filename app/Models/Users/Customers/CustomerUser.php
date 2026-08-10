@@ -500,13 +500,6 @@ class CustomerUser extends Authenticatable
         return $this->hasMany(CustomerCategories::class, 'customer_id', 'id');
     }
 
-    /**
-     * @return HasMany
-     */
-    public function interests(): HasMany
-    {
-        return $this->hasMany(\App\Models\Users\Customers\Interests\CustomerInterests::class, 'customer_id', 'id');
-    }
 
     /**
      * @return HasMany

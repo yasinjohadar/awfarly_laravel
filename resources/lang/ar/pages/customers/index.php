@@ -51,7 +51,7 @@ return [
         ],
     ],
     'actions' => [
-        'view_interests' => 'عرض الاهتمامات',
+        'view_categories' => 'عرض الاهتمامات',
     ],
     'modal' => [
         'edit' => [
@@ -104,7 +104,7 @@ return [
             'submit' => 'حذف',
             'cancel' => 'إلغاء',
         ],
-        'interests' => [
+        'categories' => [
             'title' => 'اهتمامات: :name',
             'empty' => 'لا توجد اهتمامات مسجّلة لهذا المستخدم.',
             'close' => 'إغلاق',

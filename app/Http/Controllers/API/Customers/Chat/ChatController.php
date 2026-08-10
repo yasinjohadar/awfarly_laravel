@@ -478,6 +478,7 @@ class ChatController extends Controller
 
             $customProperties = [
                 'chatToken' => $chat->token,
+                'type' => 'chats',
                 'userId' => Auth::guard('customer-api')->id(),
                 'userType' => 'customer',
                 'body' => $message,
@@ -486,10 +487,13 @@ class ChatController extends Controller
 
             Notifications::sendForCommunity($other_user, 'chats', 'chats.message_received', 'add', $customProperties);
             if ($other_user->fcm_token && !$other_user->is_online) {
+                $senderName = Str::limit(Auth::guard('customer-api')->user()->name, 20);
                 FcmHelper::sendFcmNotification([
-                    'title' => __('api/customers/chat/chats.fcm.title', ['name' => Str::limit(Auth::guard('customer-api')->user()->name, 20)]),
+                    'title' => trans('api/customers/chat/chats.fcm.title', ['name' => $senderName], 'ar'),
+                    'title_en' => trans('api/customers/chat/chats.fcm.title', ['name' => $senderName], 'en'),
                     'body' => $message,
-                ], [$other_user->fcm_token]);
+                    'body_en' => $message,
+                ], [$other_user->fcm_token], $customProperties);
             }
 
             try {

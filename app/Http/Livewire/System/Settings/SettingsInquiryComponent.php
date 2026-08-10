@@ -108,7 +108,7 @@ class SettingsInquiryComponent extends LivewireDatatable
                 ->filterable()
                 ->searchable(),
             Column::callback(['id', 'name'], function ($id, $name) {
-                return view('admin.pages.customers.table-actions', ['id' => $id, 'name' => $name]);
+                return view('admin.pages.system.settings.table-actions', ['id' => $id, 'name' => $name]);
             })
                 ->label(__('datatable.actions'))
                 ->excludeFromExport()

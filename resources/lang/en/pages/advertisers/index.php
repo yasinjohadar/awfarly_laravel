@@ -50,9 +50,11 @@ return [
     ],
     'actions' => [
         'edit' => 'Edit',
-        'view_interests' => 'View Interests',
+        'view_categories' => 'View Categories',
         'stop' => 'Stop',
+        'stop_hint' => 'Temporary, login allowed',
         'freeze' => 'Freeze',
+        'freeze_hint' => 'Full ban, no login',
         'activate' => 'Activate',
         'restore' => 'Restore',
         'delete' => 'Delete',
@@ -120,9 +122,9 @@ return [
             'submit' => 'Apply package',
             'cancel' => 'Cancel',
         ],
-        'interests' => [
-            'title' => 'Interests: :name',
-            'empty' => 'This advertiser has no interests recorded.',
+        'categories' => [
+            'title' => 'Categories: :name',
+            'empty' => 'This advertiser has no categories recorded.',
             'close' => 'Close',
         ],
         'delete' => [

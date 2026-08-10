@@ -10,7 +10,6 @@ use App\Http\Controllers\Admins\Countries\CountriesController;
 use App\Http\Controllers\Admins\Currencies\CurrenciesController;
 use App\Http\Controllers\Admins\Customers\CustomersController;
 use App\Http\Controllers\Admins\Categories\CategoriesController;
-use App\Http\Controllers\Admins\Interests\InterestsController;
 use App\Http\Controllers\Admins\System\Logs\SystemLogsController;
 use App\Http\Controllers\Admins\Advertisers\AdvertisersController;
 use App\Http\Controllers\Admins\Admins\Roles\AdminsRolesController;
@@ -172,14 +171,6 @@ Route::resource('/categories', CategoriesController::class)
         'create'
     ]);
 
-/**
- * Interests routes
- */
-Route::resource('/interests', InterestsController::class)
-    ->only([
-        'index',
-        'create'
-    ]);
 
 /**
  * Currencies routes

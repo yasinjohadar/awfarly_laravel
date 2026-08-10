@@ -37,17 +37,17 @@ class CustomersInquiryComponent extends LivewireDatatable
     public $hideable = 'select';
     public $beforeTableSlot = 'livewire.datatables.selected';
     public $afterTableSlot = 'modals.users.customers.edit';
-    public string $afterTableSlot2 = 'modals.users.customers.interests';
+    public string $afterTableSlot2 = 'modals.users.customers.categories';
     public $model = CustomerUser::class;
     public array $user;
     public Collection $languages;
     public Collection $countries;
     public Collection $governorates;
     public Collection $cities;
-    public Collection $viewed_interests;
+    public Collection $viewed_categories;
     public bool $showDeleteModal = false;
     public bool $showEditModal = false;
-    public bool $showInterestsModal = false;
+    public bool $showCategoriesModal = false;
     public array $deleteModalTexts;
     public array $editModalTexts;
     private string $country_column = '';
@@ -71,7 +71,7 @@ class CustomersInquiryComponent extends LivewireDatatable
         $this->getAdminLanguage();
 
         $this->country_code = 'SA';
-        $this->viewed_interests = new Collection();
+        $this->viewed_categories = new Collection();
 
         //set modal texts
         $this->setModalTexts();
@@ -633,28 +633,28 @@ class CustomersInquiryComponent extends LivewireDatatable
     }
 
     /**
-     * show a read-only modal listing the customer's interests
+     * show a read-only modal listing the customer's categories
      * @param $id
      */
-    public function showInterestsModal($id)
+    public function showCategoriesModal($id)
     {
         $customer = CustomerUser::withTrashed()->findOrFail($id);
 
         $this->viewed_user_name = $customer->name;
-        $this->viewed_interests = $customer->interests()
-            ->with('interest')
+        $this->viewed_categories = $customer->categories()
+            ->with('category')
             ->get()
-            ->pluck('interest')
+            ->pluck('category')
             ->filter();
 
-        $this->showInterestsModal = true;
+        $this->showCategoriesModal = true;
     }
 
-    public function closeInterestsModal()
+    public function closeCategoriesModal()
     {
-        $this->showInterestsModal = false;
+        $this->showCategoriesModal = false;
         $this->viewed_user_name = null;
-        $this->viewed_interests = new Collection();
+        $this->viewed_categories = new Collection();
     }
 
     /**

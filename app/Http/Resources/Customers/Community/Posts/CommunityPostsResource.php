@@ -88,6 +88,7 @@ class CommunityPostsResource extends JsonResource
             'comments'    => $this->users_comments->count() > 0 ? CommunityCommentsResource::collection($this->users_comments) : [],
 
             'categoryId' => $this->category_id ?? null,
+            'category' => optional($this->category)->{$name_column},
             'governorateId' => $this->governorate_id,
             'cityId' => $this->city_id,
             'governorate' => optional($this->governorate)->{$name_column},
@@ -113,6 +114,7 @@ class CommunityPostsResource extends JsonResource
                 'chatStatus' => $this->user->chats_privacy,
                 'profilePrivacy' => $this->user->profile_privacy,
                 'isOnline' => $this->user->is_online,
+                'discount_percentage' => $this->user?->discount_percentage,
             ],
             'isHidden' => $isHidden,
             'isLiked' => $isLiked,

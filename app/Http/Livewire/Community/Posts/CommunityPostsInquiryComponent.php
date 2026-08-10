@@ -3,7 +3,6 @@
 namespace App\Http\Livewire\Community\Posts;
 
 use App\Helpers\Admins\AdminLogs;
-use App\Helpers\FCM\FcmHelper;
 use App\Helpers\Filter;
 use App\Helpers\Notifications;
 use App\Models\Countries\Cities\City;
@@ -477,37 +476,6 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
 
         Notifications::sendFromAdmin($users, 'posts', $post->content, 'add', $customProperties);
         Notifications::sendFromAdmin($advertisers, 'posts', $post->content, 'add', $customProperties);
-        foreach($users->pluck('fcm_token')->toArray() as $token){
-        if(!$token) continue;
-            FcmHelper::sendFcmNotification([
-                'title'         => " منشور جديد - $name",
-                'title_en'         => " منشور جديد - $name",
-                'body'              => $post->content,
-                'body_en'         => $post->content,
-                'type'  =>  'posts',
-                'postId' => $post->id,
-                'message' => "posts.add",
-                'action' => "like",
-                'customProperties' => $customProperties,
-            ], [$token]);
-        }
-
-        foreach($advertisers->pluck('fcm_token')->toArray() as $token){
-
-            FcmHelper::sendFcmNotification([
-                'title'         => " منشور جديد - $name",
-                'title_en'         => " منشور جديد - $name",
-                'body'              => $post->content,
-                'body_en'         => $post->content,
-                'type'  =>  'posts',
-                'postId' => $post->id,
-                'message' => "posts.add",
-                'action' => "like",
-                'customProperties' => $customProperties,
-            ], [$token]);
-        }
-
-
     }
 
     /**

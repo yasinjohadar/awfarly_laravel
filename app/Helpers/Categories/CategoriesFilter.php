@@ -3,6 +3,7 @@
 namespace App\Helpers\Categories;
 
 use App\Models\Categories\Category;
+use Illuminate\Support\Facades\DB;
 
 class CategoriesFilter
 {
@@ -96,5 +97,47 @@ class CategoriesFilter
         }
 
         return $query->whereIn($column, $ids);
+    }
+
+    /**
+     * Match at the advertiser level: shows content from advertisers whose own selected
+     * categories overlap with the user's selected categories. Advertisers whose business
+     * type has no categories (e.g. "Shopper"/"متسوق") are exempt from this match — their
+     * content still surfaces via the content-level filter alone.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder $query
+     * @param mixed $user
+     */
+    public static function applyFeedAdvertiserCategoryFilter($query, array $data, $user, string $advertiserTable = 'advertisers_users')
+    {
+        $categoryLessBusinessTypeIds = DB::table('advertisers_business_types')
+            ->where('has_categories', false)
+            ->pluck('id');
+
+        if (!empty($data['categoryId'])) {
+            $ids = self::expandCategoryIds([(int) $data['categoryId']]);
+
+            return $query->where(function ($q) use ($ids, $advertiserTable, $categoryLessBusinessTypeIds) {
+                $q->whereIn("{$advertiserTable}.id", function ($sub) use ($ids) {
+                    $sub->select('advertiser_id')->from('advertiser_categories')->whereIn('category_id', $ids);
+                })->orWhereIn("{$advertiserTable}.business_type", $categoryLessBusinessTypeIds);
+            });
+        }
+
+        if (self::wantsAllCategories($data)) {
+            return $query;
+        }
+
+        $ids = self::preferredCategoryIds($user);
+
+        if (empty($ids)) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($ids, $advertiserTable, $categoryLessBusinessTypeIds) {
+            $q->whereIn("{$advertiserTable}.id", function ($sub) use ($ids) {
+                $sub->select('advertiser_id')->from('advertiser_categories')->whereIn('category_id', $ids);
+            })->orWhereIn("{$advertiserTable}.business_type", $categoryLessBusinessTypeIds);
+        });
     }
 }

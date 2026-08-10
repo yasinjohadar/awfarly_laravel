@@ -18,10 +18,12 @@ class AdvertiserBusinessType extends Model
         'name_ar',
         'name_en',
         'is_active',
+        'has_categories',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'has_categories' => 'boolean',
     ];
 
     /**

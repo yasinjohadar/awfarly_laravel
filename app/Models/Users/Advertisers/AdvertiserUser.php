@@ -574,13 +574,6 @@ class AdvertiserUser extends Authenticatable implements Wallet
         return $this->hasMany(AdvertiserCategories::class, 'advertiser_id', 'id');
     }
 
-    /**
-     * @return HasMany
-     */
-    public function interests(): HasMany
-    {
-        return $this->hasMany(\App\Models\Users\Advertisers\Interests\AdvertiserInterests::class, 'advertiser_id', 'id');
-    }
 
     /**
      * @return HasMany

@@ -67,6 +67,19 @@
             width: 1.1rem;
             text-align: center;
         }
+
+        .advertiser-row-actions__menu .action-label {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1.25;
+        }
+
+        .advertiser-row-actions__menu .action-hint {
+            font-size: .7rem;
+            color: #90a4ae;
+            white-space: normal;
+        }
     </style>
 
     <summary class="btn btn-light border btn-sm">
@@ -86,19 +99,25 @@
                     <i class="icon-pencil7 mr-2 text-secondary"></i>
                     {{ __('pages/advertisers/index.actions.edit') }}
                 </button>
-                <button type="button" wire:click="showInterestsModal({{ $id }})">
-                    <i class="icon-heart5 mr-2 text-secondary"></i>
-                    {{ __('pages/advertisers/index.actions.view_interests') }}
+                <button type="button" wire:click="showCategoriesModal({{ $id }})">
+                    <i class="icon-stack2 mr-2 text-secondary"></i>
+                    {{ __('pages/advertisers/index.actions.view_categories') }}
                 </button>
                 <div class="divider"></div>
                 @if($status === 'active')
                     <button type="button" wire:click="showStatusModal({{ $id }}, 'inactive')">
                         <i class="icon-pause mr-2 text-warning"></i>
-                        {{ __('pages/advertisers/index.actions.stop') }}
+                        <span class="action-label">
+                            {{ __('pages/advertisers/index.actions.stop') }}
+                            <span class="action-hint">{{ __('pages/advertisers/index.actions.stop_hint') }}</span>
+                        </span>
                     </button>
                     <button type="button" wire:click="showStatusModal({{ $id }}, 'banned')">
                         <i class="icon-lock2 mr-2 text-dark"></i>
-                        {{ __('pages/advertisers/index.actions.freeze') }}
+                        <span class="action-label">
+                            {{ __('pages/advertisers/index.actions.freeze') }}
+                            <span class="action-hint">{{ __('pages/advertisers/index.actions.freeze_hint') }}</span>
+                        </span>
                     </button>
                 @elseif($status === 'inactive')
                     <button type="button" wire:click="changeStatus({{ $id }}, 'active')">
@@ -107,7 +126,10 @@
                     </button>
                     <button type="button" wire:click="showStatusModal({{ $id }}, 'banned')">
                         <i class="icon-lock2 mr-2 text-dark"></i>
-                        {{ __('pages/advertisers/index.actions.freeze') }}
+                        <span class="action-label">
+                            {{ __('pages/advertisers/index.actions.freeze') }}
+                            <span class="action-hint">{{ __('pages/advertisers/index.actions.freeze_hint') }}</span>
+                        </span>
                     </button>
                 @elseif($status === 'banned')
                     <button type="button" wire:click="changeStatus({{ $id }}, 'active')">
