@@ -5,6 +5,7 @@ namespace App\Helpers\Geography;
 use App\Models\Countries\Cities\City;
 use App\Models\Countries\Governorates\Governorate;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 
 class Geography
 {
@@ -42,6 +43,42 @@ class Geography
         }
 
         return null;
+    }
+
+    /**
+     * Derive the governorate from the city when a client sends only `cityId`.
+     *
+     * Without this a partial update writes `city_id` and leaves a stale
+     * `governorate_id` behind (see assignUserLocation), which later makes
+     * validateCityBelongsToGovernorate fail on every post the user tries to
+     * add. Older app builds send exactly that shape.
+     *
+     * Call after `$request->only(...)` and BEFORE validation, so the derived id
+     * is itself validated and seen by validateCityBelongsToGovernorate.
+     *
+     * @param array $data
+     * @param Request|null $request
+     * @return void
+     */
+    public static function fillGovernorateFromCity(array &$data, ?Request $request = null): void
+    {
+        if (!empty($data['governorateId']) || empty($data['cityId'])) {
+            return;
+        }
+
+        $city = City::find($data['cityId']);
+
+        if (!$city || !$city->governorate_id) {
+            return;
+        }
+
+        $data['governorateId'] = $city->governorate_id;
+
+        //keep the request in sync, the account controllers gate the assignment
+        //on $request->has('governorateId')
+        if ($request) {
+            $request->merge(['governorateId' => $city->governorate_id]);
+        }
     }
 
     /**
@@ -137,12 +174,26 @@ class Geography
 
     public static function assignUserLocation($user, array $data): void
     {
+        //belt and braces: even if the caller skipped fillGovernorateFromCity,
+        //never let a city land next to a governorate that does not own it
+        self::fillGovernorateFromCity($data);
+
         if (!empty($data['governorateId'])) {
             $user->governorate_id = $data['governorateId'];
         }
 
         if (!empty($data['cityId'])) {
             $user->city_id = $data['cityId'];
+        }
+
+        //mirror case: a governorate-only update must not strand a city that
+        //belongs to a different governorate
+        if (!empty($user->city_id) && !empty($user->governorate_id)) {
+            $city = City::find($user->city_id);
+
+            if ($city && (string) $city->governorate_id !== (string) $user->governorate_id) {
+                $user->city_id = null;
+            }
         }
     }
 

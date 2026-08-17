@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Advertisers\Account;
 
 use App\Helpers\Files;
 use App\Helpers\Filter;
+use App\Helpers\Categories\CategoriesFilter;
 use App\Helpers\Geography\Geography;
 use App\Helpers\Settings;
 use App\Http\Controllers\Controller;
@@ -109,10 +110,15 @@ class AccountController extends Controller
             'deleteImage',
             'isDisableAccount',
             'interestedCategories',
+            'interests',
             'gender',
             'birth_date',
             'discount_percentage',
         ]);
+
+        //older app builds send only cityId, derive the governorate so the pair
+        //can never drift apart and block the user from posting later
+        Geography::fillGovernorateFromCity($data, $request);
 
         //validate data
         $this->apiValidate($data, [
@@ -147,7 +153,9 @@ class AccountController extends Controller
             'deleteImage' => ['nullable', 'boolean'],
             'isDisableAccount' => ['nullable', 'boolean'],
             'interestedCategories' => ['nullable', 'array'],
-            'interestedCategories.*' => ['exists:categories,id']
+            'interestedCategories.*' => ['exists:categories,id'],
+            'interests' => ['nullable', 'array'],
+            'interests.*' => ['exists:categories,id'],
         ]);
 
 
@@ -377,18 +385,24 @@ class AccountController extends Controller
         DB::beginTransaction();
         try {
 
-            //change category id
+            //For an advertiser `interestedCategories` means their OWN business
+            //categories: that is what installed builds send from the profile
+            //editor and read back for the post/offer category dropdown. Their
+            //interests are a separate set, written via `interests` below or
+            //via POST /categories/interested.
             if ($request->has('interestedCategories')) {
-                $user->categories()
-                    ->delete();
-                foreach ($data['interestedCategories'] as $category) {
-                    if ($category != null) {
-                        $user->categories()
-                            ->updateOrCreate([
-                                'category_id' => $category,
-                            ]);
-                    }
-                }
+                CategoriesFilter::syncCategories(
+                    $user->categories(),
+                    (array) ($data['interestedCategories'] ?? [])
+                );
+            }
+
+            //change interests, independently of the own categories above
+            if ($request->has('interests')) {
+                CategoriesFilter::syncCategories(
+                    $user->interests(),
+                    (array) ($data['interests'] ?? [])
+                );
             }
         } catch (Exception $e) {
             //roll back

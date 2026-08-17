@@ -67,6 +67,10 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
     public function changeType($params)
     {
         $this->page_type = $params['page_type'];
+
+        //jump back to the first page: a stale page number left over from the
+        //previous tab can land on an out-of-range page and show an empty table
+        $this->resetPage();
     }
 
 
@@ -150,8 +154,8 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
                 ->filterable()
                 ->searchable()
                 ->hide(),
-            Column::callback(['id', 'updated_at', 'deleted_at'], function ($id, $name, $deleted_at) {
-                return view('admin.pages.community.posts.table-actions', ['id' => $id, 'name' => $name, 'deleted_at' => $deleted_at]);
+            Column::callback(['id', 'updated_at', 'deleted_at', 'status'], function ($id, $name, $deleted_at, $status) {
+                return view('admin.pages.community.posts.table-actions', ['id' => $id, 'name' => $name, 'deleted_at' => $deleted_at, 'status' => $status]);
             })
                 ->label(__('datatable.actions'))
                 ->excludeFromExport()
@@ -445,6 +449,59 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
             return null;
         }
         //commit
+        DB::commit();
+    }
+
+    /**
+     * One-click approval straight from the actions column, without opening the
+     * edit modal. Mirrors the approval side-effects of update().
+     *
+     * @param $id
+     * @return void|null
+     */
+    public function approve($id)
+    {
+        if (!Auth::guard('admin')->user()->can('posts.edit')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        DB::beginTransaction();
+        try {
+            $post = Post::withTrashed()->findOrFail($id);
+
+            //nothing to do if it is already approved
+            if ($post->status === 'approved') {
+                DB::rollBack();
+                return null;
+            }
+
+            AdminLogs::log('edit', 'posts', [
+                'old' => $post,
+                'new' => ['status' => 'approved'],
+            ], "Approve: post #$id");
+
+            tap($post)->update(['status' => 'approved']);
+
+            //notify interested users, exactly as the edit-modal approval does
+            $this->sendNotificationToIntersetUser($post);
+
+            $this->alert('success', __('toastr.success'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+
+            //refresh the tab counters so "unreviewed" drops by one
+            $this->emitUp('recountCounters');
+        } catch (Exception $e) {
+            DB::rollBack();
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+            return null;
+        }
         DB::commit();
     }
 

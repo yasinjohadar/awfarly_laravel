@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Customers\Account;
 
 use App\Helpers\Files;
 use App\Helpers\Filter;
+use App\Helpers\Categories\CategoriesFilter;
 use App\Helpers\Geography\Geography;
 use App\Helpers\Settings;
 use App\Http\Controllers\Controller;
@@ -68,11 +69,16 @@ class AccountController extends Controller
             'deleteImage',
             'isDisableAccount',
             'interestedCategories',
+            'interests',
             'gender',
             'birth_date',
             'latitude',
             'longitude',
         ]);
+
+        //older app builds send only cityId, derive the governorate so the pair
+        //can never drift apart and block the user from posting later
+        Geography::fillGovernorateFromCity($data, $request);
 
         //validate data
         $this->apiValidate($data, [
@@ -106,6 +112,8 @@ class AccountController extends Controller
             'isDisableAccount' => ['nullable', 'boolean'],
             'interestedCategories' => ['nullable', 'array'],
             'interestedCategories.*' => ['exists:categories,id'],
+            'interests' => ['nullable', 'array'],
+            'interests.*' => ['exists:categories,id'],
             'latitude'  =>  'sometimes|nullable|string',
             'longitude'  =>  'sometimes|nullable|string',
         ]);
@@ -312,16 +320,13 @@ class AccountController extends Controller
         //Begin Transaction
         DB::beginTransaction();
         try {
-            //change category id
-            if ($request->has('interestedCategories')) {
-                $user->categories()
-                    ->delete();
-                foreach ($data['interestedCategories'] as $category) {
-                    $user->categories()
-                        ->updateOrCreate([
-                            'category_id' => $category,
-                        ]);
-                }
+            //A customer's categories are purely interests; `interests` is
+            //accepted as the clearer alias for the same set.
+            if ($request->has('interestedCategories') || $request->has('interests')) {
+                CategoriesFilter::syncCategories(
+                    $user->categories(),
+                    (array) ($data['interests'] ?? $data['interestedCategories'] ?? [])
+                );
             }
             //edit account
             $user->save();

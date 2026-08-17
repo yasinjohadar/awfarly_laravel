@@ -102,17 +102,29 @@ Route::delete('/notifications/{id}', [NotificationsController::class, 'deleteNot
 Route::get('/categories', [CategoriesController::class, 'getCategories'])
     ->name('categories.get');
 
+//interests: what the advertiser's own feed is filtered by
 Route::get('/categories/interested', [CategoriesController::class, 'getUserCategories'])
     ->name('categories.interested');
-
-Route::get('/categories/{id}', [CategoriesController::class, 'getCategoryById'])
-    ->name('category.get');
 
 Route::post('/categories/interested', [CategoriesController::class, 'addAdvertiserCategories'])
     ->name('categories.add');
 
 Route::delete('/categories/interested', [CategoriesController::class, 'deleteAdvertiserCategories'])
     ->name('categories.delete');
+
+//own categories: what the advertiser publishes under, independent of interests.
+//NOTE: these must stay ABOVE /categories/{id} or that wildcard swallows "own".
+Route::get('/categories/own', [CategoriesController::class, 'getOwnCategories'])
+    ->name('categories.own');
+
+Route::post('/categories/own', [CategoriesController::class, 'setOwnCategories'])
+    ->name('categories.own.set');
+
+Route::delete('/categories/own', [CategoriesController::class, 'deleteOwnCategories'])
+    ->name('categories.own.delete');
+
+Route::get('/categories/{id}', [CategoriesController::class, 'getCategoryById'])
+    ->name('category.get');
 
 
 /**

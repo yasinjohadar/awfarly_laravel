@@ -30,7 +30,7 @@ class CommunityPostComponent extends Component
             $storagePath = route('users.profile.image', ['image' => $post->advertisement->advertiser_image]);
         } else {
             //Set default image
-            $storagePath = asset('assets/images/user-default.png');
+            $storagePath = Settings::Logo('assets/images/frontend/logo.png');
         }
 
 

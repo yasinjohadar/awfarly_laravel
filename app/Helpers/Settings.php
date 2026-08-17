@@ -3,10 +3,19 @@
 namespace App\Helpers;
 
 use App\Models\Settings\Setting;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Settings extends Helper
 {
+    /**
+     * Resolved logo values, memoized per request (the logo is asked for many
+     * times per page: navbar, footer, meta tags and every missing image).
+     * @var array
+     */
+    protected static $logoCache = [];
+
     /**
      * Get Settings
      * @param null $key
@@ -109,21 +118,70 @@ class Settings extends Helper
      */
     public static function Logo($fallback = 'assets/images/logo_light.png')
     {
-        $path = self::Get('site.logo');
+        if (array_key_exists('url:' . $fallback, self::$logoCache)) {
+            return self::$logoCache['url:' . $fallback];
+        }
+
+        $path = self::LogoPath();
 
         if (!$path) {
-            return '/' . ltrim($fallback, '/');
+            $url = '/' . ltrim($fallback, '/');
+        } elseif (Str::startsWith($path, ['http://', 'https://'])) {
+            $url = $path;
+        } elseif (Str::startsWith($path, 'uploads/')) {
+            // Uploaded logos live on the local disk (storage/app) and are served via route
+            $url = '/image/' . $path;
+        } else {
+            $url = '/' . ltrim($path, '/');
         }
 
-        if (is_string($path) && Str::startsWith($path, ['http://', 'https://'])) {
-            return $path;
+        return self::$logoCache['url:' . $fallback] = $url;
+    }
+
+    /**
+     * Raw `site.logo` setting value, memoized per request.
+     *
+     * @return string|null
+     */
+    public static function LogoPath()
+    {
+        if (!array_key_exists('path', self::$logoCache)) {
+            $path = self::Get('site.logo');
+            self::$logoCache['path'] = (is_string($path) && $path !== '') ? $path : null;
         }
 
-        // Uploaded logos live on the local disk (storage/app) and are served via route
-        if (is_string($path) && Str::startsWith($path, 'uploads/')) {
-            return '/image/' . $path;
+        return self::$logoCache['path'];
+    }
+
+    /**
+     * The site logo as a source Intervention Image can render: either the raw
+     * file contents (uploaded logos live on the local disk) or an absolute
+     * path on the public disk. Used as the default image whenever a category,
+     * a post owner or an advertiser has no image of its own.
+     *
+     * @param string $fallback
+     * @return string
+     */
+    public static function LogoImage($fallback = 'assets/images/logo_light.png')
+    {
+        $path = self::LogoPath();
+
+        // Remote logos are not fetched here, an outbound request per served
+        // image would be far too costly, so they fall back to the local file.
+        if ($path && !Str::startsWith($path, ['http://', 'https://'])) {
+            if (Str::startsWith($path, 'uploads/')) {
+                if (Storage::exists($path)) {
+                    return Storage::get($path);
+                }
+            } else {
+                $file = public_path(ltrim($path, '/'));
+
+                if (File::exists($file)) {
+                    return $file;
+                }
+            }
         }
 
-        return '/' . ltrim($path, '/');
+        return public_path(ltrim($fallback, '/'));
     }
 }

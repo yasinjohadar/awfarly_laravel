@@ -58,18 +58,59 @@ class CategoriesFilter
     }
 
     /**
+     * The categories the VIEWER follows — their interests, never the categories
+     * they publish under. Both user types expose interests() (on a customer it
+     * aliases categories(), since a customer publishes nothing), so no branch
+     * on the user type is needed here.
+     *
      * @param mixed $user
      * @return int[]
      */
     public static function preferredCategoryIds($user): array
     {
-        if (!$user || !method_exists($user, 'categories')) {
+        if (!$user || !method_exists($user, 'interests')) {
             return [];
         }
 
         return self::expandCategoryIds(
-            $user->categories()->pluck('category_id')->toArray()
+            $user->interests()->pluck('category_id')->toArray()
         );
+    }
+
+    /**
+     * Replace the contents of a user↔category relation with exactly $categoryIds,
+     * touching only the rows that actually changed.
+     *
+     * The previous pattern everywhere was `$relation->delete()` followed by
+     * re-inserting. That destroyed and recreated every row, which reshuffled the
+     * insertion order the default post/offer category depends on — so editing
+     * one's categories silently changed the default category of every future
+     * post. Syncing leaves untouched rows untouched.
+     *
+     * @param \Illuminate\Database\Eloquent\Relations\HasMany $relation
+     * @param array $categoryIds
+     * @return void
+     */
+    public static function syncCategories($relation, array $categoryIds): void
+    {
+        $wanted = array_values(array_unique(array_filter(array_map(static function ($id) {
+            return (int) $id;
+        }, $categoryIds))));
+
+        $current = $relation->pluck('category_id')
+            ->map(static fn ($id) => (int) $id)
+            ->toArray();
+
+        $toRemove = array_diff($current, $wanted);
+        $toAdd = array_diff($wanted, $current);
+
+        if (!empty($toRemove)) {
+            $relation->whereIn('category_id', $toRemove)->delete();
+        }
+
+        foreach ($toAdd as $categoryId) {
+            $relation->firstOrCreate(['category_id' => $categoryId]);
+        }
     }
 
     /**

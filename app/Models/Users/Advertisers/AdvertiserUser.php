@@ -19,6 +19,7 @@ use App\Models\Posts\Comments\Likes\PostsCommentLikes;
 use App\Models\Posts\Comments\PostComments;
 use App\Models\Subscriptions\Packages\Advertisers\AdvertiserPackages;
 use App\Models\Users\Advertisers\Categories\AdvertiserCategories;
+use App\Models\Users\Advertisers\Categories\AdvertiserInterests;
 use App\Models\Users\Advertisers\Locations\AdvertiserPreferredCity;
 use App\Models\Users\Advertisers\Locations\AdvertiserPreferredGovernorate;
 use App\Models\Users\Advertisers\Hidden\HiddenAdvertiser;
@@ -567,11 +568,26 @@ class AdvertiserUser extends Authenticatable implements Wallet
     }
 
     /**
+     * The advertiser's OWN business categories: what they publish under.
+     * Drives the default category of a new post/offer and the advertiser-level
+     * feed match. NOT the same as interests().
+     *
      * @return HasMany
      */
     public function categories(): HasMany
     {
         return $this->hasMany(AdvertiserCategories::class, 'advertiser_id', 'id');
+    }
+
+    /**
+     * The categories this advertiser FOLLOWS, deciding what appears in their
+     * own feed. Editable independently of categories().
+     *
+     * @return HasMany
+     */
+    public function interests(): HasMany
+    {
+        return $this->hasMany(AdvertiserInterests::class, 'advertiser_id', 'id');
     }
 
 

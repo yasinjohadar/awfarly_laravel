@@ -115,6 +115,11 @@ class CommunityOffersController extends Controller
                 ->where('offers.expires_at', '>', now());
         }
 
+        //"My offers" means every offer I created — it must not be narrowed by
+        //the discovery filters (my interests, my preferred locations). Only an
+        //explicit filter the user picks from the dropdowns still applies.
+        $isMine = isset($data['isShowMyOffersOnly']) && $data['isShowMyOffersOnly'];
+
         //Filter country code
         if (isset($data['countryCode']) && $data['countryCode']) {
             $offers = $offers->where(function ($q) use ($data) {
@@ -124,7 +129,7 @@ class CommunityOffersController extends Controller
 
         $offers = Geography::applyUserLocationFilter($offers, $data);
 
-        if (!Geography::hasExplicitLocationFilter($data)) {
+        if (!$isMine && !Geography::hasExplicitLocationFilter($data)) {
             $offers = Geography::applyPreferredUserLocationFilter(
                 $offers,
                 Auth::guard('advertiser-api')->user()
@@ -132,13 +137,23 @@ class CommunityOffersController extends Controller
         }
 
 
-        // Filter categories (expand parents to children; apply interests by default)
-        $offers = CategoriesFilter::applyFeedCategoryFilter(
-            $offers,
-            $data,
-            Auth::guard('advertiser-api')->user(),
-            'offers.category_id'
-        );
+        if ($isMine) {
+            //only an explicitly chosen category narrows my own offers
+            if (!empty($data['categoryId'])) {
+                $offers = $offers->whereIn(
+                    'offers.category_id',
+                    CategoriesFilter::expandCategoryIds([(int) $data['categoryId']])
+                );
+            }
+        } else {
+            // Filter categories (expand parents to children; apply interests by default)
+            $offers = CategoriesFilter::applyFeedCategoryFilter(
+                $offers,
+                $data,
+                Auth::guard('advertiser-api')->user(),
+                'offers.category_id'
+            );
+        }
 
         $offers = $offers->orderBy('advertisers_users.is_elite', 'desc')
             ->orderBy('offers.id', 'desc')

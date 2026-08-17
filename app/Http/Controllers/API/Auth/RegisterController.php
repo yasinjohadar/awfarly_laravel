@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Auth;
 use Exception;
 use App\Helpers\Advertisers\PackageQuotas;
 use App\Helpers\Filter;
+use App\Helpers\Categories\CategoriesFilter;
 use App\Helpers\Geography\Geography;
 use App\Helpers\Settings;
 use App\Models\Subscriptions\Packages\Package;
@@ -14,7 +15,6 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Helpers\ActivationCodeService;
 use App\Helpers\FirebaseAuth\FirebaseAuthHelper;
-use App\Models\Countries\Cities\City;
 use App\Models\Users\Customers\CustomerUser;
 use App\Models\Users\Advertisers\AdvertiserUser;
 use Illuminate\Contracts\Foundation\Application;
@@ -69,13 +69,7 @@ class RegisterController extends Controller
         ]);
 
         // If city is sent without governorate, derive it (supports older app clients)
-        if (empty($data['governorateId']) && !empty($data['cityId'])) {
-            $city = City::find($data['cityId']);
-            if ($city) {
-                $data['governorateId'] = $city->governorate_id;
-                $request->merge(['governorateId' => $city->governorate_id]);
-            }
-        }
+        Geography::fillGovernorateFromCity($data, $request);
 
         // Validate data
         $this->apiValidate($data, [
@@ -188,17 +182,20 @@ class RegisterController extends Controller
                 }
             }
 
-            //change category id
+            //set the categories picked at registration
             if ($request->has('interestedCategories') && is_array($request->interestedCategories) && count($request->interestedCategories) > 0) {
-                $user->categories()
-                    ->delete();
-                foreach ($data['interestedCategories'] as $category) {
-                    if ($category != null && $category !== '' && $category !== '0') {
-                        $user->categories()
-                            ->updateOrCreate([
-                                'category_id' => $category,
-                            ]);
-                    }
+                $categoryIds = array_filter($data['interestedCategories'], static function ($category) {
+                    return $category !== null && $category !== '' && $category !== '0';
+                });
+
+                //For an advertiser this is their OWN business category — the
+                //registration form labels it "Category". Seed their interests
+                //with the same set so their feed is not unfiltered on day one;
+                //the two are independent from that point on.
+                CategoriesFilter::syncCategories($user->categories(), $categoryIds);
+
+                if (method_exists($user, 'interests') && $data['type'] === 'advertiser') {
+                    CategoriesFilter::syncCategories($user->interests(), $categoryIds);
                 }
             }
 

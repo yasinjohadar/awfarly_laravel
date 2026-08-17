@@ -30,10 +30,27 @@ class MediaResource extends JsonResource
         }
 
 
+        //Files on the local disk are not reachable at getFullUrl() (that points
+        //at /storage on the public disk, and at the configured APP_URL host
+        //rather than the request host). Serve them inline through the
+        //request-host media.view route instead. S3 keeps its own working URL.
+        $isS3 = $this->getDiskDriverName() === 's3';
+
+        $mediaUrl = $isS3
+            ? $this->getFullUrl()
+            : route('media.view', ['uuid' => $this->uuid]);
+
+        $thumbnailImageUrl = null;
+        if ($this->hasGeneratedConversion('thumb')) {
+            $thumbnailImageUrl = $isS3
+                ? $this->getFullUrl('thumb')
+                : route('media.view', ['uuid' => $this->uuid, 'conversion' => 'thumb']);
+        }
+
         return [
             'id' => $this->id,
-            'mediaUrl' => $this->getFullUrl(),
-            'thumbnailImageUrl' => $this->hasGeneratedConversion('thumb') ? $this->getFullUrl('thumb') : null,
+            'mediaUrl' => $mediaUrl,
+            'thumbnailImageUrl' => $thumbnailImageUrl,
             'width' => $this->hasCustomProperty('width') ? $this->getCustomProperty('width') : null,
             'height' => $this->hasCustomProperty('height') ? $this->getCustomProperty('height') : null,
             'fileName' => $this->file_name,

@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Frontend\Categories;
 
 use App\Helpers\Files;
+use App\Helpers\Settings;
 use App\Http\Livewire\Frontend\Home\HomeComponent;
 use App\Models\Categories\Category;
 use Illuminate\Support\Facades\App;
@@ -32,7 +33,7 @@ class CategoriesComponent extends Component
                     $storagePath = route('files.image.get', $category->image);
                 } else {
                     //Set default image
-                    $storagePath = asset('assets/images/user-default.png');
+                    $storagePath = Settings::Logo('assets/images/frontend/logo.png');
                 }
                 return [
                     'id' => $category->id,
@@ -61,7 +62,7 @@ class CategoriesComponent extends Component
                         $storagePath = route('files.image.get', $category->image);
                     } else {
                         //Set default image
-                        $storagePath = asset('assets/images/user-default.png');
+                        $storagePath = Settings::Logo('assets/images/frontend/logo.png');
                     }
                     return [
                         'id' => $category->id,
@@ -85,7 +86,7 @@ class CategoriesComponent extends Component
                             $storagePath = route('files.image.get', $category->image);
                         } else {
                             //Set default image
-                            $storagePath = asset('assets/images/user-default.png');
+                            $storagePath = Settings::Logo('assets/images/frontend/logo.png');
                         }
                         return [
                             'id' => $category->id,
@@ -101,7 +102,7 @@ class CategoriesComponent extends Component
                                         $storagePath = route('files.image.get', $children->image);
                                     } else {
                                         //Set default image
-                                        $storagePath = asset('assets/images/user-default.png');
+                                        $storagePath = Settings::Logo('assets/images/frontend/logo.png');
                                     }
                                     return [
                                         'id' => $children->id,

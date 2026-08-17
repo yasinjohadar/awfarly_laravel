@@ -69,6 +69,7 @@ class AccountResource extends JsonResource
             ->posts()
             ->count();
 
+        //the advertiser's OWN business categories: what they publish under
         $userCategories = $this->categories()
             ->whereHas('category')
             ->get()
@@ -76,9 +77,17 @@ class AccountResource extends JsonResource
                 return $category->category;
             });
 
-        $has_categories = $this->categories()
-                ->whereHas('category')
-                ->count() > 0;
+        //the categories they follow, which filter their own feed
+        $userInterests = $this->interests()
+            ->whereHas('category')
+            ->get()
+            ->map(function ($interest) {
+                return $interest->category;
+            });
+
+        //profile completeness depends on having a business category, never on
+        //interests — an advertiser with no interests can still publish
+        $has_categories = $userCategories->isNotEmpty();
 
         //check maximum allowed offers for advertiser (active + monthly)
         $limits = OfferLimits::evaluate(Auth::guard('advertiser-api')->user());
@@ -92,6 +101,11 @@ class AccountResource extends JsonResource
             'type' => 'advertiser',
             'businessTypeId' => $this->business->id,
             'businessTypeName' => $this->business->{$language_column},
+            //whether this business type owns categories at all. "Shopper"
+            //advertisers publish across every category, so they have no own
+            //set. The app used to infer this by comparing the TRANSLATED name
+            //against "Shopper", which breaks in any other locale.
+            'businessTypeHasCategories' => (bool) $this->business->has_categories,
             'imageUrl' => $this->image ? route('files.image.get', $this->image) : null,
             'bio' => $this->bio ?? null,
             'birth_date' => optional($this->birth_date)->format('d/m/Y') ?? null,
@@ -125,7 +139,13 @@ class AccountResource extends JsonResource
                 'maximumMonthlyOffers' => $limits['monthlyLimit'],
                 'leftMonthlyOffers' => max(0, $limits['monthlyLimit'] - $limits['monthlyCount']),
             ],
+            //legacy key: for an advertiser this has always been the set the
+            //post/offer category dropdown and the profile editor consume, i.e.
+            //the OWN categories. Kept pointing there so installed builds keep
+            //working; new builds should read ownCategories/interests instead.
             'interestedCategories' => CategoriesResource::collection($userCategories),
+            'ownCategories' => CategoriesResource::collection($userCategories),
+            'interests' => CategoriesResource::collection($userInterests),
             'isAllowAddOffer' => $isAllowAddOffer,
             'isAllowCreatePosts' => ((int) ($this->allowed_posts_count ?? 0)) > 0,
             'chatStatus' => $this->chats_privacy,

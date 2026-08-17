@@ -23,12 +23,12 @@ class Images
     {
         //Get image if exists
         if (!is_null($image) && !empty($image) && $image != null) {
-            $storagePath = Storage::exists($image) ? Storage::exists($image) ? Storage::get($image) : public_path('assets/images/user-default.png') : public_path('assets/images/user-default.png');
+            $storagePath = Storage::exists($image) ? Storage::get($image) : Settings::LogoImage();
             return Image::make($storagePath)->response();
         }
 
-        //Set default image
-        $storagePath = public_path('assets/images/user-default.png');
+        //Set default image to the site logo set in the dashboard
+        $storagePath = Settings::LogoImage();
 
         return Image::make($storagePath)->response();
     }
@@ -81,12 +81,12 @@ class Images
     {
         //Get image if exists
         if (!is_null($image) && !empty($image)) {
-            $storagePath = Storage::exists($image) ? Storage::get($image) : public_path('assets/images/user-default.png');
+            $storagePath = Storage::exists($image) ? Storage::get($image) : Settings::LogoImage();
             return Image::make($storagePath)->response();
         }
 
-        //Set default image
-        $storagePath = public_path('assets/images/user-default.png');
+        //Set default image to the site logo set in the dashboard
+        $storagePath = Settings::LogoImage();
 
         return Image::make($storagePath)->response();
     }
@@ -99,12 +99,12 @@ class Images
     {
         //Get image if exists
         if (!is_null($image) && !empty($image)) {
-            $storagePath = Storage::exists($image) ? Storage::exists($image) ? Storage::get($image) : public_path('assets/images/user-default.png') : public_path('assets/images/user-default.png');
+            $storagePath = Storage::exists($image) ? Storage::get($image) : Settings::LogoImage();
             return Image::make($storagePath)->response();
         }
 
-        //Set default image
-        $storagePath = public_path('assets/images/user-default.png');
+        //Set default image to the site logo set in the dashboard
+        $storagePath = Settings::LogoImage();
 
         return Image::make($storagePath)->response();
     }

@@ -493,11 +493,25 @@ class CustomerUser extends Authenticatable
     }
 
     /**
+     * A customer's categories are purely interests — they publish nothing, so
+     * there is no "own category" counterpart here.
+     *
      * @return HasMany
      */
     public function categories(): HasMany
     {
         return $this->hasMany(CustomerCategories::class, 'customer_id', 'id');
+    }
+
+    /**
+     * Alias of categories(), so CategoriesFilter can ask any user type for its
+     * interests without branching on the type.
+     *
+     * @return HasMany
+     */
+    public function interests(): HasMany
+    {
+        return $this->categories();
     }
 
 

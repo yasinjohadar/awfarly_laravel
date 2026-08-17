@@ -68,7 +68,11 @@ class AccountResource extends JsonResource
                 'twitterUrl' => $this->twitter_url ?? null,
                 'websiteUrl' => $this->website_url ?? null,
             ],
+            //a customer's categories are purely interests; they publish nothing,
+            //so there is no own-category counterpart
             'interestedCategories' => CategoriesResource::collection($userCategories),
+            'interests' => CategoriesResource::collection($userCategories),
+            'ownCategories' => [],
             'chatStatus' => $this->chats_privacy,
             'profilePrivacy' => $this->profile_privacy,
             'isFollowAllowed' => (bool)$this->isFollowAllowed,

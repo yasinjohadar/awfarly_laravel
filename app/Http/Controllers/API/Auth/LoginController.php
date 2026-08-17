@@ -132,6 +132,18 @@ class LoginController extends Controller
             // Login with (login, password)
             if (isset($data['login']) && $data['login']) {
 
+                //The app always sends a mobile in E.164 form (+963…), but some
+                //older/seeded rows are stored without the leading "+". Try both
+                //spellings of the same digits so either format authenticates.
+                $mobileVariants = [$data['login']];
+                if (is_string($data['login']) && $data['login'] !== '') {
+                    if (str_starts_with($data['login'], '+')) {
+                        $mobileVariants[] = ltrim($data['login'], '+');
+                    } else {
+                        $mobileVariants[] = '+' . $data['login'];
+                    }
+                }
+
                 //Check login data with guards
                 foreach ($guards as $guard) {
                     //Auth user
@@ -139,8 +151,13 @@ class LoginController extends Controller
                         //Try email
                         Auth::guard($guard)->attempt(['email' => $data['login'], 'password' => $data['password']]);
                     } else {
-                        //Try mobile
-                        Auth::guard($guard)->attempt(['mobile' => $data['login'], 'password' => $data['password']]);
+                        //Try mobile (both with and without the leading "+")
+                        foreach ($mobileVariants as $mobileVariant) {
+                            Auth::guard($guard)->attempt(['mobile' => $mobileVariant, 'password' => $data['password']]);
+                            if (Auth::guard($guard)->check()) {
+                                break;
+                            }
+                        }
 
                         //Try username
                         if (!Auth::guard($guard)->check()) {

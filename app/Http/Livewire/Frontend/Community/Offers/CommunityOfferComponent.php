@@ -30,7 +30,7 @@ class CommunityOfferComponent extends Component
             $storagePath = route('files.image.get', $offer->advertiser->image);
         } else {
             //Set default image
-            $storagePath = asset('assets/images/user-default.png');
+            $storagePath = Settings::Logo('assets/images/frontend/logo.png');
         }
         //get user rate
         $rate = $offer->advertiser->rate ?? null;

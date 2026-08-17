@@ -55,6 +55,10 @@ class AdvertisementsCommentsInquiryComponent extends LivewireDatatable
     public function changeType($params)
     {
         $this->page_type = $params['page_type'];
+
+        //reset to the first page so a stale page number from the previous
+        //tab cannot land on an out-of-range page and show an empty table
+        $this->resetPage();
     }
 
 

@@ -37,6 +37,13 @@ Route::get('image/{image?}', function ($image = null) {
 })->name('files.image.get')->where(['image' => '(.*)']);
 
 //*********************************************************************************
+//view Media inline (images + videos) — used by the app/frontend to display media
+Route::get('media/view/{uuid}/{conversion?}', function ($uuid, $conversion = null) {
+    $media = Media::findByUuid($uuid);
+    return Files::streamMedia($media, $conversion);
+})->name('media.view')->where(['conversion' => '[A-Za-z0-9_-]+']);
+
+//*********************************************************************************
 //download Media
 Route::get('media/{uuid}', function ($uuid) {
     $media = Media::findByUuid($uuid);

@@ -53,7 +53,7 @@ class HomeComponent extends Component
                     $storagePath = route('files.image.get', optional($post->user)->image);
                 } else {
                     //Set default image
-                    $storagePath = asset('assets/images/user-default.png');
+                    $storagePath = Settings::Logo('assets/images/frontend/logo.png');
                 }
                 //get user rate
                 $rate = optional($post->user)->rate ?? null;
@@ -119,7 +119,7 @@ class HomeComponent extends Component
                 $storagePath = route('files.image.get', $advertisement->advertiser_image);
             } else {
                 //Set default image
-                $storagePath = asset('assets/images/user-default.png');
+                $storagePath = Settings::Logo('assets/images/frontend/logo.png');
             }
 
             $advertisement = [
@@ -170,7 +170,7 @@ class HomeComponent extends Component
                         $storagePath = route('files.image.get', optional($post->user)->image);
                     } else {
                         //Set default image
-                        $storagePath = asset('assets/images/user-default.png');
+                        $storagePath = Settings::Logo('assets/images/frontend/logo.png');
                     }
                     return [
                         'id' => $post->id,
@@ -223,7 +223,7 @@ class HomeComponent extends Component
                         $storagePath = route('files.image.get', optional($post->user)->image);
                     } else {
                         //Set default image
-                        $storagePath = asset('assets/images/user-default.png');
+                        $storagePath = Settings::Logo('assets/images/frontend/logo.png');
                     }
                     return [
                         'id' => $post->id,
@@ -300,7 +300,7 @@ class HomeComponent extends Component
                                 $storagePath = route('files.image.get', optional($post->user)->image);
                             } else {
                                 //Set default image
-                                $storagePath = asset('assets/images/user-default.png');
+                                $storagePath = Settings::Logo('assets/images/frontend/logo.png');
                             }
                             return [
                                 'id' => $post->id,
@@ -357,7 +357,7 @@ class HomeComponent extends Component
                             $storagePath = route('files.image.get', optional($post->user)->image);
                         } else {
                             //Set default image
-                            $storagePath = asset('assets/images/user-default.png');
+                            $storagePath = Settings::Logo('assets/images/frontend/logo.png');
                         }
                         return [
                             'id' => $post->id,

@@ -310,6 +310,40 @@ class Files
      * @param Media $media
      * @return false|int|BinaryFileResponse
      */
+    /**
+     * Stream a media file (or one of its conversions) INLINE, so it can be
+     * shown directly in an <img>/video tag. Works for images and videos, reads
+     * from wherever the media actually lives, and is served on the request host.
+     *
+     * @param Media|null $media
+     * @param string|null $conversion
+     */
+    public static function streamMedia($media, $conversion = null)
+    {
+        if (!$media) {
+            abort(404);
+        }
+
+        //remote disks already have a working absolute URL — redirect to it
+        if ($media->getDiskDriverName() === 's3') {
+            return redirect($conversion && $media->hasGeneratedConversion($conversion)
+                ? $media->getFullUrl($conversion)
+                : $media->getFullUrl());
+        }
+
+        $path = ($conversion && $media->hasGeneratedConversion($conversion))
+            ? $media->getPath($conversion)
+            : $media->getPath();
+
+        if (!file_exists($path)) {
+            abort(404);
+        }
+
+        //response()->file serves inline with the right content-type and honours
+        //range requests, which video seeking needs
+        return response()->file($path);
+    }
+
     public static function downloadMedia(Media $media)
     {
         if ($media->getDiskDriverName() === 's3') {
