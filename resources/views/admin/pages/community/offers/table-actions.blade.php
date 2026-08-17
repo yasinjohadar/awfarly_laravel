@@ -1,4 +1,16 @@
 <div class="d-flex justify-content-around">
+    @if(!$deleted_at && ($status ?? null) === 'pending')
+        <button title="{{ __('pages/community/offers/inquiry.modal.edit.inputs.approved') }}"
+                @cannot('offers.edit') disabled @endcannot
+                wire:click="approve({{ $id }})"
+                wire:loading.attr="disabled"
+                wire:target="approve({{ $id }})"
+                onclick="return confirm('{{ __('pages/community/offers/inquiry.modal.edit.inputs.approved') }}?')"
+                class="btn btn-success mx-1">
+            <i class="icon-checkmark3"></i>
+        </button>
+    @endif
+
     <button title="Edit" @cannot('offers.edit') disabled @endcannot  wire:click="showEditModal({{ $id }})" class="btn btn-secondary mx-1">
         <i class="icon-pencil7"></i>
     </button>

@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Community\Offers;
 use App\Helpers\Admins\AdminLogs;
 use App\Helpers\Filter;
 use App\Helpers\Notifications;
+use App\Helpers\Settings;
 use App\Models\Offers\Offer;
 use App\Models\Users\Advertisers\AdvertiserUser;
 use App\Models\Users\Advertisers\Categories\AdvertiserCategories;
@@ -158,8 +159,8 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
                 ->filterable()
                 ->searchable()
                 ->hide(),
-            Column::callback(['id', 'updated_at', 'deleted_at'], function ($id, $name, $deleted_at) {
-                return view('admin.pages.community.offers.table-actions', ['id' => $id, 'name' => $name, 'deleted_at' => $deleted_at]);
+            Column::callback(['id', 'updated_at', 'deleted_at', 'status'], function ($id, $name, $deleted_at, $status) {
+                return view('admin.pages.community.offers.table-actions', ['id' => $id, 'name' => $name, 'deleted_at' => $deleted_at, 'status' => $status]);
             })
                 ->label(__('datatable.actions'))
                 ->excludeFromExport()
@@ -427,6 +428,67 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
             return null;
         }
         //commit
+        DB::commit();
+    }
+
+    /**
+     * One-click approval straight from the actions column, without opening the
+     * edit modal. Sets expires_at from the offer's own validity so it lands in
+     * the "active" tab, and notifies interested users — mirroring update().
+     *
+     * @param $id
+     * @return void|null
+     */
+    public function approve($id)
+    {
+        if (!Auth::guard('admin')->user()->can('offers.edit')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        DB::beginTransaction();
+        try {
+            $offer = Offer::withTrashed()->findOrFail($id);
+
+            //already approved — nothing to do
+            if ($offer->status === 'approved') {
+                DB::rollBack();
+                return null;
+            }
+
+            //the "active" tab filters expires_at > now, so an approved offer
+            //must get a real expiry from its own validity period
+            $expiresAt = ($offer->expires_in && $offer->expires_in > 0)
+                ? Carbon::now()->addDays($offer->expires_in)
+                : Carbon::now()->addDays((int) Settings::Get('offers.default.expiry.days', 30));
+
+            AdminLogs::log('edit', 'offers', [
+                'old' => $offer,
+                'new' => ['status' => 'approved', 'expires_at' => $expiresAt],
+            ], "Approve: offer #$id");
+
+            tap($offer)->update([
+                'status' => 'approved',
+                'expires_at' => $expiresAt,
+            ]);
+
+            $this->sendNotificationToIntersetUser($offer);
+
+            $this->alert('success', __('toastr.success'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+
+            $this->emitUp('recountCounters');
+        } catch (Exception $e) {
+            DB::rollBack();
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+            return null;
+        }
         DB::commit();
     }
 
