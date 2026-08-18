@@ -29,6 +29,7 @@ return [
             'package' => 'Package',
             'package_hint' => 'Selecting a package applies its quotas and permissions immediately.',
             'allowed_posts_count' => 'Allowed Posts Count',
+            'discount_percentage' => 'Discount Percentage',
             'status' => 'Status',
             'is_elite' => 'Elite',
             'accepted_send_notification' => 'Notifications Accepted',

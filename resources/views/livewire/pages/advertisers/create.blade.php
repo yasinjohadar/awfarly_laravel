@@ -419,6 +419,21 @@
         </div>
         <div class="form-group row">
             <label class="col-form-label col-lg-2"
+                   for="discount_percentage">{{__('pages/advertisers/create.content.inputs.discount_percentage')}}</label>
+            <div class="col-lg-10">
+                <input type="number" step="0.01" min="0" max="100"
+                       class="form-control @error('discount_percentage') is-invalid @enderror"
+                       id="discount_percentage"
+                       wire:model.defer="discount_percentage">
+                @error('discount_percentage')
+                <div class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </div>
+                @enderror
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-lg-2"
                    for="status">{{__('pages/advertisers/create.content.inputs.status')}}</label>
             <div class="col-lg-10">
                 <x-select wire:model.defer="status"

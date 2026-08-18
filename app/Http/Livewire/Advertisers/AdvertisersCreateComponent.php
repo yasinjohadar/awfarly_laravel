@@ -50,6 +50,7 @@ class AdvertisersCreateComponent extends Component
     public ?string $allowed_posts_count = null;
     public ?string $allowed_offers_count = null;
     public ?string $maximum_monthly_offers = null;
+    public ?string $discount_percentage = null;
     public ?string $package_id = null;
     public string $status = 'active';
     public int $is_elite = 0;
@@ -82,7 +83,7 @@ class AdvertisersCreateComponent extends Component
             'name' => ['required', 'unique:admins_users,name', 'unique:advertisers_users,name', 'unique:customers_users,name'],
             'business_type' => ['required', 'exists:advertisers_business_types,id'],
             'email' => ['nullable', 'email:rfc,dns', 'unique:admins_users,email', 'unique:advertisers_users,email', 'unique:customers_users,email'],
-            'mobile' => ['required', 'unique:admins_users,mobile', 'unique:advertisers_users,mobile', 'unique:customers_users,mobile', 'regex:^\+\d+$^'],
+            'mobile' => ['required', 'unique:admins_users,mobile', 'unique:advertisers_users,mobile', 'unique:customers_users,mobile', 'regex:/^\+?\d+$/'],
             'username' => ['nullable', 'unique:admins_users,username', 'unique:advertisers_users,username', 'unique:customers_users,username'],
             'country_code' => ['required', 'exists:countries,code'],
             'governorate_id' => ['required', 'exists:governorates,id'],
@@ -95,14 +96,15 @@ class AdvertisersCreateComponent extends Component
             'language_code' => ['required', 'exists:languages,code'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif'],
             'password' => ['required'],
-            'contact_number' => ['nullable', 'regex:^\+\d+$^'],
-            'whatsapp_number' => ['nullable', 'regex:^\+\d+$^'],
+            'contact_number' => ['nullable', 'regex:/^\+?\d+$/'],
+            'whatsapp_number' => ['nullable', 'regex:/^\+?\d+$/'],
             'facebook_url' => ['nullable', 'url'],
             'twitter_url' => ['nullable', 'url'],
             'website_url' => ['nullable', 'url'],
             'allowed_posts_count' => ['nullable', 'numeric', 'min:0'],
             'allowed_offers_count' => ['nullable', 'numeric', 'min:0'],
             'maximum_monthly_offers' => ['nullable', 'numeric', 'min:0'],
+            'discount_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'package_id' => ['nullable', 'exists:packages,id'],
             'status' => ['required', 'in:active,inactive,banned'],
             'is_elite' => ['required', 'boolean'],
@@ -233,6 +235,10 @@ class AdvertisersCreateComponent extends Component
             if ($this->maximum_monthly_offers === '') {
                 $this->maximum_monthly_offers = null;
             }
+
+            if ($this->discount_percentage === '' || $this->discount_percentage === null) {
+                $this->discount_percentage = '0';
+            }
             //set data
             $data = [
                 'name' => Filter::RemoveHtml($this->name),
@@ -254,6 +260,7 @@ class AdvertisersCreateComponent extends Component
                 'allowed_posts_count' => $this->allowed_posts_count,
                 'allowed_offers_count' => $this->allowed_offers_count,
                 'maximum_monthly_offers' => $this->maximum_monthly_offers,
+                'discount_percentage' => $this->discount_percentage,
                 'status' => $this->status,
                 'is_elite' => $this->is_elite,
                 'is_accepted_send_notification' => $this->is_accepted_send_notification,
@@ -308,6 +315,7 @@ class AdvertisersCreateComponent extends Component
                 'allowed_posts_count',
                 'allowed_offers_count',
                 'maximum_monthly_offers',
+                'discount_percentage',
                 'package_id',
                 'status',
                 'is_elite',

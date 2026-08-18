@@ -86,6 +86,7 @@ return [
                 'allowed_posts_count' => 'عدد المنشورات المسموح بها',
                 'allowed_offers_count' => 'عدد العروض النشطة المسموح بها',
                 'maximum_monthly_offers' => 'الحد الشهري لإنشاء العروض',
+                'discount_percentage' => 'نسبة التخفيض',
                 'status' => 'الحالة',
                 'is_elite' => 'مميز',
                 'accepted_send_notification' => 'الإخطارات مقبولة',

@@ -718,7 +718,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                 "unique:admins_users,mobile",
                 "unique:advertisers_users,mobile,$id",
                 "unique:customers_users,mobile",
-                'regex:^\+\d+$^',
+                'regex:/^\+?\d+$/',
             ],
             'user.username' => [
                 'nullable',
@@ -737,14 +737,15 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                 }),
             ],
             'user.language_code' => ['nullable', 'exists:languages,code'],
-            'user.contact_number' => ['nullable', 'regex:^\+\d+$^'],
-            'user.whatsapp_number' => ['nullable', 'regex:^\+\d+$^'],
+            'user.contact_number' => ['nullable', 'regex:/^\+?\d+$/'],
+            'user.whatsapp_number' => ['nullable', 'regex:/^\+?\d+$/'],
             'user.facebook_url' => ['nullable', 'url'],
             'user.twitter_url' => ['nullable', 'url'],
             'user.website_url' => ['nullable', 'url'],
             'user.allowed_posts_count' => ['nullable', 'numeric', 'min:0'],
             'user.allowed_offers_count' => ['nullable', 'numeric', 'min:0'],
             'user.maximum_monthly_offers' => ['nullable', 'numeric', 'min:0'],
+            'user.discount_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'user.rate' => ['nullable', 'numeric', 'min:0', 'max:5'],
             'user.status' => ['nullable', 'in:active,inactive,banned'],
             'user.email_verified_at' => ['nullable', 'boolean'],
@@ -774,6 +775,9 @@ class AdvertisersInquiryComponent extends LivewireDatatable
         $data['maximum_monthly_offers'] = isset($this->user['maximum_monthly_offers']) && $this->user['maximum_monthly_offers'] !== ''
             ? $this->user['maximum_monthly_offers']
             : null;
+        $data['discount_percentage'] = isset($this->user['discount_percentage']) && $this->user['discount_percentage'] !== ''
+            ? $this->user['discount_percentage']
+            : 0;
         $data['rate'] = !empty($this->user['rate']) ? $this->user['rate'] : null;
 
         //unset the user id

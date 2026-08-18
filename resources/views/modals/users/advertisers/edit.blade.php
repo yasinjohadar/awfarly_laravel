@@ -400,6 +400,20 @@
                 @enderror
             </div>
             <div class="form-group">
+                <label
+                    for="discount_percentage">{{__('pages/advertisers/index.modal.edit.inputs.discount_percentage')}}</label>
+                <input type="number" step="0.01" min="0" max="100"
+                       class="form-control @error('user.discount_percentage') is-invalid @enderror"
+                       id="discount_percentage"
+                       name="discount_percentage"
+                       wire:model.defer="user.discount_percentage">
+                @error('user.discount_percentage')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+                @enderror
+            </div>
+            <div class="form-group">
                 <label for="status">{{__('pages/advertisers/index.modal.edit.inputs.status')}}</label>
                 <x-select wire:model.defer="user.status"
                           :options="['active' => __('pages/advertisers/index.modal.edit.inputs.status_options.active'), 'inactive' => __('pages/advertisers/index.modal.edit.inputs.status_options.inactive'), 'banned' => __('pages/advertisers/index.modal.edit.inputs.status_options.banned')]"

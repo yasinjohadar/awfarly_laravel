@@ -83,6 +83,7 @@ return [
                 'twitter_url' => 'Twitter URL',
                 'website_url' => 'Website URL',
                 'allowed_posts_count' => 'Allowed Posts Count',
+                'discount_percentage' => 'Discount Percentage',
                 'status' => 'Status',
                 'is_elite' => 'Elite',
                 'accepted_send_notification' => 'Notifications Accepted',
