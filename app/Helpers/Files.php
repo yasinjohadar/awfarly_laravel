@@ -318,6 +318,33 @@ class Files
      * @param Media|null $media
      * @param string|null $conversion
      */
+    /**
+     * Build a browser-usable URL for a media item.
+     * Files on the local disk are not reachable at getFullUrl() (that points at
+     * /storage on the public disk), so they are served inline through the
+     * media.view route. S3 keeps its own working URL.
+     *
+     * @param Media|null $media
+     * @param string|null $conversion
+     * @return string|null
+     */
+    public static function mediaUrl($media, $conversion = null)
+    {
+        if (!$media) {
+            return null;
+        }
+
+        $hasConversion = $conversion && $media->hasGeneratedConversion($conversion);
+
+        if ($media->getDiskDriverName() === 's3') {
+            return $hasConversion ? $media->getFullUrl($conversion) : $media->getFullUrl();
+        }
+
+        return $hasConversion
+            ? route('media.view', ['uuid' => $media->uuid, 'conversion' => $conversion])
+            : route('media.view', ['uuid' => $media->uuid]);
+    }
+
     public static function streamMedia($media, $conversion = null)
     {
         if (!$media) {

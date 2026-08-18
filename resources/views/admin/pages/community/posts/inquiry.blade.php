@@ -62,15 +62,16 @@
                     <ul id="animated-thumbnails-gallery" dir="ltr"
                         class="justified-gallery justify-content-center list-unstyled d-flex">
                         @foreach ($post->getMedia('posts') as $index => $media)
-                            <li data-id="{{$media->id}}" data-src="{{$media->getUrl()}}"
+                            @php($media_url = \App\Helpers\Files::mediaUrl($media))
+                            <li data-id="{{$media->id}}" data-src="{{$media_url}}"
                                 class="px-3 cursor-pointer position-relative">
                                 <a wire:click="showDeleteModal({{$media->id}})" class="delete-image text-danger">
                                     <i class="icon-delete-o"></i>
                                 </a>
-                                <img data-id="{{$media->id}}" data-src="{{$media->getUrl()}}"
+                                <img data-id="{{$media->id}}" data-src="{{$media_url}}"
                                      data-download-url="{{route('media.download', $media->uuid)}}"
-                                     data-thumb="{{$media->getUrl()}}" width="140"
-                                     class="img-fluid grid-square" alt="{{$media->name}}" src="{{$media->getUrl()}}"/>
+                                     data-thumb="{{$media_url}}" width="140"
+                                     class="img-fluid grid-square" alt="{{$media->name}}" src="{{$media_url}}"/>
                                 <div
                                     class="font-weight-bold text-center">{{__('pages/community/posts/inquiry.content.image')}}{{$index+1}}</div>
                             </li>

@@ -31,12 +31,14 @@ class CommunityPostsShowComponent extends Component
     public $media;
     public bool $showDeleteModal = false;
     public ?int $image_id = null;
-    public string $content;
+    public string $content = '';
     public ?int $category_id = null;
 
     public function mount()
     {
         $this->setOrderData();
+
+        $this->setFormData();
     }
 
     /**
@@ -51,9 +53,6 @@ class CommunityPostsShowComponent extends Component
             ->first();
 
         $post['created_at'] = isset($post['created_at']) ? Carbon::make($post['created_at'])->format('Y-m-d h:i A') : null;
-
-        $this->content = $post->content;
-        $this->category_id = $post->category_id;
 
         $country_column = Auth::guard('admin')->user()->language_code;
         if ($country_column === 'ar') {
@@ -104,6 +103,12 @@ class CommunityPostsShowComponent extends Component
      */
     public function showEditModal($id)
     {
+        //load the current post data into the form
+        $this->setFormData();
+
+        //reset validation messages
+        $this->resetValidation();
+
         //show the modal
         $this->showEditModal = true;
     }
@@ -143,8 +148,8 @@ class CommunityPostsShowComponent extends Component
                         $file_width = null;
                         $file_height = null;
                     } else if (strstr($mime_type, 'image/')) {
-                        $file_width = Image::load($media)->getWidth();
-                        $file_height = Image::load($media)->getHeight();
+                        $file_width = Image::load($media->getRealPath())->getWidth();
+                        $file_height = Image::load($media->getRealPath())->getHeight();
                     } else {
                         $file_width = null;
                         $file_height = null;
@@ -180,9 +185,9 @@ class CommunityPostsShowComponent extends Component
                 ->map(function ($item) {
                     return [
                         'alt' => $item->name,
-                        'src' => $item->getUrl(),
+                        'src' => Files::mediaUrl($item),
                         'subHtml' => '',
-                        'thumb' => $item->getUrl('thumb'),
+                        'thumb' => Files::mediaUrl($item, 'thumb'),
                         'width' => 140,
                     ];
                 });*/
@@ -279,9 +284,9 @@ class CommunityPostsShowComponent extends Component
                 ->map(function ($item) {
                     return [
                         'alt' => $item->name,
-                        'src' => $item->getUrl(),
+                        'src' => Files::mediaUrl($item),
                         'subHtml' => '',
-                        'thumb' => $item->getUrl('thumb'),
+                        'thumb' => Files::mediaUrl($item, 'thumb'),
                         'width' => 140,
                     ];
                 });
@@ -317,6 +322,20 @@ class CommunityPostsShowComponent extends Component
     public function closeDeleteModal()
     {
         $this->showDeleteModal = false;
+    }
+
+    /**
+     * load the editable post data into the form properties
+     */
+    public function setFormData()
+    {
+        //get post
+        $post = Post::withTrashed()
+            ->where('id', $this->post_id)
+            ->first();
+
+        $this->content = $post->content ?? '';
+        $this->category_id = $post->category_id;
     }
 
     public function setOrderData()
