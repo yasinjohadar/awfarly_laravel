@@ -165,6 +165,10 @@ Route::group([
 /**
  * Show Admins Logs
  */
+//category details, with the advertisers affiliated to it
+Route::get('/categories/{category}/details', [CategoriesController::class, 'show'])
+    ->name('categories.show');
+
 Route::resource('/categories', CategoriesController::class)
     ->only([
         'index',
