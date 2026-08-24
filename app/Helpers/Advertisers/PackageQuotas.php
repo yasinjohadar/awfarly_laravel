@@ -17,7 +17,7 @@ class PackageQuotas
     public static function applyFromPackage(AdvertiserUser $advertiser, Package $package): void
     {
         $advertiser->update([
-            'is_elite' => true,
+            'is_elite' => (bool) $package->is_elite,
             'allowed_posts_count' => (int) ($package->maximum_posts ?? Settings::Get('user.allowed.posts', 10)),
             'allowed_offers_count' => (int) ($package->maximum_offers ?? Settings::Get('max.advertiser.active.offers', 20)),
             'maximum_monthly_offers' => (int) ($package->maximum_monthly_offers ?? Settings::Get('max.advertiser.monthly.offers', 30)),
@@ -108,5 +108,29 @@ class PackageQuotas
     public static function afterSubscriptionEnded(AdvertiserUser $advertiser): void
     {
         self::syncFromActiveSubscription($advertiser);
+    }
+
+    /**
+     * Re-apply this package's current flags/quotas to every advertiser already
+     * subscribed to it. Call this right after editing a package (e.g. toggling
+     * is_elite) so the change takes effect immediately for existing subscribers,
+     * instead of silently waiting for each one's next renew/expire event.
+     */
+    public static function resyncSubscribersOfPackage(Package $package): void
+    {
+        $advertiserIds = $package->advertisers()
+            ->where('is_current', true)
+            ->where('is_active', true)
+            ->where('is_ended', false)
+            ->where('ends_at', '>', now())
+            ->pluck('advertiser_id');
+
+        if ($advertiserIds->isEmpty()) {
+            return;
+        }
+
+        AdvertiserUser::whereIn('id', $advertiserIds)->each(function (AdvertiserUser $advertiser) use ($package) {
+            self::applyFromPackage($advertiser, $package);
+        });
     }
 }

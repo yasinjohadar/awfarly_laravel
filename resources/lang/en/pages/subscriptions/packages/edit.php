@@ -47,6 +47,7 @@ return [
             'is_visible' => 'Visible',
             'is_active' => 'Active',
             'is_trial' => 'Trial',
+            'is_elite' => 'Elite Package',
             'boolean' => [
                 'yes' => 'Yes',
                 'no' => 'No',

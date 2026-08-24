@@ -47,6 +47,7 @@ return [
             'is_visible' => 'مرئية',
             'is_active' => 'نشط',
             'is_trial' => 'نسخه تجريبية',
+            'is_elite' => 'باقة مميزة',
             'boolean' => [
                 'yes' => 'نعم',
                 'no' => 'لا',

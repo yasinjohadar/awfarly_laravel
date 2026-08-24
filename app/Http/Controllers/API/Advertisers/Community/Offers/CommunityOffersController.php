@@ -155,8 +155,9 @@ class CommunityOffersController extends Controller
             );
         }
 
-        $offers = $offers->orderBy('advertisers_users.is_elite', 'desc')
-            ->orderBy('offers.id', 'desc')
+        $offers = $offers->orderByRaw('DATE(offers.created_at) desc')
+            ->orderBy('advertisers_users.is_elite', 'desc')
+            ->orderBy('offers.created_at', 'desc')
             ->groupBy('offers.id')
             ->paginate($limit);
 
@@ -341,8 +342,9 @@ class CommunityOffersController extends Controller
         );
 
         //get the offers
-        $offers = $offers->orderBy('advertisers_users.is_elite', 'desc')
-            ->orderBy('offers.created_at')
+        $offers = $offers->orderByRaw('DATE(offers.created_at) desc')
+            ->orderBy('advertisers_users.is_elite', 'desc')
+            ->orderBy('offers.created_at', 'desc')
             ->groupBy('offers.id')
             ->paginate($limit);
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Guests\Community\Offers;
 
+use App\Helpers\Categories\CategoriesFilter;
 use App\Helpers\Filter;
 use App\Helpers\Geography\Geography;
 use App\Helpers\Settings;
@@ -61,16 +62,12 @@ class CommunityOffersController extends Controller
 
         $offers = Geography::applyUserLocationFilter($offers, $data);
 
+        // Filter categories (expand parents to children)
+        $offers = CategoriesFilter::applyFeedCategoryFilter($offers, $data, null, 'offers.category_id');
 
-        //Filter city
-        if (isset($data['categoryId'])) {
-            $offers = $offers->where(function ($q) use ($data) {
-                return $q->where('offers.category_id', $data['categoryId']);
-            });
-        }
-
-        $offers = $offers->orderBy('advertisers_users.is_elite', 'desc')
-            ->orderBy('offers.id', 'desc')
+        $offers = $offers->orderByRaw('DATE(offers.created_at) desc')
+            ->orderBy('advertisers_users.is_elite', 'desc')
+            ->orderBy('offers.created_at', 'desc')
             ->groupBy('offers.id')
             ->paginate($limit);
 
@@ -163,17 +160,13 @@ class CommunityOffersController extends Controller
 
         $offers = Geography::applyUserLocationFilter($offers, $data);
 
-
-        //Filter city
-        if (isset($data['categoryId'])) {
-            $offers = $offers->where(function ($q) use ($data) {
-                return $q->where('offers.category_id', $data['categoryId']);
-            });
-        }
+        // Filter categories (expand parents to children)
+        $offers = CategoriesFilter::applyFeedCategoryFilter($offers, $data, null, 'offers.category_id');
 
         //get the offers
-        $offers = $offers->orderBy('advertisers_users.is_elite', 'desc')
-            ->orderBy('offers.created_at')
+        $offers = $offers->orderByRaw('DATE(offers.created_at) desc')
+            ->orderBy('advertisers_users.is_elite', 'desc')
+            ->orderBy('offers.created_at', 'desc')
             ->groupBy('offers.id')
             ->paginate($limit);
 

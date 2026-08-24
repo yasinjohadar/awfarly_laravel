@@ -120,6 +120,8 @@ class CommunityOffersResource extends JsonResource
                 'isAllowEdit' => false,
                 'isAllowDelete' => false,
             ],
+            'amount' => $this->amount,
+            'currency' => $this->currency,
             'isLiked' => $isLiked,
             'createdAt' => $this->created_at ? Carbon::make($this->created_at)->diffForHumans() : null,
         ];

@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Subscriptions\Packages;
 
 use App\Helpers\Admins\AdminLogs;
+use App\Helpers\Advertisers\PackageQuotas;
 use App\Models\Subscriptions\Packages\Package;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\App;
@@ -177,6 +178,16 @@ class PackagesInquiryComponent extends LivewireDatatable
                 ->filterable()
                 ->searchable()
                 ->hide(),
+            Column::callback(['id', 'is_elite'], function ($id, $isElite) {
+                return view('admin.pages.subscriptions.packages.elite-toggle', [
+                    'id' => $id,
+                    'isElite' => (bool) $isElite,
+                ]);
+            })
+                ->label(__('pages/subscriptions/packages/inquiry.datatable.is_elite'))
+                ->alignCenter()
+                ->excludeFromExport()
+                ->unsortable(),
             DateColumn::name('created_at')
                 ->label(__('datatable.created_at'))
                 ->filterable()
@@ -205,6 +216,33 @@ class PackagesInquiryComponent extends LivewireDatatable
             $query = Package::selectRaw('*');
         }
         return $query;
+    }
+
+    /**
+     * Instantly flip a package's "elite" flag from the datatable switch.
+     * @param int $id
+     */
+    public function toggleElite($id)
+    {
+        if (!Auth::guard('admin')->user()->can('packages.edit')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        $package = Package::findOrFail($id);
+        $package->update(['is_elite' => !$package->is_elite]);
+
+        //without this, subscribers already on this package would only pick up the
+        //new elite flag at their next renewal/expiry — make it take effect now
+        PackageQuotas::resyncSubscribersOfPackage($package);
+
+        AdminLogs::log('edit', 'packages', ['package' => $package], "Toggle elite: package #{$id}");
+
+        $this->alert('success', __('toastr.success'), [
+            'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+        ]);
     }
 
     /**

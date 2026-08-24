@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Guests\Community\Posts;
 
+use App\Helpers\Categories\CategoriesFilter;
 use App\Helpers\Filter;
 use App\Helpers\Geography\Geography;
 use App\Helpers\Settings;
@@ -63,16 +64,13 @@ class CommunityPostsController extends Controller
 
         $posts = Geography::applyPostLocationFilter($posts, $data);
 
-
-        //Filter city
-        if (isset($data['categoryId'])) {
-            $posts = $posts->where(function ($q) use ($data) {
-                return $q->where('posts.category_id', $data['categoryId']);
-            });
-        }
+        // Filter categories (expand parents to children)
+        $posts = CategoriesFilter::applyFeedCategoryFilter($posts, $data, null, 'posts.category_id');
 
         $posts = $posts
-            ->orderBy('posts.id', 'desc')
+            ->orderByRaw('DATE(posts.created_at) desc')
+            ->orderBy('advertisers_users.is_elite', 'desc')
+            ->orderBy('posts.created_at', 'desc')
             ->groupBy('posts.id')
             ->paginate($limit);
 
@@ -138,17 +136,14 @@ class CommunityPostsController extends Controller
 
         $posts = Geography::applyPostLocationFilter($posts, $data);
 
-
-        //Filter city
-        if (isset($data['categoryId'])) {
-            $posts = $posts->where(function ($q) use ($data) {
-                return $q->where('posts.category_id', $data['categoryId']);
-            });
-        }
+        // Filter categories (expand parents to children)
+        $posts = CategoriesFilter::applyFeedCategoryFilter($posts, $data, null, 'posts.category_id');
 
         //get the posts
         $posts = $posts
-            ->orderBy('posts.created_at')
+            ->orderByRaw('DATE(posts.created_at) desc')
+            ->orderBy('advertisers_users.is_elite', 'desc')
+            ->orderBy('posts.created_at', 'desc')
             ->groupBy('posts.id')
             ->paginate($limit);
 

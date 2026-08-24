@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Shared\UsersLikes;
 
+use App\Models\Users\Advertisers\AdvertiserUser;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UsersLikesResource extends JsonResource
@@ -21,6 +22,8 @@ class UsersLikesResource extends JsonResource
             'imageUrl' => $this->user->image ? route('files.image.get', $this->user->image) : null,
             'bio' => $this->user->bio ?? null,
             'countryCode' => $this->user->country_code ?? null,
+            //only advertisers carry an is_elite column; a liking customer is never elite
+            'isElite' => $this->user instanceof AdvertiserUser ? (bool) $this->user->is_elite : false,
         ];
     }
 }

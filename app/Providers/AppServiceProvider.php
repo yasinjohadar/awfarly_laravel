@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Languages\Language;
 use App\Models\Pages\Page;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -41,6 +42,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        //round diffForHumans() to the nearest unit (e.g. 5d 23h -> "6 days ago") instead of truncating down
+        Carbon::enableHumanDiffOption(Carbon::ROUND);
+
         //sidebar current active tab
         view()->composer(
             'admin.includes.sidebar',

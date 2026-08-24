@@ -132,7 +132,9 @@ class CommunityPostsController extends Controller
         );
 
         $posts = $posts
-            ->orderBy('posts.id', 'desc')
+            ->orderByRaw('DATE(posts.created_at) desc')
+            ->orderBy('advertisers_users.is_elite', 'desc')
+            ->orderBy('posts.created_at', 'desc')
             ->groupBy('posts.id')
             ->paginate($limit);
 
@@ -310,7 +312,9 @@ class CommunityPostsController extends Controller
 
         //get the posts
         $posts = $posts
-            ->orderBy('posts.created_at')
+            ->orderByRaw('DATE(posts.created_at) desc')
+            ->orderBy('advertisers_users.is_elite', 'desc')
+            ->orderBy('posts.created_at', 'desc')
             ->groupBy('posts.id')
             ->paginate($limit);
 

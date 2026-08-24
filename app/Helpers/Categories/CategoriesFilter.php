@@ -3,6 +3,7 @@
 namespace App\Helpers\Categories;
 
 use App\Models\Categories\Category;
+use App\Models\Users\Advertisers\AdvertiserUser;
 use Illuminate\Support\Facades\DB;
 
 class CategoriesFilter
@@ -141,27 +142,26 @@ class CategoriesFilter
     }
 
     /**
-     * Match at the advertiser level: shows content from advertisers whose own selected
-     * categories overlap with the user's selected categories. Advertisers whose business
-     * type has no categories (e.g. "Shopper"/"متسوق") are exempt from this match — their
-     * content still surfaces via the content-level filter alone.
+     * Match at the advertiser level: shows advertisers whose own selected categories
+     * overlap with the given categories, OR who have published approved content
+     * (a post or a live offer) under one of them — an advertiser can post outside
+     * their declared categories (see the Advertisers post/offer create validation,
+     * which allows any category id), so the Advertisers tab must recognize that
+     * content too or it silently disagrees with what the Posts/Offers tab shows for
+     * the same category. Advertisers whose business type has no categories (e.g.
+     * "Shopper"/"متسوق") are exempt from this match — their content still surfaces
+     * via the content-level filter alone.
      *
      * @param \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder $query
      * @param mixed $user
      */
     public static function applyFeedAdvertiserCategoryFilter($query, array $data, $user, string $advertiserTable = 'advertisers_users')
     {
-        $categoryLessBusinessTypeIds = DB::table('advertisers_business_types')
-            ->where('has_categories', false)
-            ->pluck('id');
-
         if (!empty($data['categoryId'])) {
             $ids = self::expandCategoryIds([(int) $data['categoryId']]);
 
-            return $query->where(function ($q) use ($ids, $advertiserTable, $categoryLessBusinessTypeIds) {
-                $q->whereIn("{$advertiserTable}.id", function ($sub) use ($ids) {
-                    $sub->select('advertiser_id')->from('advertiser_categories')->whereIn('category_id', $ids);
-                })->orWhereIn("{$advertiserTable}.business_type", $categoryLessBusinessTypeIds);
+            return $query->where(function ($q) use ($ids, $advertiserTable) {
+                self::addAdvertiserCategoryMatch($q, $ids, $advertiserTable);
             });
         }
 
@@ -175,10 +175,40 @@ class CategoriesFilter
             return $query;
         }
 
-        return $query->where(function ($q) use ($ids, $advertiserTable, $categoryLessBusinessTypeIds) {
-            $q->whereIn("{$advertiserTable}.id", function ($sub) use ($ids) {
-                $sub->select('advertiser_id')->from('advertiser_categories')->whereIn('category_id', $ids);
-            })->orWhereIn("{$advertiserTable}.business_type", $categoryLessBusinessTypeIds);
+        return $query->where(function ($q) use ($ids, $advertiserTable) {
+            self::addAdvertiserCategoryMatch($q, $ids, $advertiserTable);
         });
+    }
+
+    /**
+     * Add the "advertiser matches these category ids" OR-conditions to $q, covering
+     * a declared advertiser category, a category-less business type, or approved
+     * content (post/offer) published under one of the ids.
+     *
+     * @param \Illuminate\Database\Query\Builder $q
+     * @param int[] $ids
+     */
+    private static function addAdvertiserCategoryMatch($q, array $ids, string $advertiserTable): void
+    {
+        $categoryLessBusinessTypeIds = DB::table('advertisers_business_types')
+            ->where('has_categories', false)
+            ->pluck('id');
+
+        $q->whereIn("{$advertiserTable}.id", function ($sub) use ($ids) {
+            $sub->select('advertiser_id')->from('advertiser_categories')->whereIn('category_id', $ids);
+        })
+            ->orWhereIn("{$advertiserTable}.business_type", $categoryLessBusinessTypeIds)
+            ->orWhereIn("{$advertiserTable}.id", function ($sub) use ($ids) {
+                $sub->select('user_id')->from('posts')
+                    ->whereIn('category_id', $ids)
+                    ->where('status', 'approved')
+                    ->where('user_type', AdvertiserUser::class);
+            })
+            ->orWhereIn("{$advertiserTable}.id", function ($sub) use ($ids) {
+                $sub->select('advertiser_id')->from('offers')
+                    ->whereIn('category_id', $ids)
+                    ->where('status', 'approved')
+                    ->where('expires_at', '>', now());
+            });
     }
 }

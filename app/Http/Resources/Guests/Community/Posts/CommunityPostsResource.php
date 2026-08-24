@@ -41,6 +41,7 @@ class CommunityPostsResource extends JsonResource
             'likesUsers'    => UsersLikesResource::collection($this->likes_users),
             'comments'    => CommunityCommentsResource::collection($this->users_comments),
             'categoryId' => $this->category_id ?? null,
+            'category' => optional($this->category)->{$name_column},
             'governorateId' => $this->governorate_id,
             'cityId' => $this->city_id,
             'governorate' => optional($this->governorate)->{$name_column},
@@ -66,6 +67,7 @@ class CommunityPostsResource extends JsonResource
                 'profilePrivacy' => $this->user?->profile_privacy,
                 'isSelf' => false,
                 'isOnline' => $this->user?->is_online,
+                'discount_percentage' => $this->user?->discount_percentage,
             ],
             'isLiked' => false,
             'permissions' => [

@@ -380,6 +380,51 @@
             color: #263238;
             font-size: .95rem;
         }
+
+        .package-show__subscribers-table-wrap {
+            overflow-x: auto;
+        }
+
+        .package-show__subscribers-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .package-show__subscribers-table th,
+        .package-show__subscribers-table td {
+            padding: .65rem .75rem;
+            border-bottom: 1px solid var(--ps-border);
+            text-align: start;
+            white-space: nowrap;
+        }
+
+        .package-show__subscribers-table th {
+            color: var(--ps-muted);
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+
+        .package-show__status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: .2rem .6rem;
+            border-radius: 999px;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+
+        .package-show__status-pill.is-current {
+            background: rgba(67, 160, 71, 0.12);
+            color: var(--ps-success);
+        }
+
+        .package-show__status-pill.is-ended {
+            background: rgba(120, 144, 156, 0.14);
+            color: var(--ps-muted);
+        }
     </style>
 
     <div class="package-show__toolbar">
@@ -577,4 +622,151 @@
             </div>
         </div>
     </div>
+
+    <div class="package-show__section">
+        <div class="package-show__section-head">
+            <h5 class="package-show__section-title">
+                {{ __('pages/subscriptions/packages/show.content.subscribers_title') }}
+            </h5>
+            @can('packages.edit')
+                <button type="button" class="btn btn-sm btn-primary" wire:click="openAssignAdvertiserModal">
+                    <i class="icon-plus3 mr-1"></i>
+                    {{ __('pages/subscriptions/packages/show.content.subscribers_table.add_advertiser') }}
+                </button>
+            @endcan
+        </div>
+
+        @if($subscriptions->count())
+            <div class="package-show__subscribers-table-wrap">
+                <table class="package-show__subscribers-table">
+                    <thead>
+                        <tr>
+                            <th>{{ __('pages/subscriptions/packages/show.content.subscribers_table.advertiser') }}</th>
+                            <th>{{ __('pages/subscriptions/packages/show.content.subscribers_table.status') }}</th>
+                            <th>{{ __('pages/subscriptions/packages/show.content.subscribers_table.starts_at') }}</th>
+                            <th>{{ __('pages/subscriptions/packages/show.content.subscribers_table.ends_at') }}</th>
+                            <th>{{ __('pages/subscriptions/packages/show.content.subscribers_table.purchase_count') }}</th>
+                            <th>{{ __('datatable.actions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($subscriptions as $subscription)
+                            @php($isCurrent = $subscription->is_current && $subscription->is_active && !$subscription->is_ended)
+                            <tr>
+                                <td>
+                                    @if($subscription->advertiser)
+                                        {{ $subscription->advertiser->name }}
+                                        <span class="text-muted">
+                                            (#{{ $subscription->advertiser->id }} - {{ $subscription->advertiser->username }})
+                                        </span>
+                                    @else
+                                        <span class="text-muted">
+                                            {{ __('pages/subscriptions/packages/show.content.subscribers_table.deleted_advertiser') }}
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($isCurrent)
+                                        <span class="package-show__status-pill is-current">
+                                            <i class="icon-checkmark3"></i>
+                                            {{ __('pages/subscriptions/packages/show.content.subscribers_table.current') }}
+                                        </span>
+                                    @else
+                                        <span class="package-show__status-pill is-ended">
+                                            <i class="icon-cross2"></i>
+                                            {{ __('pages/subscriptions/packages/show.content.subscribers_table.ended') }}
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>{{ optional($subscription->starts_at)->format('Y-m-d') ?: '-' }}</td>
+                                <td>{{ optional($subscription->ends_at)->format('Y-m-d') ?: '-' }}</td>
+                                <td>{{ $subscription->purchase_count }}</td>
+                                <td>
+                                    @if($isCurrent)
+                                        @can('packages.edit')
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    wire:click="openEndSubscriptionModal({{ $subscription->id }})">
+                                                {{ __('pages/subscriptions/packages/show.content.subscribers_table.cancel_subscription') }}
+                                            </button>
+                                        @endcan
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-3">
+                {{ $subscriptions->links() }}
+            </div>
+        @else
+            <div class="package-show__empty">
+                {{ __('pages/subscriptions/packages/show.content.subscribers_table.empty') }}
+            </div>
+        @endif
+    </div>
+
+    <x-form-modal wire:model="showAssignAdvertiserModal" type="add" wire="assignAdvertiserToPackage">
+    <x-slot name="title">
+        {{ __('pages/subscriptions/packages/show.content.assign_advertiser_modal.title') }}
+    </x-slot>
+    <x-slot name="content">
+        <div class="form-group mb-0" wire:ignore
+             x-data="{advertiser_id: @entangle('assign_advertiser_id').defer}"
+             x-init="$nextTick(() => {
+                 let select2 = $('#assign_advertiser_id').select2({
+                    placeholder: '{{ __('pages/subscriptions/packages/show.content.assign_advertiser_modal.placeholder') }}',
+                    allowClear: true,
+                    dropdownParent: $('#assign_advertiser_id').closest('.modal')
+                }).val(advertiser_id).change();
+                select2.on('change', (event) => {
+                    advertiser_id = event.target.value;
+                });
+            })">
+            <label for="assign_advertiser_id">{{ __('pages/subscriptions/packages/show.content.assign_advertiser_modal.advertiser') }}</label>
+            <select x-model="advertiser_id" x-cloak
+                    data-placeholder="{{ __('pages/subscriptions/packages/show.content.assign_advertiser_modal.placeholder') }}"
+                    id="assign_advertiser_id"
+                    class="form-control @error('assign_advertiser_id') is-invalid @enderror">
+                <option></option>
+                @foreach ($advertisers as $advertiser)
+                    <option value="{{ $advertiser['id'] }}">{{ $advertiser['name'] }}</option>
+                @endforeach
+            </select>
+        </div>
+        @error('assign_advertiser_id')
+        <div class="invalid-feedback d-block mt-1" role="alert">
+            <strong>{{ $message }}</strong>
+        </div>
+        @enderror
+    </x-slot>
+    <x-slot name="footer">
+        <x-secondary-button wire:click="closeAssignAdvertiserModal" wire:loading.attr="disabled">
+            {{ __('pages/subscriptions/packages/show.content.assign_advertiser_modal.cancel') }}
+        </x-secondary-button>
+        <x-primary-button type="submit" wire:loading.attr="disabled">
+            {{ __('pages/subscriptions/packages/show.content.assign_advertiser_modal.submit') }}
+        </x-primary-button>
+    </x-slot>
+</x-form-modal>
+
+<x-confirmation-modal wire:model="showEndSubscriptionModal" type="delete">
+    <x-slot name="title">
+        {{ __('pages/subscriptions/packages/show.content.end_subscription_modal.title') }}
+    </x-slot>
+    <x-slot name="content">
+        {{ __('pages/subscriptions/packages/show.content.end_subscription_modal.content', ['name' => $end_subscription_advertiser_name ?? '']) }}
+    </x-slot>
+    <x-slot name="footer">
+        <x-secondary-button wire:click="closeEndSubscriptionModal" wire:loading.attr="disabled">
+            {{ __('pages/subscriptions/packages/show.content.end_subscription_modal.cancel') }}
+        </x-secondary-button>
+        <x-danger-button wire:loading.attr="disabled" wire:click="endSubscription">
+            {{ __('pages/subscriptions/packages/show.content.end_subscription_modal.submit') }}
+        </x-danger-button>
+    </x-slot>
+</x-confirmation-modal>
 </div>

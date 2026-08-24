@@ -63,6 +63,11 @@ class CommunityOffersShowComponent extends Component
 
         $this->offerData['expires_at'] = $offer->expires_at ? Carbon::make($offer['expires_at'])->format("Y-m-d\TH:i") : null;
 
+        //strip the decimal column's trailing zeros (e.g. "70.00" -> "70", "12.50" -> "12.5")
+        if ($this->offerData['sale_percentage'] !== null) {
+            $this->offerData['sale_percentage'] = rtrim(rtrim(number_format((float) $this->offerData['sale_percentage'], 2, '.', ''), '0'), '.');
+        }
+
         $this->category_id = $offer['category_id'];
 
         $offer['category_name'] = optional($offer->category)->{$name_column};

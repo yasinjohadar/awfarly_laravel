@@ -111,6 +111,9 @@ class CommunityPostsController extends Controller
 
 
         // Filter categories (expand parents to children; apply interests by default)
+        // Matches the guest feed: the post's own category is authoritative — do not
+        // additionally require the advertiser to have that category registered too,
+        // or an explicit category selection can wrongly return zero results.
         $posts = CategoriesFilter::applyFeedCategoryFilter(
             $posts,
             $data,
@@ -118,16 +121,10 @@ class CommunityPostsController extends Controller
             'posts.category_id'
         );
 
-        // Filter by advertiser categories (matches advertisers whose own selected categories overlap with the customer's)
-        $posts = CategoriesFilter::applyFeedAdvertiserCategoryFilter(
-            $posts,
-            $data,
-            Auth::guard('customer-api')->user(),
-            'advertisers_users'
-        );
-
         $posts = $posts
-            ->orderBy('posts.id', 'desc')
+            ->orderByRaw('DATE(posts.created_at) desc')
+            ->orderBy('advertisers_users.is_elite', 'desc')
+            ->orderBy('posts.created_at', 'desc')
             ->groupBy('posts.id')
             ->paginate($limit);
 
@@ -254,6 +251,9 @@ class CommunityPostsController extends Controller
 
 
         // Filter categories (expand parents to children; apply interests by default)
+        // Matches the guest feed: the post's own category is authoritative — do not
+        // additionally require the advertiser to have that category registered too,
+        // or an explicit category selection can wrongly return zero results.
         $posts = CategoriesFilter::applyFeedCategoryFilter(
             $posts,
             $data,
@@ -261,17 +261,11 @@ class CommunityPostsController extends Controller
             'posts.category_id'
         );
 
-        // Filter by advertiser categories (matches advertisers whose own selected categories overlap with the customer's)
-        $posts = CategoriesFilter::applyFeedAdvertiserCategoryFilter(
-            $posts,
-            $data,
-            Auth::guard('customer-api')->user(),
-            'advertisers_users'
-        );
-
         //get the posts
         $posts = $posts
-            ->orderBy('posts.id', 'desc')
+            ->orderByRaw('DATE(posts.created_at) desc')
+            ->orderBy('advertisers_users.is_elite', 'desc')
+            ->orderBy('posts.created_at', 'desc')
             ->groupBy('posts.id')
             ->paginate($limit);
 

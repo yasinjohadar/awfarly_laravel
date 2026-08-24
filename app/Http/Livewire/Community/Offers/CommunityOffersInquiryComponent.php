@@ -117,7 +117,8 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
             NumberColumn::name('sale_percentage')
                 ->label(__('pages/community/offers/inquiry.datatable.sale_percentage'))
                 ->filterable()
-                ->searchable(),
+                ->searchable()
+                ->round(2),
             Column::name('advertisement_url')
                 ->label(__('pages/community/offers/inquiry.datatable.advertisement_url'))
                 ->filterable()
@@ -314,6 +315,11 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
             ->where('id', $id)
             ->first()
             ->toArray();
+
+        //strip the decimal column's trailing zeros (e.g. "70.00" -> "70", "12.50" -> "12.5")
+        if ($this->offer['sale_percentage'] !== null) {
+            $this->offer['sale_percentage'] = rtrim(rtrim(number_format((float) $this->offer['sale_percentage'], 2, '.', ''), '0'), '.');
+        }
 
         //show the modal
         $this->showEditModal = true;

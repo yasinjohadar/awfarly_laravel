@@ -36,6 +36,7 @@ class PackagesCreateComponent extends Component
     public int $is_visible = 1;
     public int $is_active = 1;
     public int $is_trial = 0;
+    public int $is_elite = 1;
 
     protected function rules(): array
     {
@@ -58,6 +59,7 @@ class PackagesCreateComponent extends Component
             'is_visible' => ['required', 'boolean'],
             'is_active' => ['required', 'boolean'],
             'is_trial' => ['required', 'boolean'],
+            'is_elite' => ['required', 'boolean'],
         ];
     }
 
@@ -119,6 +121,7 @@ class PackagesCreateComponent extends Component
                 'is_visible' => $this->is_visible,
                 'is_active' => $this->is_active,
                 'is_trial' => $this->is_trial,
+                'is_elite' => $this->is_elite,
             ]);
 
             //send toastr alert with success
@@ -149,6 +152,7 @@ class PackagesCreateComponent extends Component
                 'is_visible',
                 'is_active',
                 'is_trial',
+                'is_elite',
             ]);
         } catch (Throwable $e) {
             //rollback

@@ -110,6 +110,9 @@ class CommunityOffersController extends Controller
 
 
         // Filter categories (expand parents to children; apply interests by default)
+        // Matches the guest feed: the offer's own category is authoritative — do not
+        // additionally require the advertiser to have that category registered too,
+        // or an explicit category selection can wrongly return zero results.
         $offers = CategoriesFilter::applyFeedCategoryFilter(
             $offers,
             $data,
@@ -117,16 +120,9 @@ class CommunityOffersController extends Controller
             'offers.category_id'
         );
 
-        // Filter by advertiser categories (matches advertisers whose own selected categories overlap with the customer's)
-        $offers = CategoriesFilter::applyFeedAdvertiserCategoryFilter(
-            $offers,
-            $data,
-            Auth::guard('customer-api')->user(),
-            'advertisers_users'
-        );
-
-        $offers = $offers->orderBy('advertisers_users.is_elite', 'desc')
-            ->orderBy('offers.id', 'desc')
+        $offers = $offers->orderByRaw('DATE(offers.created_at) desc')
+            ->orderBy('advertisers_users.is_elite', 'desc')
+            ->orderBy('offers.created_at', 'desc')
             ->groupBy('offers.id')
             ->paginate($limit);
 
@@ -306,6 +302,9 @@ class CommunityOffersController extends Controller
 
 
         // Filter categories (expand parents to children; apply interests by default)
+        // Matches the guest feed: the offer's own category is authoritative — do not
+        // additionally require the advertiser to have that category registered too,
+        // or an explicit category selection can wrongly return zero results.
         $offers = CategoriesFilter::applyFeedCategoryFilter(
             $offers,
             $data,
@@ -313,17 +312,10 @@ class CommunityOffersController extends Controller
             'offers.category_id'
         );
 
-        // Filter by advertiser categories (matches advertisers whose own selected categories overlap with the customer's)
-        $offers = CategoriesFilter::applyFeedAdvertiserCategoryFilter(
-            $offers,
-            $data,
-            Auth::guard('customer-api')->user(),
-            'advertisers_users'
-        );
-
         //get the offers
-        $offers = $offers->orderBy('advertisers_users.is_elite', 'desc')
-            ->orderBy('offers.created_at')
+        $offers = $offers->orderByRaw('DATE(offers.created_at) desc')
+            ->orderBy('advertisers_users.is_elite', 'desc')
+            ->orderBy('offers.created_at', 'desc')
             ->groupBy('offers.id')
             ->paginate($limit);
 

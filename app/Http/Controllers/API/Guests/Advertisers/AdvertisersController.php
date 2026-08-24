@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Guests\Advertisers;
 
+use App\Helpers\Categories\CategoriesFilter;
 use App\Helpers\Filter;
 use App\Helpers\Geography\Geography;
 use App\Helpers\Settings;
@@ -59,12 +60,8 @@ class AdvertisersController extends Controller
         $advertisers = Geography::applyUserLocationFilter($advertisers, $data);
 
 
-        //Filter Categories
-        if (isset($data['categoryId']) && $data['categoryId']) {
-            $advertisers = $advertisers->where(function ($q) use ($data) {
-                return $q->where('advertiser_categories.category_id', $data['categoryId']);
-            });
-        }
+        // Filter categories (expand parents to children)
+        $advertisers = CategoriesFilter::applyFeedAdvertiserCategoryFilter($advertisers, $data, null);
 
         //get the advertisers
         $advertisers = $advertisers->orderBy('advertisers_users.is_elite', 'desc')
@@ -124,11 +121,8 @@ class AdvertisersController extends Controller
         $advertisers = Geography::applyUserLocationFilter($advertisers, $data);
 
 
-        if (isset($data['categoryId']) && $data['categoryId']) {
-            $advertisers = $advertisers->where(function ($q) use ($data) {
-                return $q->where('advertiser_categories.category_id', $data['categoryId']);
-            });
-        }
+        // Filter categories (expand parents to children)
+        $advertisers = CategoriesFilter::applyFeedAdvertiserCategoryFilter($advertisers, $data, null);
 
         //get the posts
         $advertisers = $advertisers->orderBy('advertisers_users.is_elite', 'desc')
@@ -177,12 +171,8 @@ class AdvertisersController extends Controller
         $advertisers = Geography::applyUserLocationFilter($advertisers, $data);
 
 
-        //Filter Categories
-        if (isset($data['categoryId']) && $data['categoryId']) {
-            $advertisers = $advertisers->where(function ($q) use ($data) {
-                return $q->where('advertiser_categories.category_id', $data['categoryId']);
-            });
-        }
+        // Filter categories (expand parents to children)
+        $advertisers = CategoriesFilter::applyFeedAdvertiserCategoryFilter($advertisers, $data, null);
 
         //get the advertisers
         $advertisers = $advertisers->orderBy('advertisers_users.is_elite', 'desc')

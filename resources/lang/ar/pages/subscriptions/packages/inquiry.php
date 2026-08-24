@@ -50,6 +50,7 @@ return [
         'is_visible' => 'مرئية',
         'is_active' => 'نشط',
         'is_trial' => 'تجريبية',
+        'is_elite' => 'باقة مميزة',
     ],
     'modal' => [
         'delete' => [

@@ -30,6 +30,7 @@ class Package extends Model
         'is_visible',
         'is_active',
         'is_trial',
+        'is_elite',
         'maximum_offers',
         'maximum_monthly_offers',
         'maximum_points',
@@ -41,6 +42,7 @@ class Package extends Model
         'is_visible' => 'boolean',
         'is_active' => 'boolean',
         'is_trial' => 'boolean',
+        'is_elite' => 'boolean',
     ];
 
     /**

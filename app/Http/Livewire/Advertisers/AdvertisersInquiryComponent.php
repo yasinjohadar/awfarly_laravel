@@ -201,7 +201,8 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                 ->label(__('pages/advertisements/inquiry.content.datatable.discount_percentage'))
                 ->filterable()
                 ->searchable()
-                ->alignCenter(),
+                ->alignCenter()
+                ->round(2),
             Column::callback('email', function ($email) {
                 return $email ? "<a dir='ltr' class='ltr' href='mailto:{$email}'>{$email}</a>" : '-';
             })
@@ -641,6 +642,11 @@ class AdvertisersInquiryComponent extends LivewireDatatable
         $this->user['email_verified_at'] = $this->user['email_verified_at'] ? 1 : 0;
         $this->user['mobile_verified_at'] = $this->user['mobile_verified_at'] ? 1 : 0;
 
+        //strip the decimal column's trailing zeros (e.g. "70.00" -> "70", "12.50" -> "12.5")
+        if ($this->user['discount_percentage'] !== null) {
+            $this->user['discount_percentage'] = rtrim(rtrim(number_format((float) $this->user['discount_percentage'], 2, '.', ''), '0'), '.');
+        }
+
         $this->country_code = $this->user['country_code'];
         $this->governorate_id = $this->user['governorate_id'] ?? null;
 
@@ -801,7 +807,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                     if ($this->user_package_id != $this->package_id) {
                         $subscription_package = Package::findOrFail($this->package_id);
                         PackageQuotas::assignPackage($user, $subscription_package);
-                        $data['is_elite'] = true;
+                        $data['is_elite'] = (bool) $subscription_package->is_elite;
                         $data['allowed_posts_count'] = $subscription_package->maximum_posts;
                         $data['allowed_offers_count'] = $subscription_package->maximum_offers;
                         $data['maximum_monthly_offers'] = $subscription_package->maximum_monthly_offers;
@@ -809,7 +815,7 @@ class AdvertisersInquiryComponent extends LivewireDatatable
                 } else {
                     $subscription_package = Package::findOrFail($this->package_id);
                     PackageQuotas::assignPackage($user, $subscription_package);
-                    $data['is_elite'] = true;
+                    $data['is_elite'] = (bool) $subscription_package->is_elite;
                     $data['allowed_posts_count'] = $subscription_package->maximum_posts;
                     $data['allowed_offers_count'] = $subscription_package->maximum_offers;
                     $data['maximum_monthly_offers'] = $subscription_package->maximum_monthly_offers;

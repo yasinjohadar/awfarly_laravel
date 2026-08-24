@@ -254,6 +254,22 @@
                 </div>
                 @enderror
             </div>
+            <div class="form-group col-md-6">
+                <label for="is_elite">{{__('pages/subscriptions/packages/create.content.inputs.is_elite')}}</label>
+                <select class="form-control" wire:model.defer="is_elite" id="is_elite">
+                    <option value="1">
+                        {{__('pages/subscriptions/packages/create.content.inputs.boolean.yes')}}
+                    </option>
+                    <option value="0">
+                        {{__('pages/subscriptions/packages/create.content.inputs.boolean.no')}}
+                    </option>
+                </select>
+                @error('is_elite')
+                <div class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </div>
+                @enderror
+            </div>
         </div>
         <hr>
         <div class="text-right">

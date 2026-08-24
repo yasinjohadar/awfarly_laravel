@@ -3,6 +3,7 @@
 namespace App\Http\Livewire\Subscriptions\Packages;
 
 use App\Helpers\Admins\AdminLogs;
+use App\Helpers\Advertisers\PackageQuotas;
 use App\Helpers\Filter;
 use App\Models\Currencies\Currency;
 use App\Models\Subscriptions\Packages\Package;
@@ -37,6 +38,7 @@ class PackagesEditComponent extends Component
     public $is_visible = 1;
     public $is_active = 1;
     public $is_trial = 0;
+    public $is_elite = 1;
 
     public function mount($id)
     {
@@ -60,6 +62,7 @@ class PackagesEditComponent extends Component
         $this->is_visible = $package->is_visible ? 1 : 0;
         $this->is_active = $package->is_active ? 1 : 0;
         $this->is_trial = $package->is_trial ? 1 : 0;
+        $this->is_elite = $package->is_elite ? 1 : 0;
     }
 
     protected function rules(): array
@@ -82,6 +85,7 @@ class PackagesEditComponent extends Component
             'is_visible' => ['required', 'boolean'],
             'is_active' => ['required', 'boolean'],
             'is_trial' => ['required', 'boolean'],
+            'is_elite' => ['required', 'boolean'],
         ];
     }
 
@@ -146,7 +150,12 @@ class PackagesEditComponent extends Component
                 'is_visible' => $this->is_visible,
                 'is_active' => $this->is_active,
                 'is_trial' => $this->is_trial,
+                'is_elite' => $this->is_elite,
             ]);
+
+            //without this, subscribers already on this package would only pick up
+            //the new flags/quotas at their next renewal/expiry — apply them now
+            PackageQuotas::resyncSubscribersOfPackage($package);
 
             //add log
             AdminLogs::log('edit', 'packages', ['package' => $package], "Edit: package");
