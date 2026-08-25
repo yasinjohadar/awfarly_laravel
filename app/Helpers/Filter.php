@@ -117,7 +117,7 @@ class Filter extends Helper
         if ($number == '-') {
             return $number;
         } else {
-            intval($number);
+            $number = intval($number);
         }
 
         if ($format_only === true) {
