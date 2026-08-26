@@ -119,8 +119,11 @@ class CategoriesFilter
      *
      * @param \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder $query
      * @param mixed $user
+     * @param \Closure|null $includeOwn Optional extra condition OR'd into the interests
+     *   filter (e.g. "this row belongs to the viewer") so the viewer's own content stays
+     *   visible on their own feed even when its category isn't among their interests.
      */
-    public static function applyFeedCategoryFilter($query, array $data, $user, string $column)
+    public static function applyFeedCategoryFilter($query, array $data, $user, string $column, ?\Closure $includeOwn = null)
     {
         if (!empty($data['categoryId'])) {
             $ids = self::expandCategoryIds([(int) $data['categoryId']]);
@@ -136,6 +139,12 @@ class CategoriesFilter
 
         if (empty($ids)) {
             return $query;
+        }
+
+        if ($includeOwn) {
+            return $query->where(function ($q) use ($column, $ids, $includeOwn) {
+                $q->whereIn($column, $ids)->orWhere($includeOwn);
+            });
         }
 
         return $query->whereIn($column, $ids);

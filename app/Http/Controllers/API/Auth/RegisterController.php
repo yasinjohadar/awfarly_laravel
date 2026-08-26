@@ -146,6 +146,13 @@ class RegisterController extends Controller
                 }
             }
 
+            // A business type without categories (e.g. the "Shopper" type) has no
+            // public specialties and no posting rights — treated as a personal,
+            // browse-only account rather than a real business throughout this method.
+            $isShopperLikeAdvertiser = $data['type'] === 'advertiser'
+                && isset($business_type) && $business_type
+                && !$business_type->has_categories;
+
             $user = $this->model()::create([
                 'name' => $request->has('name') ? ucwords(Filter::RemoveHtml(trim($data['name']))) : null,
                 'business_type' => ($data['type'] == 'advertiser' && $request->has('businessTypeId') && $data['businessTypeId']) ? $data['businessTypeId'] : null,
@@ -167,8 +174,10 @@ class RegisterController extends Controller
                 'last_login_at' => now(),
             ]);
 
-            // Grant the configured default package to newly registered advertisers
-            if ($data['type'] === 'advertiser') {
+            // Grant the configured default package to newly registered advertisers —
+            // except the "Shopper" business type, which has no posting rights and
+            // only browses/messages advertisers, so no package applies to it.
+            if ($data['type'] === 'advertiser' && !$isShopperLikeAdvertiser) {
                 $defaultPackageId = Settings::Get('advertisers.default_package_id');
                 if ($defaultPackageId) {
                     $defaultPackage = Package::where('id', $defaultPackageId)
@@ -188,11 +197,13 @@ class RegisterController extends Controller
                     return $category !== null && $category !== '' && $category !== '0';
                 });
 
-                //For an advertiser this is their OWN business category — the
-                //registration form labels it "Category". Seed their interests
-                //with the same set so their feed is not unfiltered on day one;
-                //the two are independent from that point on.
-                CategoriesFilter::syncCategories($user->categories(), $categoryIds);
+                if (!$isShopperLikeAdvertiser) {
+                    //For an advertiser this is their OWN business category — the
+                    //registration form labels it "Category". Seed their interests
+                    //with the same set so their feed is not unfiltered on day one;
+                    //the two are independent from that point on.
+                    CategoriesFilter::syncCategories($user->categories(), $categoryIds);
+                }
 
                 if (method_exists($user, 'interests') && $data['type'] === 'advertiser') {
                     CategoriesFilter::syncCategories($user->interests(), $categoryIds);

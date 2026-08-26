@@ -21,6 +21,8 @@ class PackagesShowComponent extends Component
     use WithPagination;
     use LivewireAlert;
 
+    protected $paginationTheme = 'bootstrap';
+
     public int $package_id;
     public string $features_lang = 'ar';
 

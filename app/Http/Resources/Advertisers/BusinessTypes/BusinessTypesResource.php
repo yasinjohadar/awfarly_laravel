@@ -23,6 +23,7 @@ class BusinessTypesResource extends JsonResource
             'id' => $this->id,
             'name' => $this->{$language_column},
             'isActive' => (bool)$this->is_active,
+            'hasCategories' => (bool)$this->has_categories,
         ];
     }
 }

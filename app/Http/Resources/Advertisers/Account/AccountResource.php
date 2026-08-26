@@ -86,8 +86,11 @@ class AccountResource extends JsonResource
             });
 
         //profile completeness depends on having a business category, never on
-        //interests — an advertiser with no interests can still publish
-        $has_categories = $userCategories->isNotEmpty();
+        //interests — an advertiser with no interests can still publish.
+        //A business type without categories (e.g. "Shopper") can never own
+        //one, so it's exempt from this requirement entirely.
+        $requiresOwnCategory = (bool) $this->business->has_categories;
+        $has_categories = !$requiresOwnCategory || $userCategories->isNotEmpty();
 
         //check maximum allowed offers for advertiser (active + monthly)
         $limits = OfferLimits::evaluate(Auth::guard('advertiser-api')->user());

@@ -123,12 +123,20 @@ class CommunityPostsController extends Controller
         }
 
 
-        // Filter categories (expand parents to children; apply interests by default)
+        // Filter categories (expand parents to children; apply interests by default),
+        // but always keep the viewer's own posts visible on their own feed even when
+        // a post's category isn't among their interests (e.g. they posted under a
+        // business category they never added as an interest).
+        $viewer = Auth::guard('advertiser-api')->user();
         $posts = CategoriesFilter::applyFeedCategoryFilter(
             $posts,
             $data,
-            Auth::guard('advertiser-api')->user(),
-            'posts.category_id'
+            $viewer,
+            'posts.category_id',
+            function ($q) use ($viewer) {
+                $q->where('posts.user_id', $viewer->id)
+                    ->where('posts.user_type', AdvertiserUser::class);
+            }
         );
 
         $posts = $posts
