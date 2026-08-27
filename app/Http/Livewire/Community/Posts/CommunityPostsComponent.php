@@ -24,13 +24,16 @@ class CommunityPostsComponent extends Component
             ->whereNull('advertisement_id')
             ->count();
 
-        $this->unreviewed_posts_count = Post::withTrashed()
+        //not trashed — a soft-deleted pending post no longer needs review
+        $this->unreviewed_posts_count = Post::withoutTrashed()
             ->whereNull('advertisement_id')
             ->whereStatus('pending')
             ->count();
 
+        //approved only, so this tab is mutually exclusive with "unreviewed"
         $this->active_posts_count = Post::withoutTrashed()
             ->whereNull('advertisement_id')
+            ->whereStatus('approved')
             ->count();
 
         $this->deleted_posts_count = Post::onlyTrashed()
@@ -80,13 +83,16 @@ class CommunityPostsComponent extends Component
             ->whereNull('advertisement_id')
             ->count();
 
-        $this->unreviewed_posts_count = Post::withTrashed()
+        //not trashed — a soft-deleted pending post no longer needs review
+        $this->unreviewed_posts_count = Post::withoutTrashed()
             ->whereNull('advertisement_id')
             ->whereStatus('pending')
             ->count();
 
+        //approved only, so this tab is mutually exclusive with "unreviewed"
         $this->active_posts_count = Post::withoutTrashed()
             ->whereNull('advertisement_id')
+            ->whereStatus('approved')
             ->count();
 
         $this->deleted_posts_count = Post::onlyTrashed()

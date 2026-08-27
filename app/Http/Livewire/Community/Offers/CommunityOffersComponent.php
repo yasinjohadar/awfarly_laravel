@@ -18,6 +18,7 @@ class CommunityOffersComponent extends Component
     public ?int $active_offers_count = null;
     public ?int $unreviewed_offers_count = null;
     public ?int $expired_offers_count = null;
+    public ?int $unapproved_offers_count = null;
     public ?int $deleted_offers_count = null;
     public ?int $filter_id = null;
 
@@ -33,7 +34,12 @@ class CommunityOffersComponent extends Component
         $this->unreviewed_offers_count = Offer::where('status', 'pending')
             ->count();
 
-        $this->expired_offers_count = Offer::where('expires_at', '<', Carbon::now())
+        //approved only — a never-approved pending offer isn't "expired", it's still "unreviewed"
+        $this->expired_offers_count = Offer::where('status', 'approved')
+            ->where('expires_at', '<=', Carbon::now())
+            ->count();
+
+        $this->unapproved_offers_count = Offer::where('status', 'unapproved')
             ->count();
 
         $this->deleted_offers_count = Offer::onlyTrashed()
@@ -89,7 +95,12 @@ class CommunityOffersComponent extends Component
         $this->unreviewed_offers_count = Offer::where('status', 'pending')
             ->count();
 
-        $this->expired_offers_count = Offer::where('expires_at', '<', Carbon::now())
+        //approved only — a never-approved pending offer isn't "expired", it's still "unreviewed"
+        $this->expired_offers_count = Offer::where('status', 'approved')
+            ->where('expires_at', '<=', Carbon::now())
+            ->count();
+
+        $this->unapproved_offers_count = Offer::where('status', 'unapproved')
             ->count();
 
         $this->deleted_offers_count = Offer::onlyTrashed()

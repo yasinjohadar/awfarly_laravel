@@ -148,8 +148,10 @@
                     </div>
                 @endif
                 @foreach($this->results as $index => $result)
+                    @php($isPendingRow = isset($result->status) && $result->status === 'pending')
                     <div
-                        class="table-row results p-1{{ isset($result->checkbox_attribute) && in_array($result->checkbox_attribute, $selected) ? ' bg-info' : ($loop->even ? ' striped' : ' stripe') }}">
+                        @if($isPendingRow) style="background-color: #fff3e0; border-inline-start: 4px solid #fb8c00;" @endif
+                        class="table-row results p-1{{ isset($result->checkbox_attribute) && in_array($result->checkbox_attribute, $selected) ? ' bg-info' : ($isPendingRow ? '' : ($loop->even ? ' striped' : ' stripe')) }}">
                         @foreach($this->columns as $index => $column)
                             @if($column['hidden'])
                                 @if($hideable === 'inline')

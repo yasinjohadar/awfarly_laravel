@@ -12,12 +12,20 @@ return [
         'title' => 'Posts Inquiry',
         'tabs' => [
             'all' => 'All Posts (:count)',
+            'unreviewed' => 'Unreviewed Posts (:count)',
             'active' => 'Active Posts (:count)',
             'deleted' => 'Deleted Posts (:count)',
-        ]
+        ],
+        'stats' => [
+            'all' => 'Total Posts',
+            'approved' => 'Approved',
+            'pending' => 'Pending Review',
+            'deleted' => 'Deleted',
+        ],
     ],
     'datatable' => [
         'image' => 'Image',
+        'status' => 'Status',
         'user_type' => 'User Type',
         'user_id' => 'User #',
         'user_name' => 'User Name',

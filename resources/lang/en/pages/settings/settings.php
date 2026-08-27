@@ -51,6 +51,7 @@ return [
         "Posts Auto Delete After Days" => "Auto-Delete Posts After (Days)",
         "Offers Auto Delete After Days" => "Auto-Delete Offers After (Days)",
         "Maximum Advertiser Monthly Offers" => "Maximum Advertiser Monthly Offers",
+        "Personalize Elite Advertisers" => "Personalize Elite Advertisers",
     ],
     'descriptions' => [
         "Site name" => "This is for Site name.",
@@ -103,5 +104,6 @@ return [
         "Posts Auto Delete After Days" => "Number of days after publish to permanently delete posts. 0 disables auto-delete.",
         "Offers Auto Delete After Days" => "Number of days after publish to permanently delete offers. 0 disables auto-delete.",
         "Maximum Advertiser Monthly Offers" => "Maximum number of offers an advertiser can create per calendar month.",
+        "Personalize Elite Advertisers" => "When enabled, the Featured/Elite Advertisers strip and listing are filtered by the viewing user's followed interest categories and saved preferred governorate/city. When disabled, all elite advertisers are shown generally.",
     ]
 ];

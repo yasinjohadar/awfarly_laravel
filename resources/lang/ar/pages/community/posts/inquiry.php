@@ -4,6 +4,11 @@ return [
     'content' => [
         'title' => 'عرض منشور #<strong>:id</strong>',
         'back' => 'رجوع',
+        'edit' => 'تعديل',
+        'approve' => 'قبول المنشور',
+        'status_pending' => 'قيد المراجعة',
+        'status_approved' => 'تمت الموافقة',
+        'status_deleted' => 'محذوف',
         'post_id' => 'منشور #',
         'user_type' => 'نوع المستخدم',
         'user_id' => 'مستخدم #',
@@ -19,6 +24,11 @@ return [
         'images' => 'الملفات',
         'image' => 'ملف: ',
         'save' => 'حفظ الترتيب',
+        'sections' => [
+            'info' => 'بيانات المنشور',
+            'content' => 'محتوى المنشور',
+            'media' => 'الوسائط المرفقة',
+        ],
     ],
     'modal' => [
         'edit' => [

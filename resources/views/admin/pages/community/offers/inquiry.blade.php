@@ -467,17 +467,18 @@
             </h5>
             <ul id="animated-thumbnails-gallery" dir="ltr" class="offer-show__media">
                 @foreach ($offer->getMedia('offers') as $index => $media)
-                    <li data-id="{{ $media->id }}" data-src="{{ $media->getUrl() }}">
+                    @php($media_url = \App\Helpers\Files::mediaUrl($media))
+                    <li data-id="{{ $media->id }}" data-src="{{ $media_url }}">
                         <a wire:click="showDeleteModal({{ $media->id }})" class="delete-image text-danger" href="javascript:void(0)">
                             <i class="icon-trash"></i>
                         </a>
                         <img data-id="{{ $media->id }}"
-                             data-src="{{ $media->getUrl() }}"
+                             data-src="{{ $media_url }}"
                              data-download-url="{{ route('media.download', $media->uuid) }}"
-                             data-thumb="{{ $media->getUrl() }}"
+                             data-thumb="{{ $media_url }}"
                              class="grid-square"
                              alt="{{ $media->name }}"
-                             src="{{ $media->getUrl() }}"/>
+                             src="{{ $media_url }}"/>
                         <div class="offer-show__media-caption">
                             {{ __('pages/community/offers/show.content.media') }} {{ $index + 1 }}
                         </div>

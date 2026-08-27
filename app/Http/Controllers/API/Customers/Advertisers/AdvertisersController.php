@@ -33,6 +33,9 @@ class AdvertisersController extends Controller
         //get limit
         $limit = ($request->has('limit') && $request->get('limit') > 0) ? $request->get('limit') : Settings::Get('advertisers.pagination.limit', 10);
 
+        //admin toggle: filter elite advertisers by the viewer's interests/preferred location, or show all generally
+        $personalizeEliteAdvertisers = Settings::Get('advertisers.elite.personalize', true);
+
         $data = $request->only([
             'countryCode',
             'governorateId',
@@ -87,7 +90,7 @@ class AdvertisersController extends Controller
 
         $advertisers = Geography::applyUserLocationFilter($advertisers, $data);
 
-        if (!Geography::hasExplicitLocationFilter($data)) {
+        if ($personalizeEliteAdvertisers && !Geography::hasExplicitLocationFilter($data)) {
             $advertisers = Geography::applyPreferredUserLocationFilter(
                 $advertisers,
                 Auth::guard('customer-api')->user()
@@ -95,10 +98,17 @@ class AdvertisersController extends Controller
         }
 
 
-        // Filter categories (expand parents to children; apply interests by default)
+        // Filter categories (expand parents to children; apply interests by default).
+        // When elite personalization is off, force the "all categories" branch so the
+        // interest fallback is skipped, while an explicit categoryId (Elites browse
+        // screen filter) still applies exactly as before, in either toggle state.
+        $eliteCategoryData = $data;
+        if (!$personalizeEliteAdvertisers) {
+            $eliteCategoryData['isGetAllCategories'] = true;
+        }
         $advertisers = CategoriesFilter::applyFeedCategoryFilter(
             $advertisers,
-            $data,
+            $eliteCategoryData,
             Auth::guard('customer-api')->user(),
             'advertiser_categories.category_id'
         );

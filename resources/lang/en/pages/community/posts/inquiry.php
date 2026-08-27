@@ -4,6 +4,11 @@ return [
     'content' => [
         'title' => 'Post #<strong>:id</strong> Inquiry',
         'back' => 'Back',
+        'edit' => 'Edit',
+        'approve' => 'Approve Post',
+        'status_pending' => 'Pending Review',
+        'status_approved' => 'Approved',
+        'status_deleted' => 'Deleted',
         'post_id' => 'Post #',
         'user_type' => 'User Type',
         'user_id' => 'User #',
@@ -19,6 +24,11 @@ return [
         'images' => 'Images',
         'image' => 'Image: ',
         'save' => 'Save Order',
+        'sections' => [
+            'info' => 'Post Info',
+            'content' => 'Post Content',
+            'media' => 'Attached Media',
+        ],
     ],
     'modal' => [
         'edit' => [

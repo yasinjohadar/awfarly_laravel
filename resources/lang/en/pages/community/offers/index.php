@@ -16,6 +16,14 @@ return [
             'unreviewed' => 'Unreviewed Offers (:count)',
             'expired' => 'Expired Offers (:count)',
             'deleted' => 'Deleted Offers (:count)',
-        ]
+        ],
+        'stats' => [
+            'all' => 'Total Offers',
+            'active' => 'Active & Approved',
+            'pending' => 'Pending Review',
+            'expired' => 'Expired',
+            'unapproved' => 'Unapproved',
+            'deleted' => 'Deleted',
+        ],
     ],
 ];

@@ -181,7 +181,11 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
                 ->label(__('datatable.created_at'))
                 ->filterable()
                 ->searchable()
-                ->defaultSort('desc')
+                ->defaultSort('desc'),
+            Column::name('status')
+                ->label(__('pages/community/posts/index.datatable.status'))
+                ->filterable()
+                ->searchable()
                 ->hide(),
             Column::callback(['id', 'updated_at', 'deleted_at', 'status'], function ($id, $name, $deleted_at, $status) {
                 return view('admin.pages.community.posts.table-actions', ['id' => $id, 'name' => $name, 'deleted_at' => $deleted_at, 'status' => $status]);
@@ -203,16 +207,17 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
                 ->whereNull('advertisement_id');
         } else if ($this->page_type === 'active') {
             return Post::withoutTrashed()
-                ->whereNull('advertisement_id');
+                ->whereNull('advertisement_id')
+                ->where('posts.status', 'approved');
         }
         else if ($this->page_type === 'unreviewed') {
             return Post::withoutTrashed()
                 ->whereNull('advertisement_id')
             ->where('posts.status','pending');
         }
+        //"all" — every non-ad post regardless of status, matching its tab count
         return Post::withTrashed()
-            ->whereNull('advertisement_id')
-        ->where('posts.status','approved');
+            ->whereNull('advertisement_id');
 
     }
 

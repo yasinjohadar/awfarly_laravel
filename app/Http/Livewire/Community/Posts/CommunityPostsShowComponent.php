@@ -2,9 +2,15 @@
 
 namespace App\Http\Livewire\Community\Posts;
 
+use App\Helpers\Admins\AdminLogs;
 use App\Helpers\Files;
+use App\Helpers\Notifications;
 use App\Models\Categories\Category;
 use App\Models\Posts\Post;
+use App\Models\Users\Advertisers\AdvertiserUser;
+use App\Models\Users\Advertisers\Categories\AdvertiserCategories;
+use App\Models\Users\Customers\Categories\CustomerCategories;
+use App\Models\Users\Customers\CustomerUser;
 use Carbon\Carbon;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
@@ -95,6 +101,82 @@ class CommunityPostsShowComponent extends Component
     public function loadScripts()
     {
         $this->dispatchBrowserEvent('loadScripts');
+    }
+
+    /**
+     * approve a pending post — mirrors CommunityPostsInquiryComponent::approve()
+     */
+    public function approve($id)
+    {
+        if (!Auth::guard('admin')->user()->can('posts.edit')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        DB::beginTransaction();
+        try {
+            $post = Post::withTrashed()->findOrFail($id);
+
+            //nothing to do if it is already approved
+            if ($post->status === 'approved') {
+                DB::rollBack();
+                return null;
+            }
+
+            AdminLogs::log('edit', 'posts', [
+                'old' => $post,
+                'new' => ['status' => 'approved'],
+            ], "Approve: post #$id");
+
+            tap($post)->update(['status' => 'approved']);
+
+            //notify interested users, exactly as the edit-modal approval does
+            $this->sendNotificationToIntersetUser($post);
+
+            $this->alert('success', __('toastr.success'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+            return null;
+        }
+        DB::commit();
+    }
+
+    private function sendNotificationToIntersetUser($post)
+    {
+        $advertiserCategories = optional($post->advertiser)->categories()->pluck('category_id')->toArray();
+
+        $users_ids = CustomerCategories::whereIn('category_id', $advertiserCategories)->pluck('customer_id')->toArray();
+        $advertiser_ids = AdvertiserCategories::whereIn('category_id', $advertiserCategories)->pluck('advertiser_id')->toArray();
+
+        $advertisers = AdvertiserUser::whereIn('id', $advertiser_ids)->where('country_code', $post->user->country_code)->get();
+        $users = CustomerUser::whereIn('id', $users_ids)->where('country_code', $post->user->country_code)->get();
+        $name = optional($post->advertiser)->name;
+
+        $customProperties = [
+            'title' => " منشور جديد - $name",
+            'title_en' => " منشور جديد - $name",
+            'body_en' => $post->content,
+            'notify_link' => null,
+            'postId' => $post->id,
+            'userId' => optional($post->advertiser)->id,
+            'type' => 'posts',
+            'userType' => 'advertiser',
+            'customProperties' => [
+                'postId' => $post->id,
+                'type' => 'posts',
+            ],
+        ];
+
+        Notifications::sendFromAdmin($users, 'posts', $post->content, 'add', $customProperties);
+        Notifications::sendFromAdmin($advertisers, 'posts', $post->content, 'add', $customProperties);
     }
 
     /**

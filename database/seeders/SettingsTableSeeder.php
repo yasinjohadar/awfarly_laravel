@@ -138,6 +138,14 @@ class SettingsTableSeeder extends Seeder
                 'description' => 'Selects whether auto approve advertisers rating requests or not.',
             ],
             [
+                'name' => 'Personalize Elite Advertisers',
+                'key' => 'advertisers.elite.personalize',
+                'value' => '1',
+                'value_type' => 'boolean',
+                'type' => 'users',
+                'description' => 'When enabled, elite advertisers are filtered by the viewer\'s followed interests and preferred governorate/city. When disabled, all elite advertisers are shown generally.',
+            ],
+            [
                 'name' => 'Advertisers Ratings Pagination Limit',
                 'key' => 'advertisers.ratings.pagination.limit',
                 'value' => '12',

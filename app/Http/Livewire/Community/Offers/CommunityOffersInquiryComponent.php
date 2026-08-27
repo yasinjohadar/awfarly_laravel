@@ -151,11 +151,15 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
                 ->label(__('pages/community/offers/inquiry.datatable.advertisement_url'))
                 ->filterable()
                 ->searchable(),
+            DateColumn::name('created_at')
+                ->label(__('datatable.created_at'))
+                ->filterable()
+                ->searchable()
+                ->defaultSort('desc'),
             DateColumn::name('expires_at')
                 ->label(__('pages/community/offers/inquiry.datatable.expires_at'))
                 ->filterable()
-                ->searchable()
-                ->hide(),
+                ->searchable(),
             NumberColumn::name('expires_in')
                 ->label(__('pages/community/offers/inquiry.datatable.expires_in'))
                 ->filterable()
@@ -188,6 +192,11 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
                 ->filterable()
                 ->searchable()
                 ->hide(),
+            Column::name('status')
+                ->label(__('pages/community/offers/inquiry.datatable.status'))
+                ->filterable()
+                ->searchable()
+                ->hide(),
             Column::callback(['id', 'updated_at', 'deleted_at', 'status'], function ($id, $name, $deleted_at, $status) {
                 return view('admin.pages.community.offers.table-actions', ['id' => $id, 'name' => $name, 'deleted_at' => $deleted_at, 'status' => $status]);
             })
@@ -211,7 +220,9 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
         } else if ($this->page_type === 'unreviewed') {
             return Offer::where('offers.status', 'pending');
         } else if ($this->page_type === 'expired') {
-            return Offer::where('expires_at', '<', Carbon::now());
+            //approved only — a never-approved pending offer isn't "expired", it's still "unreviewed"
+            return Offer::where('offers.status', 'approved')
+                ->where('expires_at', '<=', Carbon::now());
         }
         return Offer::withTrashed();
     }
