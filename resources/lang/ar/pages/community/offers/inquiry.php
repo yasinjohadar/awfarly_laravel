@@ -2,6 +2,7 @@
 
 return [
     'datatable' => [
+        'image' => 'الصورة',
         'user_id' => 'معلن #',
         'user_name' => 'إسم المعلن',
         'content' => 'المضمون',

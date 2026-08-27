@@ -18,6 +18,7 @@ return [
         ]
     ],
     'datatable' => [
+        'image' => 'الصورة',
         'user_type' => 'نوع المستخدم',
         'user_id' => 'مستخدم #',
         'user_name' => 'إسم المعرف',

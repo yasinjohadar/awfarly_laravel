@@ -101,6 +101,34 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
                 ->label('#')
                 ->filterable()
                 ->searchable(),
+            Column::callback('id', function ($id) {
+                $media = Post::withTrashed()->find($id)?->getFirstMedia('posts');
+
+                //local-disk media isn't reachable at getFullUrl() (see MediaResource) —
+                //serve it through the request-host media.view route instead; S3 keeps
+                //its own working URL. Fall back to the original file when no "thumb"
+                //conversion has been generated yet.
+                $url = null;
+                if ($media) {
+                    $isS3 = $media->getDiskDriverName() === 's3';
+                    $hasThumb = $media->hasGeneratedConversion('thumb');
+
+                    if ($hasThumb) {
+                        $url = $isS3
+                            ? $media->getFullUrl('thumb')
+                            : route('media.view', ['uuid' => $media->uuid, 'conversion' => 'thumb']);
+                    } else {
+                        $url = $isS3
+                            ? $media->getFullUrl()
+                            : route('media.view', ['uuid' => $media->uuid]);
+                    }
+                }
+
+                return view('admin.pages.community.posts.table-image', ['url' => $url]);
+            })
+                ->label(__('pages/community/posts/index.datatable.image'))
+                ->excludeFromExport()
+                ->unsortable(),
             NumberColumn::name('user_id')
                 ->label(__('pages/community/posts/index.datatable.user_id'))
                 ->searchable()
@@ -153,6 +181,7 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
                 ->label(__('datatable.created_at'))
                 ->filterable()
                 ->searchable()
+                ->defaultSort('desc')
                 ->hide(),
             Column::callback(['id', 'updated_at', 'deleted_at', 'status'], function ($id, $name, $deleted_at, $status) {
                 return view('admin.pages.community.posts.table-actions', ['id' => $id, 'name' => $name, 'deleted_at' => $deleted_at, 'status' => $status]);

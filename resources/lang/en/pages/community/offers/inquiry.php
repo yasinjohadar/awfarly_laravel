@@ -2,6 +2,7 @@
 
 return [
     'datatable' => [
+        'image' => 'Image',
         'user_id' => 'Advertiser #',
         'user_name' => 'Advertiser Name',
         'content' => 'Content',

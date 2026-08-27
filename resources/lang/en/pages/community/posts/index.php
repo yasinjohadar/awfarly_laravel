@@ -17,6 +17,7 @@ return [
         ]
     ],
     'datatable' => [
+        'image' => 'Image',
         'user_type' => 'User Type',
         'user_id' => 'User #',
         'user_name' => 'User Name',

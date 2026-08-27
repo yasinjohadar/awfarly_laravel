@@ -98,6 +98,34 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
                 ->filterable()
                 ->searchable()
                 ->width('50px'),
+            Column::callback('id', function ($id) {
+                $media = Offer::withTrashed()->find($id)?->getFirstMedia('offers');
+
+                //local-disk media isn't reachable at getFullUrl() (see MediaResource) —
+                //serve it through the request-host media.view route instead; S3 keeps
+                //its own working URL. Fall back to the original file when no "thumb"
+                //conversion has been generated yet.
+                $url = null;
+                if ($media) {
+                    $isS3 = $media->getDiskDriverName() === 's3';
+                    $hasThumb = $media->hasGeneratedConversion('thumb');
+
+                    if ($hasThumb) {
+                        $url = $isS3
+                            ? $media->getFullUrl('thumb')
+                            : route('media.view', ['uuid' => $media->uuid, 'conversion' => 'thumb']);
+                    } else {
+                        $url = $isS3
+                            ? $media->getFullUrl()
+                            : route('media.view', ['uuid' => $media->uuid]);
+                    }
+                }
+
+                return view('admin.pages.community.offers.table-image', ['url' => $url]);
+            })
+                ->label(__('pages/community/offers/inquiry.datatable.image'))
+                ->excludeFromExport()
+                ->unsortable(),
             NumberColumn::name('advertiser.id')
                 ->label(__('pages/community/offers/inquiry.datatable.user_id'))
                 ->filterable()
