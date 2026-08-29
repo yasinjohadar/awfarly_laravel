@@ -55,8 +55,10 @@ return [
             'failure' => 'فشل إرسال الإشعار التجريبي.',
         ],
         'test_connection' => [
-            'success' => 'تم الاتصال بـ Firebase بنجاح.',
+            'success' => 'تم الاتصال بـ Firebase بنجاح (المصادقة والإشعارات معًا).',
             'failure' => 'فشل الاتصال بـ Firebase.',
+            'auth_failed' => 'فشل الاتصال بخدمة المصادقة (Auth): :error',
+            'messaging_failed' => 'المصادقة تعمل، لكن خدمة الإشعارات (Messaging) مرفوضة — هذا ما يمنع وصول الإشعارات فعليًا: :error',
         ],
     ],
 ];

@@ -55,8 +55,10 @@ return [
             'failure' => 'Failed to send the test notification.',
         ],
         'test_connection' => [
-            'success' => 'Successfully connected to Firebase.',
+            'success' => 'Successfully connected to Firebase (both Auth and Messaging).',
             'failure' => 'Failed to connect to Firebase.',
+            'auth_failed' => 'Failed to connect to the Auth service: :error',
+            'messaging_failed' => 'Auth works, but the Messaging service is rejected — this is what actually blocks push notifications: :error',
         ],
     ],
 ];

@@ -172,19 +172,52 @@ class FirebaseSettingsComponent extends Component
             return null;
         }
 
+        // Auth and Messaging are separate Google services with separate authorization:
+        // Auth succeeding does NOT prove push notifications will work. Testing only Auth
+        // previously reported a misleading "connected successfully" while every real push
+        // was being rejected with invalid_grant. Both are probed now, Messaging included.
         try {
             app('firebase.auth')->listUsers(1);
-
-            $this->alert('success', __('pages/system/firebase.content.test_connection.success'), [
-                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
-            ]);
         } catch (Throwable $e) {
-            Log::error('FirebaseSettingsComponent: connection test failed', ['exception' => $e->getMessage()]);
+            Log::error('FirebaseSettingsComponent: auth connection test failed', ['exception' => $e->getMessage()]);
             $this->alert('error', __('pages/system/firebase.content.test_connection.failure'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
-                'text' => $e->getMessage(),
+                'text' => __('pages/system/firebase.content.test_connection.auth_failed', ['error' => $e->getMessage()]),
             ]);
+            return null;
         }
+
+        // Probe Messaging with a deliberately invalid device token: we don't need a real
+        // device to learn whether the credentials are authorized for Messaging at all.
+        // A rejection naming the *token* means credentials are fine (only the fake token
+        // was bad); any other failure (invalid_grant, permission denied) is a real
+        // credentials/authorization problem that would break every actual push.
+        try {
+            app('firebase.messaging')->send(
+                CloudMessage::withTarget('token', 'AWFARLY_CONNECTIVITY_PROBE_INVALID_TOKEN')
+            );
+        } catch (Throwable $e) {
+            $messagingError = $e->getMessage();
+            $tokenWasRejected = Str::contains(Str::lower($messagingError), [
+                'registration token',
+                'not a valid fcm',
+                'invalid-registration-token',
+                'requested entity was not found',
+            ]);
+
+            if (!$tokenWasRejected) {
+                Log::error('FirebaseSettingsComponent: messaging connection test failed', ['exception' => $messagingError]);
+                $this->alert('error', __('pages/system/firebase.content.test_connection.failure'), [
+                    'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                    'text' => __('pages/system/firebase.content.test_connection.messaging_failed', ['error' => $messagingError]),
+                ]);
+                return null;
+            }
+        }
+
+        $this->alert('success', __('pages/system/firebase.content.test_connection.success'), [
+            'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+        ]);
     }
 
     public function sendTestNotification()
