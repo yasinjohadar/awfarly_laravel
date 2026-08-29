@@ -175,23 +175,30 @@ class Notifications
      * to override the defaults; otherwise the title falls back to a translated
      * "{$type}.title" lookup and the English body falls back to the Arabic $message.
      *
-     * The return value counts users actually notified (a DB notification record was
-     * created for them) — NOT how many received an FCM push. Most users won't have a
-     * registered device token at any given moment (logged out, token expired, web-only
-     * account, etc.) and that is expected, not a failure: the in-app notification still
-     * lands either way, so callers checking "did this send at all" should check this
-     * count, not push-delivery success.
+     * Returns three counts, since "notified" and "actually pushed to a device"
+     * are genuinely different things and conflating them hides real failures:
+     * - notified: a DB notification record was created (this is the real
+     *   "did this send at all" signal — most users won't have a registered
+     *   device token at any given moment, and that's expected, not a failure).
+     * - push_attempted: how many of those had a token, so a push was tried.
+     * - push_delivered: how many of those attempts actually succeeded per
+     *   FcmHelper. If push_attempted > 0 but push_delivered is far lower (or
+     *   zero), that's a real delivery problem worth surfacing to the admin —
+     *   this was previously invisible, since a successful DB write always
+     *   made the send "look" successful even when every push silently failed.
      *
      * @param AdvertiserUser|CustomerUser|Collection $users
      * @param string $type
      * @param string $message
      * @param string $action
      * @param array|null $customProperties
-     * @return int number of users actually notified
+     * @return array{notified: int, push_attempted: int, push_delivered: int}
      */
-    public static function sendFromAdmin($users, string $type, string $message, string $action, array $customProperties = null): int
+    public static function sendFromAdmin($users, string $type, string $message, string $action, array $customProperties = null): array
     {
-        $sentCount = 0;
+        $notifiedCount = 0;
+        $pushAttempted = 0;
+        $pushDelivered = 0;
 
         $title = $customProperties['title'] ?? trans("api/notifications/notifications.{$type}.title", [], 'ar');
         $titleEn = $customProperties['title_en'] ?? trans("api/notifications/notifications.{$type}.title", [], 'en');
@@ -224,19 +231,28 @@ class Notifications
             }
 
             if ($user->fcm_token) {
-                FcmHelper::sendFcmNotification([
+                $pushAttempted++;
+                $delivered = FcmHelper::sendFcmNotification([
                     'title' => $title,
                     'title_en' => $titleEn,
                     'body' => $message,
                     'body_en' => $bodyEn,
                     'image' => $image,
                 ], [$user->fcm_token], $customProperties);
+
+                if ($delivered) {
+                    $pushDelivered++;
+                }
             }
 
-            $sentCount++;
+            $notifiedCount++;
         }
 
-        return $sentCount;
+        return [
+            'notified' => $notifiedCount,
+            'push_attempted' => $pushAttempted,
+            'push_delivered' => $pushDelivered,
+        ];
     }
 
     /**

@@ -122,6 +122,8 @@ class SendNotificationsComponent extends Component
         ]);
 
         $sentCount = 0;
+        $pushAttempted = 0;
+        $pushDelivered = 0;
         $error = '';
 
         DB::beginTransaction();
@@ -225,13 +227,22 @@ class SendNotificationsComponent extends Component
             ];
 
             if (isset($all_advertisers) && $all_advertisers->count() > 0) {
-                $sentCount += Notifications::sendFromAdmin($all_advertisers, 'admin.notification', $this->body, 'add', $customProperties);
+                $result = Notifications::sendFromAdmin($all_advertisers, 'admin.notification', $this->body, 'add', $customProperties);
+                $sentCount += $result['notified'];
+                $pushAttempted += $result['push_attempted'];
+                $pushDelivered += $result['push_delivered'];
             }
             if (isset($all_customers) && $all_customers->count() > 0) {
-                $sentCount += Notifications::sendFromAdmin($all_customers, 'admin.notification', $this->body, 'add', $customProperties);
+                $result = Notifications::sendFromAdmin($all_customers, 'admin.notification', $this->body, 'add', $customProperties);
+                $sentCount += $result['notified'];
+                $pushAttempted += $result['push_attempted'];
+                $pushDelivered += $result['push_delivered'];
             }
             if (isset($users) && $users->count() > 0) {
-                $sentCount += Notifications::sendFromAdmin($users, 'admin.notification', $this->body, 'add', $customProperties);
+                $result = Notifications::sendFromAdmin($users, 'admin.notification', $this->body, 'add', $customProperties);
+                $sentCount += $result['notified'];
+                $pushAttempted += $result['push_attempted'];
+                $pushDelivered += $result['push_delivered'];
             }
 
             $this->tokens = $tokens;
@@ -262,10 +273,25 @@ class SendNotificationsComponent extends Component
             return null;
         }
 
-        //send toastr alert with success
-        $this->alert('success', __('toastr.sent', ['type' => __('pages/marketing-tools/notifications.name')]), [
-            'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
-        ]);
+        // A device push failing silently used to be invisible — the in-app notification
+        // always succeeded, making the whole send "look" fine even when every push failed.
+        // Surface it explicitly whenever we tried to push to at least one device and most
+        // (or all) of those attempts didn't actually deliver.
+        if ($pushAttempted > 0 && $pushDelivered < $pushAttempted) {
+            $this->alert('warning', __('pages/marketing-tools/notifications.content.title'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => __('pages/marketing-tools/notifications.warnings.push_partial_failure', [
+                    'notified' => $sentCount,
+                    'attempted' => $pushAttempted,
+                    'delivered' => $pushDelivered,
+                ]),
+            ]);
+        } else {
+            //send toastr alert with success
+            $this->alert('success', __('toastr.sent', ['type' => __('pages/marketing-tools/notifications.name')]), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+        }
 
         $this->reset([
             'recipients_type',

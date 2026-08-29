@@ -120,7 +120,7 @@ class NotificationsController extends Controller
             'notify_link'       => null,
         ];
 
-        $sentCount = Notifications::sendFromAdmin($users, $request->type ?? 'admin.notification', $request->description, 'add', $customProperties);
+        $sentCount = Notifications::sendFromAdmin($users, $request->type ?? 'admin.notification', $request->description, 'add', $customProperties)['notified'];
 
         $advertisers = AdvertiserUser::when($request->country_code,fn($q)=>$q->where('country_code',$request->country_code))
             ->when($request->city_id,fn($q)=>$q->where('city_id',$request->city_id))
@@ -131,7 +131,7 @@ class NotificationsController extends Controller
             ->when($request->age_from && $request->age_to,fn($q)=>$q->whereRaw("TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) BETWEEN ? AND ?", [$request->age_from, $request->age_to]))
             ->get();
 
-        $sentCount += Notifications::sendFromAdmin($advertisers, $request->type ?? 'admin.notification', $request->description, 'add', $customProperties);
+        $sentCount += Notifications::sendFromAdmin($advertisers, $request->type ?? 'admin.notification', $request->description, 'add', $customProperties)['notified'];
 
         if ($sentCount === 0) {
             return $this->apiResponse([

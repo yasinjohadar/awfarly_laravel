@@ -37,5 +37,8 @@ return [
         'no-customers' => 'There is no customers selected',
         'interested' => 'Please select at least one category or one governorate/city, and no matching user was found.',
     ],
+    'warnings' => [
+        'push_partial_failure' => ':notified users were notified in-app, but the device push notification failed: only :delivered of :attempted attempts succeeded despite a registered device token. Check the server logs and Firebase settings.',
+    ],
     'name' => 'Notifications',
 ];
