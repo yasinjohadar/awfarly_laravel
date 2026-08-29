@@ -33,6 +33,13 @@ class FirebaseSettingsComponent extends Component
     public ?bool $key_usable = null;
     public ?string $server_time_utc = null;
 
+    // Paste-the-whole-file field. Strongly preferred over the individual fields
+    // below: mixing a freshly-pasted private_key with a stale private_key_id
+    // produces a file Google rejects with invalid_grant, because the key id must
+    // identify the very key that signs the request. Taking the whole JSON at once
+    // makes that mismatch impossible.
+    public ?string $input_json = null;
+
     // manual entry fields for updating the credentials
     public ?string $input_project_id = null;
     public ?string $input_client_email = null;
@@ -49,11 +56,12 @@ class FirebaseSettingsComponent extends Component
         $this->currentPath = Settings::Get('firebase.credentials.file');
         $this->loadCredentialInfo();
 
-        // pre-fill the non-secret fields from the active credentials so the admin only
-        // has to paste the private key + its id when rotating credentials
+        // Pre-fill only the fields that are safe to carry over. private_key_id is
+        // deliberately NOT pre-filled: it must always come from the same file as the
+        // private_key being pasted, and pre-filling it previously caused a stale id to
+        // be paired with a fresh key — which Google rejects as invalid_grant.
         $this->input_project_id = $this->project_id;
         $this->input_client_email = $this->client_email;
-        $this->input_private_key_id = $this->private_key_id;
     }
 
     public function render()
@@ -91,21 +99,26 @@ class FirebaseSettingsComponent extends Component
             return;
         }
 
-        // A fingerprint of the key material itself: identical keys give identical
-        // fingerprints, so a mismatch between two servers proves the key text was
-        // altered (truncated / mangled newlines) even when private_key_id matches,
-        // since private_key_id is only a label carried alongside the real key.
-        $this->key_fingerprint = substr(hash('sha256', $privateKey), 0, 16);
-
-        // Prove the key can actually sign. A key mangled in transit still *looks*
-        // like a key but fails here — and would be rejected by Google as
-        // invalid_grant, indistinguishable from clock skew without this check.
+        // Fingerprint the PUBLIC key derived from this private key, not the private
+        // key's raw text: the same key pasted with different whitespace/line endings
+        // (or with a trailing newline trimmed) yields different text but the same
+        // derived public key. Fingerprinting the text instead would flag harmless
+        // formatting as a key mismatch and send diagnosis down the wrong path.
         try {
             $resource = openssl_pkey_get_private($privateKey);
             if ($resource === false) {
                 $this->key_usable = false;
                 return;
             }
+
+            $details = openssl_pkey_get_details($resource);
+            if (is_array($details) && !empty($details['key'])) {
+                $this->key_fingerprint = substr(hash('sha256', $details['key']), 0, 16);
+            }
+
+            // Prove the key can actually sign — a key mangled in transit may still
+            // parse but fail here, and Google would reject it as invalid_grant,
+            // indistinguishable from clock skew without this check.
             $signature = '';
             $this->key_usable = openssl_sign('awfarly-key-selftest', $signature, $resource, OPENSSL_ALGO_SHA256);
         } catch (Throwable $e) {
@@ -122,17 +135,45 @@ class FirebaseSettingsComponent extends Component
             return null;
         }
 
-        $this->validate([
-            'input_project_id' => ['required', 'string'],
-            'input_client_email' => ['required', 'string'],
-            'input_client_id' => ['nullable', 'string'],
-            'input_private_key_id' => ['required', 'string'],
-            'input_private_key' => ['required', 'string'],
-        ]);
+        $pastedJson = trim((string) $this->input_json);
+
+        if ($pastedJson !== '') {
+            // Whole-file paste: take every field from the one source, so the key and its
+            // id can never come from different files.
+            $decoded = json_decode($pastedJson, true);
+
+            if (!is_array($decoded) || empty($decoded['project_id']) || empty($decoded['private_key']) || empty($decoded['client_email']) || empty($decoded['private_key_id'])) {
+                $this->alert('error', __('toastr.error'), [
+                    'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                    'text' => __('pages/system/firebase.errors.invalid_file'),
+                ]);
+                return null;
+            }
+
+            $projectId = trim($decoded['project_id']);
+            $clientEmail = trim($decoded['client_email']);
+            $clientId = trim((string) ($decoded['client_id'] ?? ''));
+            $privateKeyId = trim($decoded['private_key_id']);
+            $privateKey = $decoded['private_key'];
+        } else {
+            $this->validate([
+                'input_project_id' => ['required', 'string'],
+                'input_client_email' => ['required', 'string'],
+                'input_client_id' => ['nullable', 'string'],
+                'input_private_key_id' => ['required', 'string'],
+                'input_private_key' => ['required', 'string'],
+            ]);
+
+            $projectId = trim($this->input_project_id);
+            $clientEmail = trim($this->input_client_email);
+            $clientId = trim($this->input_client_id ?? '');
+            $privateKeyId = trim($this->input_private_key_id);
+            $privateKey = $this->input_private_key;
+        }
 
         // service-account keys are copy-pasted as a single line with literal "\n" sequences
         // when taken out of a minified JSON, so normalize those into real newlines
-        $privateKey = trim($this->input_private_key);
+        $privateKey = trim($privateKey);
         $privateKey = str_replace(["\r\n", "\r", '\\n'], "\n", $privateKey);
 
         if (!Str::contains($privateKey, 'PRIVATE KEY')) {
@@ -143,16 +184,26 @@ class FirebaseSettingsComponent extends Component
             return null;
         }
 
-        try {
-            $clientEmail = trim($this->input_client_email);
+        // Reject a key that cannot actually sign before it ever becomes the live
+        // credential — otherwise the failure only surfaces later as a confusing
+        // invalid_grant rejection on every push.
+        $keyResource = openssl_pkey_get_private($privateKey);
+        if ($keyResource === false) {
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => __('pages/system/firebase.errors.invalid_private_key'),
+            ]);
+            return null;
+        }
 
+        try {
             $data = [
                 'type' => 'service_account',
-                'project_id' => trim($this->input_project_id),
-                'private_key_id' => trim($this->input_private_key_id),
+                'project_id' => $projectId,
+                'private_key_id' => $privateKeyId,
                 'private_key' => $privateKey,
                 'client_email' => $clientEmail,
-                'client_id' => trim($this->input_client_id ?? ''),
+                'client_id' => $clientId,
                 'auth_uri' => 'https://accounts.google.com/o/oauth2/auth',
                 'token_uri' => 'https://oauth2.googleapis.com/token',
                 'auth_provider_x509_cert_url' => 'https://www.googleapis.com/oauth2/v1/certs',
@@ -187,6 +238,7 @@ class FirebaseSettingsComponent extends Component
 
             $this->currentPath = $absolutePath;
             $this->input_private_key = null;
+            $this->input_json = null;
             $this->loadCredentialInfo();
 
             $this->alert('success', __('toastr.success'), [

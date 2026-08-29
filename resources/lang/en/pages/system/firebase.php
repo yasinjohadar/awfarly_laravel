@@ -30,6 +30,9 @@ return [
         'credentials' => [
             'title' => 'Update Credentials',
             'description' => 'Enter the fields below directly from the new Firebase service-account, no file upload needed. You can copy them from "Project settings > Service accounts" in the Firebase Console after clicking "Generate New Private Key".',
+            'json' => 'Paste the whole JSON file (recommended, safest)',
+            'json_hint' => 'Open the JSON file you downloaded from Firebase in a text editor, copy all of its contents and paste them here. This prevents mixing a new key with an old key id — a common cause of Firebase rejecting push notifications.',
+            'manual_divider' => 'Or enter the fields manually (only if pasting the whole file is not possible — make sure every field comes from the same file):',
             'guide_title' => 'How to get the connection data from Firebase?',
             'guide_link' => 'Open Firebase Service Accounts page',
             'guide_steps' => [

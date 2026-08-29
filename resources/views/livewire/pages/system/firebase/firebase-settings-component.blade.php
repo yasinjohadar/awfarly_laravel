@@ -94,6 +94,29 @@
             <form wire:submit.prevent="save">
                 <div class="form-group row">
                     <label class="col-form-label col-lg-2"
+                           for="input_json">{{__('pages/system/firebase.content.credentials.json')}}</label>
+                    <div class="col-lg-10">
+                        <textarea id="input_json" wire:model.defer="input_json" rows="6" dir="ltr"
+                                  placeholder='{"type":"service_account","project_id":"...","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\n...","client_email":"..."}'
+                                  class="form-control @error('input_json') is-invalid @enderror"></textarea>
+                        <small class="text-muted">{{__('pages/system/firebase.content.credentials.json_hint')}}</small>
+                        @error('input_json')
+                        <div class="invalid-feedback d-block" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </div>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-lg-10 offset-lg-2">
+                        <hr>
+                        <small class="text-muted">{{__('pages/system/firebase.content.credentials.manual_divider')}}</small>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-form-label col-lg-2"
                            for="input_project_id">{{__('pages/system/firebase.content.credentials.project_id')}}</label>
                     <div class="col-lg-10">
                         <input type="text" id="input_project_id" wire:model.defer="input_project_id"

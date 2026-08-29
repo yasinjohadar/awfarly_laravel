@@ -30,6 +30,9 @@ return [
         'credentials' => [
             'title' => 'تحديث بيانات الاعتماد',
             'description' => 'أدخل الحقول التالية من ملف حساب الخدمة (Service Account) الجديد من Firebase مباشرة، بدون الحاجة لرفع أي ملف. يمكنك نسخها من صفحة "Project settings > Service accounts" في Firebase Console بعد الضغط على "Generate New Private Key".',
+            'json' => 'الصق محتوى ملف JSON كاملاً (الأفضل والأضمن)',
+            'json_hint' => 'افتح ملف JSON الذي نزّلته من Firebase بمحرر نصوص، وانسخ محتواه كاملاً والصقه هنا. هذه الطريقة تمنع أي خطأ ناتج عن خلط مفتاح جديد بمعرّف قديم — وهو سبب شائع لرفض Firebase للإشعارات.',
+            'manual_divider' => 'أو أدخل الحقول يدويًا (استخدمها فقط إن تعذّر اللصق الكامل، وتأكد أن كل الحقول من نفس الملف):',
             'guide_title' => 'كيف تحصل على بيانات الاتصال من Firebase؟',
             'guide_link' => 'فتح صفحة حسابات الخدمة في Firebase',
             'guide_steps' => [
