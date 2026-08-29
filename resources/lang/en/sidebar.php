@@ -113,5 +113,6 @@ return [
             'title' => 'Logs',
             'admins-actions' => 'Admins Actions',
         ],
+        'firebase' => 'Firebase Settings',
     ],
 ];

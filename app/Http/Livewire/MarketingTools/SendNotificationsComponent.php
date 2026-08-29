@@ -2,9 +2,19 @@
 
 namespace App\Http\Livewire\MarketingTools;
 
+use App\Helpers\Categories\CategoriesFilter;
+use App\Helpers\Geography\Geography;
 use App\Helpers\Notifications;
+use App\Models\Categories\Category;
+use App\Models\Countries\Governorates\Governorate;
 use App\Models\Users\Advertisers\AdvertiserUser;
+use App\Models\Users\Advertisers\Categories\AdvertiserInterests;
+use App\Models\Users\Advertisers\Locations\AdvertiserPreferredCity;
+use App\Models\Users\Advertisers\Locations\AdvertiserPreferredGovernorate;
+use App\Models\Users\Customers\Categories\CustomerCategories;
 use App\Models\Users\Customers\CustomerUser;
+use App\Models\Users\Customers\Locations\CustomerPreferredCity;
+use App\Models\Users\Customers\Locations\CustomerPreferredGovernorate;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
@@ -18,6 +28,9 @@ class SendNotificationsComponent extends Component
 
     public string $recipients_type = 'all_users';
     public ?array $recipients = null;
+    public ?array $categories = null;
+    public ?array $governorates = null;
+    public ?array $cities = null;
     public ?string $subject = null;
     public ?string $subject_en = null;
     public ?string $notify_link = null;
@@ -48,9 +61,42 @@ class SendNotificationsComponent extends Component
                 ];
             });
 
+        $name_column = App::currentLocale() === 'ar' ? 'name_ar' : 'name_en';
+
+        // NOTE: named "all_categories"/"all_governorates", NOT "categories"/"governorates" —
+        // those names are already taken by this component's own public properties (the
+        // admin's *selected* ids), and Livewire auto-shares public properties into the view,
+        // silently overwriting any same-named view data with the (usually null) property value.
+        $all_categories = Category::whereNull('parent_category_id')
+            ->orderBy('order')
+            ->with('childCategories')
+            ->get()
+            ->map(fn ($c) => [
+                'id' => $c->id,
+                'name' => $c->{$name_column},
+                'children' => $c->childCategories->map(fn ($ch) => [
+                    'id' => $ch->id,
+                    'name' => $ch->{$name_column},
+                ]),
+            ]);
+
+        $all_governorates = Governorate::with('cities')
+            ->orderBy('order')
+            ->get()
+            ->map(fn ($g) => [
+                'id' => $g->id,
+                'name' => $g->{$name_column},
+                'cities' => $g->cities->map(fn ($c) => [
+                    'id' => $c->id,
+                    'name' => $c->{$name_column},
+                ]),
+            ]);
+
         return view('livewire.pages.marketing-tools.send-notifications-component', [
             'all_advertisers' => $all_advertisers,
             'all_customers' => $all_customers,
+            'all_categories' => $all_categories,
+            'all_governorates' => $all_governorates,
         ]);
     }
 
@@ -62,8 +108,11 @@ class SendNotificationsComponent extends Component
     public function sendNotification()
     {
         $this->validate([
-            'recipients_type'   => ['required', 'in:all_users,all_advertisers,all_customers,specific_advertisers,specific_customers'],
+            'recipients_type'   => ['required', 'in:all_users,all_advertisers,all_customers,specific_advertisers,specific_customers,interested'],
             'recipients'        => ['nullable',],
+            'categories'        => ['nullable',],
+            'governorates'      => ['nullable',],
+            'cities'            => ['nullable',],
             'subject'           => ['required', 'string'],
             'subject_en'        => ['required', 'string'],
             'body'              => ['required', 'string'],
@@ -130,6 +179,38 @@ class SendNotificationsComponent extends Component
                 $users = CustomerUser::where('status', 'active')
                     ->whereIn('id', $this->recipients ?? [])
                     ->get();
+            } elseif ($this->recipients_type === 'interested') {
+                if (empty($this->categories) && empty($this->governorates) && empty($this->cities)) {
+                    $error = __('pages/marketing-tools/notifications.errors.interested');
+                }
+
+                $categoryIds = !empty($this->categories) ? CategoriesFilter::expandCategoryIds($this->categories) : null;
+
+                $governorateIds = $this->governorates ?? [];
+                $cityIds = array_unique(array_merge(
+                    $this->cities ?? [],
+                    Geography::expandGovernorateIdsToCities($governorateIds)
+                ));
+
+                $customerQuery = CustomerUser::where('status', 'active');
+                $advertiserQuery = AdvertiserUser::where('status', 'active');
+
+                if ($categoryIds !== null) {
+                    $customerQuery->whereIn('id', CustomerCategories::whereIn('category_id', $categoryIds)->pluck('customer_id'));
+                    $advertiserQuery->whereIn('id', AdvertiserInterests::whereIn('category_id', $categoryIds)->pluck('advertiser_id'));
+                }
+
+                $all_customers = Geography::candidatesInterestedInLocations(
+                    $customerQuery->pluck('id'), CustomerPreferredGovernorate::class, CustomerPreferredCity::class, 'customer_id', $governorateIds, $cityIds
+                );
+                $all_advertisers = Geography::candidatesInterestedInLocations(
+                    $advertiserQuery->pluck('id'), AdvertiserPreferredGovernorate::class, AdvertiserPreferredCity::class, 'advertiser_id', $governorateIds, $cityIds
+                );
+
+                $all_customers = CustomerUser::whereIn('id', $all_customers)->get();
+                $all_advertisers = AdvertiserUser::whereIn('id', $all_advertisers)->get();
+
+                $tokens = null;
             } else {
                 $tokens = null;
                 $users = null;
@@ -143,10 +224,13 @@ class SendNotificationsComponent extends Component
                 'image'         => $this->image,
             ];
 
-            if (isset($all_advertisers) && $all_advertisers->count() > 0 && isset($all_customers) && $all_customers->count() > 0) {
+            if (isset($all_advertisers) && $all_advertisers->count() > 0) {
                 $sentCount += Notifications::sendFromAdmin($all_advertisers, 'admin.notification', $this->body, 'add', $customProperties);
+            }
+            if (isset($all_customers) && $all_customers->count() > 0) {
                 $sentCount += Notifications::sendFromAdmin($all_customers, 'admin.notification', $this->body, 'add', $customProperties);
-            } elseif (isset($users) && $users->count() > 0) {
+            }
+            if (isset($users) && $users->count() > 0) {
                 $sentCount += Notifications::sendFromAdmin($users, 'admin.notification', $this->body, 'add', $customProperties);
             }
 
@@ -195,6 +279,9 @@ class SendNotificationsComponent extends Component
         ]);
         $this->resetValidation();
         $this->recipients = null;
+        $this->categories = null;
+        $this->governorates = null;
+        $this->cities = null;
         $this->dispatchBrowserEvent('clear-select');
     }
 }

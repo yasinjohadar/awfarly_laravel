@@ -289,6 +289,121 @@ class Geography
     }
 
     /**
+     * Of $candidateIds, return those with no saved location preference at all
+     * (treated as eligible by default) OR whose preferred governorate/city
+     * matches $governorateId/$cityId. Scoped to $candidateIds only — never scans
+     * the full preferred-location tables.
+     *
+     * @param \Illuminate\Support\Collection $candidateIds
+     * @param string $preferredGovernorateModel
+     * @param string $preferredCityModel
+     * @param string $ownerColumn
+     * @param int|null $governorateId
+     * @param int|null $cityId
+     * @return \Illuminate\Support\Collection
+     */
+    public static function candidatesInterestedInLocation(
+        \Illuminate\Support\Collection $candidateIds,
+        string $preferredGovernorateModel,
+        string $preferredCityModel,
+        string $ownerColumn,
+        ?int $governorateId,
+        ?int $cityId
+    ): \Illuminate\Support\Collection {
+        if ($candidateIds->isEmpty()) {
+            return $candidateIds;
+        }
+
+        $withPrefs = $preferredGovernorateModel::whereIn($ownerColumn, $candidateIds)->pluck($ownerColumn)
+            ->merge($preferredCityModel::whereIn($ownerColumn, $candidateIds)->pluck($ownerColumn))
+            ->unique();
+
+        $matching = collect();
+        if ($governorateId) {
+            $matching = $matching->merge(
+                $preferredGovernorateModel::whereIn($ownerColumn, $candidateIds)->where('governorate_id', $governorateId)->pluck($ownerColumn)
+            );
+        }
+        if ($cityId) {
+            $matching = $matching->merge(
+                $preferredCityModel::whereIn($ownerColumn, $candidateIds)->where('city_id', $cityId)->pluck($ownerColumn)
+            );
+        }
+
+        $withoutPrefs = $candidateIds->diff($withPrefs);
+
+        return $matching->merge($withoutPrefs)->unique()->values();
+    }
+
+    /**
+     * A selected governorate's own city ids — mirrors CategoriesFilter::expandCategoryIds()
+     * for the location side: picking a governorate should also match candidates whose
+     * preference is set at the (more specific) city level within it.
+     *
+     * @param int[] $governorateIds
+     * @return int[]
+     */
+    public static function expandGovernorateIdsToCities(array $governorateIds): array
+    {
+        if (empty($governorateIds)) {
+            return [];
+        }
+
+        return City::whereIn('governorate_id', $governorateIds)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->toArray();
+    }
+
+    /**
+     * Bulk variant of candidatesInterestedInLocation() for admin-driven targeting where
+     * several governorates/cities may be selected at once. Of $candidateIds, returns those
+     * with no saved location preference at all (eligible by default) OR whose preferred
+     * governorate/city is in $governorateIds/$cityIds. Empty $governorateIds AND $cityIds
+     * means no location constraint at all — everyone in $candidateIds passes through.
+     *
+     * @param \Illuminate\Support\Collection $candidateIds
+     * @param string $preferredGovernorateModel
+     * @param string $preferredCityModel
+     * @param string $ownerColumn
+     * @param int[] $governorateIds
+     * @param int[] $cityIds
+     * @return \Illuminate\Support\Collection
+     */
+    public static function candidatesInterestedInLocations(
+        \Illuminate\Support\Collection $candidateIds,
+        string $preferredGovernorateModel,
+        string $preferredCityModel,
+        string $ownerColumn,
+        array $governorateIds,
+        array $cityIds
+    ): \Illuminate\Support\Collection {
+        if ($candidateIds->isEmpty() || (empty($governorateIds) && empty($cityIds))) {
+            return $candidateIds;
+        }
+
+        $withPrefs = $preferredGovernorateModel::whereIn($ownerColumn, $candidateIds)->pluck($ownerColumn)
+            ->merge($preferredCityModel::whereIn($ownerColumn, $candidateIds)->pluck($ownerColumn))
+            ->unique();
+
+        $matching = collect();
+        if (!empty($governorateIds)) {
+            $matching = $matching->merge(
+                $preferredGovernorateModel::whereIn($ownerColumn, $candidateIds)->whereIn('governorate_id', $governorateIds)->pluck($ownerColumn)
+            );
+        }
+        if (!empty($cityIds)) {
+            $matching = $matching->merge(
+                $preferredCityModel::whereIn($ownerColumn, $candidateIds)->whereIn('city_id', $cityIds)->pluck($ownerColumn)
+            );
+        }
+
+        $withoutPrefs = $candidateIds->diff($withPrefs);
+
+        return $matching->merge($withoutPrefs)->unique()->values();
+    }
+
+    /**
      * Hard-filter ads by preferred locations; nationwide (null targeting) still included.
      *
      * @param Builder|\Illuminate\Database\Query\Builder $query

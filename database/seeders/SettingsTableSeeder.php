@@ -242,6 +242,14 @@ class SettingsTableSeeder extends Seeder
                 'description' => 'Posts Pagination Limit is how many posts sent per page while showing posts.',
             ],
             [
+                'name' => 'Posts Add Auto Approve',
+                'key' => 'posts.default.auto.approve',
+                'value' => '0',
+                'value_type' => 'boolean',
+                'type' => 'posts',
+                'description' => 'Selects whether to auto approve adding a post or not.',
+            ],
+            [
                 'name' => 'Posts Auto Delete After Days',
                 'key' => 'posts.auto_delete_after_days',
                 'value' => '0',

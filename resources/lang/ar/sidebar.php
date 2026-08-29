@@ -113,5 +113,6 @@ return [
             'title' => 'السجلات',
             'admins-actions' => 'سجلات المدراء',
         ],
+        'firebase' => 'إعدادات Firebase',
     ],
 ];

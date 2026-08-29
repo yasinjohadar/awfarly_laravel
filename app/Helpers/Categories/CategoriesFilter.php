@@ -59,6 +59,30 @@ class CategoriesFilter
     }
 
     /**
+     * A category id plus all its ancestor ids, walking up parent_category_id.
+     * Interests are typically saved at a category's parent level while a specific
+     * post/offer is tagged with the more specific (child) category — so matching a
+     * post/offer against saved interests requires walking UP the tree, the mirror
+     * image of expandCategoryIds() (which walks down from a saved parent interest
+     * to the child categories actual content is tagged with).
+     *
+     * @param int $categoryId
+     * @return int[]
+     */
+    public static function categoryAndAncestorIds(int $categoryId): array
+    {
+        $ids = [];
+        $current = Category::find($categoryId);
+
+        while ($current && !in_array((int) $current->id, $ids, true)) {
+            $ids[] = (int) $current->id;
+            $current = $current->parent_category_id ? Category::find($current->parent_category_id) : null;
+        }
+
+        return $ids;
+    }
+
+    /**
      * The categories the VIEWER follows — their interests, never the categories
      * they publish under. Both user types expose interests() (on a customer it
      * aliases categories(), since a customer publishes nothing), so no branch

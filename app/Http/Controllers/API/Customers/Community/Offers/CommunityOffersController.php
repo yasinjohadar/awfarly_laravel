@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Customers\Community\Offers;
 
 use App\Helpers\Filter;
+use App\Helpers\Advertisers\OfferLimits;
 use App\Helpers\Categories\CategoriesFilter;
 use App\Helpers\Geography\Geography;
 use App\Helpers\Notifications;
@@ -385,6 +386,10 @@ class CommunityOffersController extends Controller
             ->toArray();
 
         $blocks = array_unique([...$blockers, ...$blocked_advertisers]);
+
+        //cap to the advertiser's currently allowed active-offer count
+        $cappedOfferIds = OfferLimits::cappedActiveOfferIds($advertiser);
+
         //get offers
         $offers = $advertiser->offers()
             ->join('advertisers_users', function ($q) use ($followed_advertisers, $blocks) {
@@ -400,6 +405,7 @@ class CommunityOffersController extends Controller
             })
             ->where('offers.status', 'approved')
             ->where('offers.expires_at', '>', now())
+            ->whereIn('offers.id', $cappedOfferIds)
             ->orderBy('offers.created_at', 'desc')
             ->paginate($limit);
 

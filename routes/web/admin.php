@@ -19,6 +19,7 @@ use App\Http\Controllers\Admins\Advertisements\AdvertisementsController;
 use App\Http\Controllers\Admins\Community\Chats\CommunityChatsController;
 use App\Http\Controllers\Admins\Community\Posts\CommunityPostsController;
 use App\Http\Controllers\Admins\System\Settings\SystemSettingsController;
+use App\Http\Controllers\Admins\System\Firebase\SystemFirebaseController;
 use App\Http\Controllers\Admins\Requests\UsernameChangeRequestsController;
 use App\Http\Controllers\Admins\Community\Offers\CommunityOffersController;
 use App\Http\Controllers\Admins\Countries\Cities\CountriesCitiesController;
@@ -159,6 +160,9 @@ Route::group([
 
     Route::get('settings/{type?}', [SystemSettingsController::class, 'index'])
         ->name('settings.index');
+
+    Route::get('firebase', [SystemFirebaseController::class, 'index'])
+        ->name('firebase.index');
 });
 
 

@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Helpers\Settings;
 use App\Models\Languages\Language;
 use App\Models\Pages\Page;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\ServiceProvider;
 use Request;
@@ -45,6 +47,20 @@ class AppServiceProvider extends ServiceProvider
         //round diffForHumans() to the nearest unit (e.g. 5d 23h -> "6 days ago") instead of truncating down
         Carbon::enableHumanDiffOption(Carbon::ROUND);
 
+        //admin-managed Firebase credentials override the static .env path, read once per
+        //request before anything resolves the Firebase container bindings. Guarded so
+        //artisan commands that run before the settings table exists (fresh migrate) don't break.
+        try {
+            if (Schema::hasTable('settings')) {
+                $firebaseCredentialsPath = Settings::Get('firebase.credentials.file');
+                if (is_string($firebaseCredentialsPath) && $firebaseCredentialsPath !== '') {
+                    config(['firebase.projects.app.credentials.file' => $firebaseCredentialsPath]);
+                }
+            }
+        } catch (\Throwable $e) {
+            //no DB connection yet (e.g. very first migrate) — fall back to .env silently
+        }
+
         //sidebar current active tab
         view()->composer(
             'admin.includes.sidebar',
@@ -82,7 +98,8 @@ class AppServiceProvider extends ServiceProvider
                     $alias = 'marketing-tools';
                 } else if (
                     Request::routeIs('admin.system.settings.index') ||
-                    Request::routeIs('admin.system.logs.index')
+                    Request::routeIs('admin.system.logs.index') ||
+                    Request::routeIs('admin.system.firebase.index')
                 ) {
                     $alias = 'system';
                 } else {

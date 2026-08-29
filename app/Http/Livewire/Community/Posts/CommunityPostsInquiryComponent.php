@@ -8,10 +8,6 @@ use App\Helpers\Notifications;
 use App\Models\Countries\Cities\City;
 use App\Models\Countries\Governorates\Governorate;
 use App\Models\Posts\Post;
-use App\Models\Users\Advertisers\AdvertiserUser;
-use App\Models\Users\Advertisers\Categories\AdvertiserCategories;
-use App\Models\Users\Customers\Categories\CustomerCategories;
-use App\Models\Users\Customers\CustomerUser;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\App;
@@ -445,6 +441,7 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
             //get user
             $post = Post::withTrashed()
                 ->findOrFail($id);
+            $wasApproved = $post->status === 'approved';
 
             //add log
             AdminLogs::log('edit', 'posts', [
@@ -456,8 +453,8 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
             tap($post)->update($data);
 
 
-            if ($post->status === 'approved') {
-                $this->sendNotificationToIntersetUser($post);
+            if ($post->status === 'approved' && !$wasApproved) {
+                Notifications::notifyInterestedUsersForPost($post);
             }
             //close modal
             $this->closeEditModal();
@@ -520,7 +517,7 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
             tap($post)->update(['status' => 'approved']);
 
             //notify interested users, exactly as the edit-modal approval does
-            $this->sendNotificationToIntersetUser($post);
+            Notifications::notifyInterestedUsersForPost($post);
 
             $this->alert('success', __('toastr.success'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
@@ -537,36 +534,6 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
             return null;
         }
         DB::commit();
-    }
-
-    private function sendNotificationToIntersetUser($post)
-    {
-        $advertiserCategories = optional($post->advertiser)->categories()->pluck('category_id')->toArray();
-
-        $users_ids = CustomerCategories::whereIn('category_id',$advertiserCategories)->pluck('customer_id')->toArray();
-        $advertiser_ids = AdvertiserCategories::whereIn('category_id',$advertiserCategories)->pluck('advertiser_id')->toArray();
-
-        $advertisers = AdvertiserUser::whereIn('id',$advertiser_ids)->where('country_code',$post->user->country_code)->get();
-        $users = CustomerUser::whereIn('id',$users_ids)->where('country_code',$post->user->country_code)->get();
-        $name = optional($post->advertiser)->name;
-
-        $customProperties = [
-            'title'         => " منشور جديد - $name",
-            'title_en'         => " منشور جديد - $name",
-            'body_en'         => $post->content,
-            'notify_link'   => null,
-            'postId' => $post->id,
-            'userId' => optional($post->advertiser)->id,
-            'type'  =>  'posts',
-            'userType' => 'advertiser',
-            'customProperties' => [
-                'postId' => $post->id,
-                'type'  =>  'posts',
-            ],
-        ];
-
-        Notifications::sendFromAdmin($users, 'posts', $post->content, 'add', $customProperties);
-        Notifications::sendFromAdmin($advertisers, 'posts', $post->content, 'add', $customProperties);
     }
 
     /**

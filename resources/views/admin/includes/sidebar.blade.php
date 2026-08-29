@@ -685,7 +685,7 @@
                 {{--System--}}
                 @canany(['settings.inquiry', 'export.database', 'logs.inquiry', 'countries.inquiry', 'countries.add', 'governorates.inquiry', 'governorates.add', 'cities.inquiry', 'cities.add'])
                     @canany(['settings.inquiry', 'countries.inquiry', 'countries.add', 'governorates.inquiry', 'governorates.add', 'cities.inquiry', 'cities.add'])
-                        <li id="system" class="nav-item nav-item-submenu{{(Request::routeIs('admin.system.settings.index') || Request::routeIs('admin.countries.*') || Request::routeIs('admin.governorates.*') || Request::routeIs('admin.cities.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
+                        <li id="system" class="nav-item nav-item-submenu{{(Request::routeIs('admin.system.settings.index') || Request::routeIs('admin.system.firebase.index') || Request::routeIs('admin.countries.*') || Request::routeIs('admin.governorates.*') || Request::routeIs('admin.cities.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
                             <a class="nav-link cursor-pointer">
                                 <i class="icon-cog"></i>
                                 <span>{{__('sidebar.system.settings.title')}}</span>
@@ -758,6 +758,14 @@
                                         <a href="{{route('admin.system.settings.index', 'payment')}}"
                                            class="nav-link{{(isset($settingType) && $settingType === 'payment') ? ' active' : ''}}">
                                             {{__('sidebar.system.settings.payment')}}
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('settings.edit')
+                                    <li class="nav-item">
+                                        <a href="{{route('admin.system.firebase.index')}}"
+                                           class="nav-link{{Request::routeIs('admin.system.firebase.index') ? ' active' : ''}}">
+                                            {{__('sidebar.system.firebase')}}
                                         </a>
                                     </li>
                                 @endcan

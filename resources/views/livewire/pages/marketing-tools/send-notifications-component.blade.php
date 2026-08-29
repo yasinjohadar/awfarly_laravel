@@ -26,6 +26,8 @@
                             value="specific_advertisers">{{__('pages/marketing-tools/notifications.content.specific-advertisers')}}</option>
                         <option
                             value="specific_customers">{{__('pages/marketing-tools/notifications.content.specific-customers')}}</option>
+                        <option
+                            value="interested">{{__('pages/marketing-tools/notifications.content.interested')}}</option>
                     </select>
                     @error('recipients_type')
                     <div class="invalid-feedback d-block" role="alert">
@@ -81,6 +83,82 @@
                                 <strong>{{ $message }}</strong>
                             </div>
                             @enderror
+                        </div>
+                    </div>
+                </template>
+                <template x-if="recipient === 'interested'">
+                    <div wire:ignore>
+                        <div class="form-group row" x-data="{categories: @entangle('categories').defer}"
+                             x-init="$nextTick(() => {select2 = $($refs.notify_categories).select2({multiple: true}).val([]).change();select2.on('change', (event) => { categories = $(event.target).val(); });})">
+                            <label class="col-form-label col-lg-2"
+                                   for="notify_categories">{{__('pages/marketing-tools/notifications.content.categories')}}</label>
+                            <div class="col-lg-10">
+                                <select x-cloak multiple x-model="categories" name="categories[]"
+                                        id="notify_categories"
+                                        class="form-control select2 @error('categories') is-invalid @enderror"
+                                        x-ref="notify_categories"
+                                        x-bind:value="categories">
+                                    @foreach($all_categories as $category)
+                                        <optgroup label="{{$category['name']}}">
+                                            <option value="{{$category['id']}}">{{$category['name']}}</option>
+                                            @foreach($category['children'] as $child)
+                                                <option value="{{$child['id']}}">{{$child['name']}}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endforeach
+                                </select>
+                                @error('categories')
+                                <div class="invalid-feedback d-block" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="form-group row" x-data="{governorates: @entangle('governorates').defer}"
+                             x-init="$nextTick(() => {select2 = $($refs.notify_governorates).select2({multiple: true}).val([]).change();select2.on('change', (event) => { governorates = $(event.target).val(); });})">
+                            <label class="col-form-label col-lg-2"
+                                   for="notify_governorates">{{__('pages/marketing-tools/notifications.content.governorates')}}</label>
+                            <div class="col-lg-10">
+                                <select x-cloak multiple x-model="governorates" name="governorates[]"
+                                        id="notify_governorates"
+                                        class="form-control select2 @error('governorates') is-invalid @enderror"
+                                        x-ref="notify_governorates"
+                                        x-bind:value="governorates">
+                                    @foreach($all_governorates as $governorate)
+                                        <option value="{{$governorate['id']}}">{{$governorate['name']}}</option>
+                                    @endforeach
+                                </select>
+                                @error('governorates')
+                                <div class="invalid-feedback d-block" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="form-group row" x-data="{cities: @entangle('cities').defer}"
+                             x-init="$nextTick(() => {select2 = $($refs.notify_cities).select2({multiple: true}).val([]).change();select2.on('change', (event) => { cities = $(event.target).val(); });})">
+                            <label class="col-form-label col-lg-2"
+                                   for="notify_cities">{{__('pages/marketing-tools/notifications.content.cities')}}</label>
+                            <div class="col-lg-10">
+                                <select x-cloak multiple x-model="cities" name="cities[]"
+                                        id="notify_cities"
+                                        class="form-control select2 @error('cities') is-invalid @enderror"
+                                        x-ref="notify_cities"
+                                        x-bind:value="cities">
+                                    @foreach($all_governorates as $governorate)
+                                        <optgroup label="{{$governorate['name']}}">
+                                            @foreach($governorate['cities'] as $city)
+                                                <option value="{{$city['id']}}">{{$city['name']}}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endforeach
+                                </select>
+                                @error('cities')
+                                <div class="invalid-feedback d-block" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </div>
+                                @enderror
+                            </div>
                         </div>
                     </div>
                 </template>

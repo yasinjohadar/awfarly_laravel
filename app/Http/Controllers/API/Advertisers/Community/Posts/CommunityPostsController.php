@@ -651,6 +651,9 @@ class CommunityPostsController extends Controller
             return $this->apiBadRequestResponse($locationError);
         }
 
+        //get auto approve status in settings
+        $auto_approve = Settings::Get('posts.default.auto.approve', false);
+
         DB::beginTransaction();
         try {
             //lock the advertiser row to serialize concurrent post-creation attempts
@@ -707,7 +710,7 @@ class CommunityPostsController extends Controller
                     'category_id' => $category_id ?? null,
                     'governorate_id' => $data['governorateId'],
                     'city_id' => $data['cityId'],
-                    'status'    =>  'pending'
+                    'status'    =>  $auto_approve ? 'approved' : 'pending'
                 ]);
 
             //upload media
@@ -782,6 +785,10 @@ class CommunityPostsController extends Controller
             $lockedAdvertiser->update([
                 'allowed_posts_count' => $allowed_posts - 1,
             ]);
+
+            if ($auto_approve) {
+                Notifications::notifyInterestedUsersForPost($post);
+            }
         } catch (\Illuminate\Http\Exceptions\HttpResponseException $e) {
             //bad-request responses (exceeded-limit, content-or-media-required) throw this by design; let it propagate
             DB::rollBack();

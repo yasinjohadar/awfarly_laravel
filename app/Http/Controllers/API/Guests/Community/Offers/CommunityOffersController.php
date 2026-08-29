@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Guests\Community\Offers;
 
+use App\Helpers\Advertisers\OfferLimits;
 use App\Helpers\Categories\CategoriesFilter;
 use App\Helpers\Filter;
 use App\Helpers\Geography\Geography;
@@ -201,10 +202,15 @@ class CommunityOffersController extends Controller
         if ($advertiser->profile_privacy !== 'public') {
             return $this->apiBadRequestResponse(__('api/guests/community/offers/offers.user-permission'));
         }
+
+        //cap to the advertiser's currently allowed active-offer count
+        $cappedOfferIds = OfferLimits::cappedActiveOfferIds($advertiser);
+
         //get offers
         $offers = $advertiser->offers()
             ->where('status', 'approved')
             ->where('offers.expires_at', '>', now())
+            ->whereIn('id', $cappedOfferIds)
             ->orderBy('created_at', 'desc')
             ->paginate($limit);
 

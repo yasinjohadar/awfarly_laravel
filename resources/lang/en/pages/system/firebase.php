@@ -1,0 +1,62 @@
+<?php
+return [
+    'breadcrumb' => [
+        'title' => 'Firebase Settings',
+        'system' => 'System',
+        'page' => 'Firebase Settings',
+    ],
+    'errors' => [
+        'invalid_file' => 'The uploaded file is not a valid Firebase (JSON) credentials file.',
+        'invalid_private_key' => 'The private key entered looks invalid — make sure you copied it in full, including the BEGIN/END lines.',
+    ],
+    'content' => [
+        'status' => [
+            'title' => 'Current Connection Status',
+            'project_id' => 'Project ID',
+            'client_email' => 'Client Email',
+            'private_key_id' => 'Private Key ID',
+            'file_path' => 'Credentials File Path',
+            'no_credentials' => 'No active Firebase credentials file found.',
+            'test_connection' => 'Test Connection',
+            'testing' => 'Testing...',
+        ],
+        'credentials' => [
+            'title' => 'Update Credentials',
+            'description' => 'Enter the fields below directly from the new Firebase service-account, no file upload needed. You can copy them from "Project settings > Service accounts" in the Firebase Console after clicking "Generate New Private Key".',
+            'guide_title' => 'How to get the connection data from Firebase?',
+            'guide_link' => 'Open Firebase Service Accounts page',
+            'guide_steps' => [
+                'Open the link above; if asked to pick a project, choose this app\'s Firebase project.',
+                'On the "Service accounts" tab, make sure "Firebase Admin SDK" is selected (it is the default).',
+                'Click "Generate new private key", then confirm by clicking "Generate key" in the popup.',
+                'A JSON file named like "your-project-firebase-adminsdk-xxxxx.json" downloads automatically — open it with a plain text editor (e.g. Notepad).',
+                'Copy each field\'s value from the file into the matching input below: project_id, client_email, client_id (optional), private_key_id, and finally the full private_key including the -----BEGIN PRIVATE KEY----- and -----END PRIVATE KEY----- lines.',
+                'Click "Save", then use the "Test Connection" button at the top of the page to confirm it worked.',
+                'Security note: this new file grants full access to the Firebase project — never share it, and delete it from your machine once you\'ve entered its data here.',
+            ],
+            'project_id' => 'Project ID (project_id)',
+            'client_email' => 'Client Email (client_email)',
+            'client_id' => 'Client ID (client_id) - optional',
+            'private_key_id' => 'Private Key ID (private_key_id)',
+            'private_key' => 'Private Key (private_key)',
+            'private_key_hint' => 'Paste the full key, including the -----BEGIN PRIVATE KEY----- and -----END PRIVATE KEY----- lines.',
+            'submit' => 'Save',
+        ],
+        'test_notification' => [
+            'title' => 'Send Test Notification',
+            'description' => 'Enter a real device FCM token to test sending an actual notification through the active credentials.',
+            'token' => 'FCM Token',
+            'notification_title' => 'Notification Title (optional)',
+            'notification_body' => 'Notification Body (optional)',
+            'submit' => 'Send',
+            'default_title' => 'Test Notification',
+            'default_body' => 'This is a test notification from the admin panel.',
+            'success' => 'Test notification sent successfully.',
+            'failure' => 'Failed to send the test notification.',
+        ],
+        'test_connection' => [
+            'success' => 'Successfully connected to Firebase.',
+            'failure' => 'Failed to connect to Firebase.',
+        ],
+    ],
+];

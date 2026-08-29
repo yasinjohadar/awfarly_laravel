@@ -1,0 +1,62 @@
+<?php
+return [
+    'breadcrumb' => [
+        'title' => 'إعدادات Firebase',
+        'system' => 'النظام',
+        'page' => 'إعدادات Firebase',
+    ],
+    'errors' => [
+        'invalid_file' => 'الملف المرفوع ليس ملف اعتماد Firebase (JSON) صالحًا.',
+        'invalid_private_key' => 'المفتاح الخاص المُدخل غير صالح، تأكد من نسخه كاملاً بما فيه أسطر BEGIN/END.',
+    ],
+    'content' => [
+        'status' => [
+            'title' => 'حالة الاتصال الحالية',
+            'project_id' => 'معرّف المشروع',
+            'client_email' => 'البريد الإلكتروني للحساب',
+            'private_key_id' => 'معرّف المفتاح الخاص',
+            'file_path' => 'مسار ملف الاعتماد',
+            'no_credentials' => 'لا يوجد ملف اعتماد Firebase مُفعّل حاليًا.',
+            'test_connection' => 'اختبار الاتصال',
+            'testing' => 'جاري الاختبار...',
+        ],
+        'credentials' => [
+            'title' => 'تحديث بيانات الاعتماد',
+            'description' => 'أدخل الحقول التالية من ملف حساب الخدمة (Service Account) الجديد من Firebase مباشرة، بدون الحاجة لرفع أي ملف. يمكنك نسخها من صفحة "Project settings > Service accounts" في Firebase Console بعد الضغط على "Generate New Private Key".',
+            'guide_title' => 'كيف تحصل على بيانات الاتصال من Firebase؟',
+            'guide_link' => 'فتح صفحة حسابات الخدمة في Firebase',
+            'guide_steps' => [
+                'افتح الرابط أعلاه، وإن طُلب منك اختيار مشروع، اختر مشروع Firebase الخاص بالتطبيق.',
+                'في تبويب "Service accounts"، تأكد من اختيار "Firebase Admin SDK" (مُختار افتراضيًا).',
+                'اضغط على زر "Generate new private key"، ثم أكّد بالضغط على "Generate key" في النافذة المنبثقة.',
+                'سيُنزَّل تلقائيًا ملف JSON باسم يشبه "your-project-firebase-adminsdk-xxxxx.json" — افتحه بمحرر نصوص عادي (Notepad مثلاً).',
+                'انسخ قيمة كل حقل من الملف وضعها في الخانة المقابلة له في النموذج أدناه: project_id، client_email، client_id (اختياري)، private_key_id، وأخيرًا private_key كاملاً بما فيه سطري -----BEGIN PRIVATE KEY----- و -----END PRIVATE KEY-----.',
+                'اضغط "حفظ"، ثم استخدم زر "اختبار الاتصال" أعلى الصفحة للتأكد من نجاح الربط.',
+                'ملاحظة أمنية: هذا الملف الجديد يمنح صلاحيات كاملة على مشروع Firebase، لا تشاركه مع أي جهة، واحذفه من جهازك بعد الانتهاء من إدخال بياناته هنا.',
+            ],
+            'project_id' => 'معرّف المشروع (project_id)',
+            'client_email' => 'البريد الإلكتروني للحساب (client_email)',
+            'client_id' => 'معرّف العميل (client_id) - اختياري',
+            'private_key_id' => 'معرّف المفتاح الخاص (private_key_id)',
+            'private_key' => 'المفتاح الخاص (private_key)',
+            'private_key_hint' => 'الصق المفتاح كاملاً بما فيه أسطر -----BEGIN PRIVATE KEY----- و -----END PRIVATE KEY-----.',
+            'submit' => 'حفظ',
+        ],
+        'test_notification' => [
+            'title' => 'إرسال إشعار تجريبي',
+            'description' => 'أدخل توكن FCM لجهاز حقيقي لاختبار إرسال إشعار فعلي عبر الاعتماد الحالي.',
+            'token' => 'توكن FCM',
+            'notification_title' => 'عنوان الإشعار (اختياري)',
+            'notification_body' => 'نص الإشعار (اختياري)',
+            'submit' => 'إرسال',
+            'default_title' => 'إشعار تجريبي',
+            'default_body' => 'هذا إشعار تجريبي من لوحة التحكم.',
+            'success' => 'تم إرسال الإشعار التجريبي بنجاح.',
+            'failure' => 'فشل إرسال الإشعار التجريبي.',
+        ],
+        'test_connection' => [
+            'success' => 'تم الاتصال بـ Firebase بنجاح.',
+            'failure' => 'فشل الاتصال بـ Firebase.',
+        ],
+    ],
+];

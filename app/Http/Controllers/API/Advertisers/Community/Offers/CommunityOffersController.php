@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\API\Advertisers\Community\Offers;
 
 use App\Helpers\Advertisers\OfferLimits;
-use App\Helpers\FCM\FcmHelper;
 use App\Helpers\Files;
 use App\Helpers\Filter;
 use App\Helpers\Categories\CategoriesFilter;
@@ -17,8 +16,6 @@ use App\Models\Offers\Offer;
 use App\Models\Offers\Ratings\OfferRatings;
 use App\Models\Users\Advertisers\AdvertiserUser;
 use App\Models\Users\Advertisers\Categories\AdvertiserCategories;
-use App\Models\Users\Customers\Categories\CustomerCategories;
-use App\Models\Users\Customers\CustomerUser;
 use Carbon\Carbon;
 use Exception;
 use FFMpeg\Coordinate\Dimension;
@@ -432,6 +429,9 @@ class CommunityOffersController extends Controller
             ->where('status', 'approved')
             ->pluck('followed_id');
 
+        //cap to the advertiser's currently allowed active-offer count
+        $cappedOfferIds = OfferLimits::cappedActiveOfferIds($advertiser);
+
         //get offers
         $offers = $advertiser->offers()
             ->join('advertisers_users', function ($q) use ($followed_advertisers) {
@@ -447,6 +447,7 @@ class CommunityOffersController extends Controller
             })
             ->where('offers.status', 'approved')
             ->where('offers.expires_at', '>', now())
+            ->whereIn('offers.id', $cappedOfferIds)
             ->orderBy('offers.created_at', 'desc')
             ->paginate($limit);
 
@@ -648,7 +649,7 @@ class CommunityOffersController extends Controller
             }
 
             if ($auto_approve) {
-                $this->sendNotificationToIntersetUser($offer);
+                Notifications::notifyInterestedUsersForOffer($offer);
             }
         } catch (\Illuminate\Http\Exceptions\HttpResponseException $e) {
             //bad-request responses (exceeded-limit) throw this by design; let it propagate
@@ -1220,67 +1221,4 @@ class CommunityOffersController extends Controller
         ]);
     }
 
-    private function sendNotificationToIntersetUser($offer)
-    {
-        $advertiserCategories = $offer->advertiser->categories()->pluck('category_id')->toArray();
-
-        $users_ids = CustomerCategories::whereIn('category_id',$advertiserCategories)->pluck('customer_id')->toArray();
-        $advertiser_ids = AdvertiserCategories::whereIn('category_id',$advertiserCategories)->pluck('advertiser_id')->toArray();
-
-        $advertisers = AdvertiserUser::whereIn('id',$advertiser_ids)->where('country_code',$offer->advertiser->country_code)->get();
-        $users = CustomerUser::whereIn('id',$users_ids)->where('country_code',$offer->advertiser->country_code)->get();
-        $name = optional($offer->advertiser)->name;
-
-
-
-        $customProperties = [
-            'title'         => " اعلان جديد - $name",
-            'title_en'         => " اعلان جديد - $name",
-            'body_en'         => $offer->content,
-            'notify_link'   => null,
-            'offerId' => $offer->id,
-            'type'  =>  'offers',
-            'message' => "offers.add",
-            'userId' => optional($offer->advertiser)->id,
-            'userType' => 'advertiser',
-            'customProperties' => [
-                'offerId' => $offer->id,
-                'type'  =>  'offers',
-
-            ],
-        ];
-
-        Notifications::sendFromAdmin($users, 'offers', $offer->content, 'add', $customProperties);
-        Notifications::sendFromAdmin($advertisers, 'offers', $offer->content, 'add', $customProperties);
-        foreach($users->pluck('fcm_token')->toArray() as $token){
-
-            FcmHelper::sendFcmNotification([
-                'title'         => " اعلان جديد - $name",
-                'title_en'         => " اعلان جديد - $name",
-                'body'              => $offer->content,
-                'body_en'         => $offer->content,
-                'type'  =>  'offers',
-                'offerId' => $offer->id,
-                'message' => "offers.add",
-                'action' => "like",
-                'customProperties' => $customProperties,
-            ], [$token]);
-        }
-
-        foreach($advertisers->pluck('fcm_token')->toArray() as $token) {
-
-            FcmHelper::sendFcmNotification([
-                'title' => " اعلان جديد - $name",
-                'title_en' => " اعلان جديد - $name",
-                'body' => $offer->content,
-                'body_en' => $offer->content,
-                'type' => 'offers',
-                'offerId' => $offer->id,
-                'message' => "offers.add",
-                'action' => "like",
-                'customProperties' => $customProperties,
-            ], [$token]);
-        }
-
-    }
 }

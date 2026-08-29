@@ -7,10 +7,6 @@ use App\Helpers\Filter;
 use App\Helpers\Notifications;
 use App\Helpers\Settings;
 use App\Models\Offers\Offer;
-use App\Models\Users\Advertisers\AdvertiserUser;
-use App\Models\Users\Advertisers\Categories\AdvertiserCategories;
-use App\Models\Users\Customers\Categories\CustomerCategories;
-use App\Models\Users\Customers\CustomerUser;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -424,6 +420,7 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
             //get user
             $offer = Offer::withTrashed()
                 ->findOrFail($id);
+            $wasApproved = $offer->status === 'approved';
 
             if ($this->offer['status'] === 'approved') {
                 if ($offer->status === $this->offer['status'] && $data['expires_in'] !== $offer->expires_in && $data['expires_in'] > 0) {
@@ -446,8 +443,8 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
             //update user
             tap($offer)->update($data);
 
-            if ($offer->status === 'approved') {
-                $this->sendNotificationToIntersetUser($offer);
+            if ($offer->status === 'approved' && !$wasApproved) {
+                Notifications::notifyInterestedUsersForOffer($offer);
             }
 
             //close modal
@@ -519,7 +516,7 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
                 'expires_at' => $expiresAt,
             ]);
 
-            $this->sendNotificationToIntersetUser($offer);
+            Notifications::notifyInterestedUsersForOffer($offer);
 
             $this->alert('success', __('toastr.success'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
@@ -535,39 +532,6 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
             return null;
         }
         DB::commit();
-    }
-
-    private function sendNotificationToIntersetUser($offer)
-    {
-        $advertiserCategories = optional($offer->advertiser)->categories()->pluck('category_id')->toArray();
-
-        $users_ids = CustomerCategories::whereIn('category_id',$advertiserCategories)->pluck('customer_id')->toArray();
-        $advertiser_ids = AdvertiserCategories::whereIn('category_id',$advertiserCategories)->pluck('advertiser_id')->toArray();
-
-        $advertisers = AdvertiserUser::whereIn('id',$advertiser_ids)->where('country_code',$offer->advertiser->country_code)->get();
-        $users = CustomerUser::whereIn('id',$users_ids)->where('country_code',$offer->advertiser->country_code)->get();
-        $name = optional($offer->advertiser)->name;
-
-
-        $customProperties = [
-            'title'         => " اعلان جديد - $name",
-            'title_en'         => " اعلان جديد - $name",
-            'body_en'         => $offer->content,
-            'notify_link'   => null,
-            'offerId' => $offer->id,
-            'type'  =>  'offers',
-            'message' => "offers.add",
-            'userId' => optional($offer->advertiser)->id,
-            'userType' => 'advertiser',
-            'customProperties' => [
-                'offerId' => $offer->id,
-                'type'  =>  'offers',
-
-            ],
-        ];
-
-        Notifications::sendFromAdmin($users, 'offers', $offer->content, 'add', $customProperties);
-        Notifications::sendFromAdmin($advertisers, 'offers', $offer->content, 'add', $customProperties);
     }
     /**
      * set modal texts
