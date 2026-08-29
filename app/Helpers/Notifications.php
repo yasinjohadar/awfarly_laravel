@@ -175,12 +175,19 @@ class Notifications
      * to override the defaults; otherwise the title falls back to a translated
      * "{$type}.title" lookup and the English body falls back to the Arabic $message.
      *
+     * The return value counts users actually notified (a DB notification record was
+     * created for them) — NOT how many received an FCM push. Most users won't have a
+     * registered device token at any given moment (logged out, token expired, web-only
+     * account, etc.) and that is expected, not a failure: the in-app notification still
+     * lands either way, so callers checking "did this send at all" should check this
+     * count, not push-delivery success.
+     *
      * @param AdvertiserUser|CustomerUser|Collection $users
      * @param string $type
      * @param string $message
      * @param string $action
      * @param array|null $customProperties
-     * @return int number of pushes actually delivered
+     * @return int number of users actually notified
      */
     public static function sendFromAdmin($users, string $type, string $message, string $action, array $customProperties = null): int
     {
@@ -217,18 +224,16 @@ class Notifications
             }
 
             if ($user->fcm_token) {
-                $delivered = FcmHelper::sendFcmNotification([
+                FcmHelper::sendFcmNotification([
                     'title' => $title,
                     'title_en' => $titleEn,
                     'body' => $message,
                     'body_en' => $bodyEn,
                     'image' => $image,
                 ], [$user->fcm_token], $customProperties);
-
-                if ($delivered) {
-                    $sentCount++;
-                }
             }
+
+            $sentCount++;
         }
 
         return $sentCount;
