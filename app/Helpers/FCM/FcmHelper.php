@@ -6,8 +6,6 @@ use App\Helpers\Files;
 use App\Models\Users\Advertisers\AdvertiserUser;
 use App\Models\Users\Customers\CustomerUser;
 use Illuminate\Support\Facades\Log;
-use Kreait\Firebase\Exception\FirebaseException;
-use Kreait\Firebase\Exception\MessagingException;
 use Kreait\Firebase\Messaging\AndroidConfig;
 use Kreait\Firebase\Messaging\ApnsConfig;
 use Kreait\Firebase\Messaging\CloudMessage;
@@ -21,9 +19,12 @@ class FcmHelper
      * @param $data
      * @param $fcm_tokens
      * @param null $customProperties
+     * @param string|null $lastError Set to the message of the last send failure, if any —
+     *   lets callers surface *why* a push failed (e.g. an invalid/stale token, a Firebase
+     *   credentials problem) without needing direct access to the Laravel log file.
      * @return bool
      */
-    public static function sendFcmNotification($data, $fcm_tokens, $customProperties = null): bool
+    public static function sendFcmNotification($data, $fcm_tokens, $customProperties = null, ?string &$lastError = null): bool
     {
         $sentCount = 0;
 
@@ -126,12 +127,17 @@ class FcmHelper
 
                 $messaging->send($message);
                 $sentCount++;
-            } catch (MessagingException | FirebaseException $e) {
+            } catch (\Throwable $e) {
+                // Widened beyond MessagingException|FirebaseException on purpose: a
+                // credentials/auth failure from the underlying Google HTTP client isn't
+                // always wrapped in Kreait's own exception types, and an uncaught one here
+                // would abort this whole foreach for every remaining user in the batch.
                 Log::error('FcmHelper: failed to send push notification', [
                     'token' => $token,
                     'user_id' => $user->id,
                     'exception' => $e->getMessage(),
                 ]);
+                $lastError = $e->getMessage();
             }
         }
 

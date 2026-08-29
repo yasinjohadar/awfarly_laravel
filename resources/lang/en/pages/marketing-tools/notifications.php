@@ -39,6 +39,7 @@ return [
     ],
     'warnings' => [
         'push_partial_failure' => ':notified users were notified in-app, but the device push notification failed: only :delivered of :attempted attempts succeeded despite a registered device token. Check the server logs and Firebase settings.',
+        'push_error_sample' => 'Error from Firebase: :error',
     ],
     'name' => 'Notifications',
 ];

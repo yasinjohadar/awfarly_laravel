@@ -39,6 +39,7 @@ return [
     ],
     'warnings' => [
         'push_partial_failure' => 'تم إشعار :notified مستخدمًا داخل التطبيق، لكن الإشعار الفوري (Push) على الجهاز فشل: نجح في :delivered فقط من أصل :attempted محاولة رغم وجود رمز جهاز مسجل. راجع سجلات الخادم وإعدادات Firebase.',
+        'push_error_sample' => 'رسالة الخطأ من Firebase: :error',
     ],
     'name' => 'الإشعارات',
     'notify_link'   =>  'رابط الإشعار'

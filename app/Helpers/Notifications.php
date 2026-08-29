@@ -192,13 +192,14 @@ class Notifications
      * @param string $message
      * @param string $action
      * @param array|null $customProperties
-     * @return array{notified: int, push_attempted: int, push_delivered: int}
+     * @return array{notified: int, push_attempted: int, push_delivered: int, push_error_sample: string|null}
      */
     public static function sendFromAdmin($users, string $type, string $message, string $action, array $customProperties = null): array
     {
         $notifiedCount = 0;
         $pushAttempted = 0;
         $pushDelivered = 0;
+        $pushErrorSample = null;
 
         $title = $customProperties['title'] ?? trans("api/notifications/notifications.{$type}.title", [], 'ar');
         $titleEn = $customProperties['title_en'] ?? trans("api/notifications/notifications.{$type}.title", [], 'en');
@@ -232,16 +233,19 @@ class Notifications
 
             if ($user->fcm_token) {
                 $pushAttempted++;
+                $pushError = null;
                 $delivered = FcmHelper::sendFcmNotification([
                     'title' => $title,
                     'title_en' => $titleEn,
                     'body' => $message,
                     'body_en' => $bodyEn,
                     'image' => $image,
-                ], [$user->fcm_token], $customProperties);
+                ], [$user->fcm_token], $customProperties, $pushError);
 
                 if ($delivered) {
                     $pushDelivered++;
+                } elseif ($pushErrorSample === null && $pushError) {
+                    $pushErrorSample = $pushError;
                 }
             }
 
@@ -252,6 +256,7 @@ class Notifications
             'notified' => $notifiedCount,
             'push_attempted' => $pushAttempted,
             'push_delivered' => $pushDelivered,
+            'push_error_sample' => $pushErrorSample,
         ];
     }
 

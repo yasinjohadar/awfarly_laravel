@@ -124,6 +124,7 @@ class SendNotificationsComponent extends Component
         $sentCount = 0;
         $pushAttempted = 0;
         $pushDelivered = 0;
+        $pushErrorSample = null;
         $error = '';
 
         DB::beginTransaction();
@@ -231,18 +232,21 @@ class SendNotificationsComponent extends Component
                 $sentCount += $result['notified'];
                 $pushAttempted += $result['push_attempted'];
                 $pushDelivered += $result['push_delivered'];
+                $pushErrorSample = $pushErrorSample ?? $result['push_error_sample'];
             }
             if (isset($all_customers) && $all_customers->count() > 0) {
                 $result = Notifications::sendFromAdmin($all_customers, 'admin.notification', $this->body, 'add', $customProperties);
                 $sentCount += $result['notified'];
                 $pushAttempted += $result['push_attempted'];
                 $pushDelivered += $result['push_delivered'];
+                $pushErrorSample = $pushErrorSample ?? $result['push_error_sample'];
             }
             if (isset($users) && $users->count() > 0) {
                 $result = Notifications::sendFromAdmin($users, 'admin.notification', $this->body, 'add', $customProperties);
                 $sentCount += $result['notified'];
                 $pushAttempted += $result['push_attempted'];
                 $pushDelivered += $result['push_delivered'];
+                $pushErrorSample = $pushErrorSample ?? $result['push_error_sample'];
             }
 
             $this->tokens = $tokens;
@@ -278,13 +282,19 @@ class SendNotificationsComponent extends Component
         // Surface it explicitly whenever we tried to push to at least one device and most
         // (or all) of those attempts didn't actually deliver.
         if ($pushAttempted > 0 && $pushDelivered < $pushAttempted) {
+            $warningText = __('pages/marketing-tools/notifications.warnings.push_partial_failure', [
+                'notified' => $sentCount,
+                'attempted' => $pushAttempted,
+                'delivered' => $pushDelivered,
+            ]);
+            if ($pushErrorSample) {
+                $warningText .= ' — ' . __('pages/marketing-tools/notifications.warnings.push_error_sample', [
+                    'error' => $pushErrorSample,
+                ]);
+            }
             $this->alert('warning', __('pages/marketing-tools/notifications.content.title'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
-                'text' => __('pages/marketing-tools/notifications.warnings.push_partial_failure', [
-                    'notified' => $sentCount,
-                    'attempted' => $pushAttempted,
-                    'delivered' => $pushDelivered,
-                ]),
+                'text' => $warningText,
             ]);
         } else {
             //send toastr alert with success
