@@ -24,6 +24,15 @@ class FirebaseSettingsComponent extends Component
     public ?string $client_email = null;
     public ?string $private_key_id = null;
 
+    // Diagnostics for "same credentials work here but not there" situations.
+    // key_fingerprint identifies the actual private key material (never the key
+    // itself) so two environments can be compared safely; key_usable proves the
+    // key can really produce a signature; server_time exposes clock skew, the
+    // other classic cause of an invalid_grant rejection from Google.
+    public ?string $key_fingerprint = null;
+    public ?bool $key_usable = null;
+    public ?string $server_time_utc = null;
+
     // manual entry fields for updating the credentials
     public ?string $input_project_id = null;
     public ?string $input_client_email = null;
@@ -60,6 +69,9 @@ class FirebaseSettingsComponent extends Component
         $this->project_id = null;
         $this->client_email = null;
         $this->private_key_id = null;
+        $this->key_fingerprint = null;
+        $this->key_usable = null;
+        $this->server_time_utc = now()->utc()->toDateTimeString() . ' UTC';
 
         if (!$this->currentPath || !is_file($this->currentPath)) {
             return;
@@ -73,6 +85,32 @@ class FirebaseSettingsComponent extends Component
         $this->project_id = $decoded['project_id'] ?? null;
         $this->client_email = $decoded['client_email'] ?? null;
         $this->private_key_id = $decoded['private_key_id'] ?? null;
+
+        $privateKey = $decoded['private_key'] ?? null;
+        if (!$privateKey) {
+            return;
+        }
+
+        // A fingerprint of the key material itself: identical keys give identical
+        // fingerprints, so a mismatch between two servers proves the key text was
+        // altered (truncated / mangled newlines) even when private_key_id matches,
+        // since private_key_id is only a label carried alongside the real key.
+        $this->key_fingerprint = substr(hash('sha256', $privateKey), 0, 16);
+
+        // Prove the key can actually sign. A key mangled in transit still *looks*
+        // like a key but fails here — and would be rejected by Google as
+        // invalid_grant, indistinguishable from clock skew without this check.
+        try {
+            $resource = openssl_pkey_get_private($privateKey);
+            if ($resource === false) {
+                $this->key_usable = false;
+                return;
+            }
+            $signature = '';
+            $this->key_usable = openssl_sign('awfarly-key-selftest', $signature, $resource, OPENSSL_ALGO_SHA256);
+        } catch (Throwable $e) {
+            $this->key_usable = false;
+        }
     }
 
     public function save()

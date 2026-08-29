@@ -23,6 +23,32 @@
                         <th>{{__('pages/system/firebase.content.status.file_path')}}</th>
                         <td class="text-break"><small class="text-muted">{{$currentPath}}</small></td>
                     </tr>
+                    <tr>
+                        <th>{{__('pages/system/firebase.content.status.key_fingerprint')}}</th>
+                        <td>
+                            <code>{{$key_fingerprint ?? '—'}}</code>
+                            <small class="d-block text-muted">{{__('pages/system/firebase.content.status.key_fingerprint_hint')}}</small>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{{__('pages/system/firebase.content.status.key_usable')}}</th>
+                        <td>
+                            @if($key_usable === true)
+                                <span class="badge badge-success">{{__('pages/system/firebase.content.status.key_usable_yes')}}</span>
+                            @elseif($key_usable === false)
+                                <span class="badge badge-danger">{{__('pages/system/firebase.content.status.key_usable_no')}}</span>
+                            @else
+                                —
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{{__('pages/system/firebase.content.status.server_time')}}</th>
+                        <td>
+                            <code>{{$server_time_utc ?? '—'}}</code>
+                            <small class="d-block text-muted">{{__('pages/system/firebase.content.status.server_time_hint')}}</small>
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             @else
