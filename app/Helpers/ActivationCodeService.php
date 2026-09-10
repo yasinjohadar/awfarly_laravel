@@ -35,9 +35,10 @@ class ActivationCodeService
 
         $expiresAt = 30 * 60;
 
-        // Send the same code if exists
-        if (Cache::has(md5(trim($mobile)))) {
-            $code = Cache::forget(md5(trim($mobile)));
+        // Reuse the still-valid existing code instead of issuing a new one
+        $existingCode = Cache::get(md5(trim($mobile)));
+        if ($existingCode) {
+            $code = $existingCode;
         }
 
         // Save code

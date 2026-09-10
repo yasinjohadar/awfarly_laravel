@@ -58,7 +58,7 @@
                 <div class="row">
                     <div class="col-md-2">{{__('pages/community/offers/reports/show.content.status')}}</div>
                     <div
-                        class="col-md-10 font-weight-bold">{{($offer->deleted_at) ? __('pages/community/offers/reports/show.content.solved') : __('pages/community/offers/reports/show.content.unsolved')}}</div>
+                        class="col-md-10 font-weight-bold">{{$is_solved ? __('pages/community/offers/reports/show.content.solved') : __('pages/community/offers/reports/show.content.unsolved')}}</div>
                 </div>
             </div>
             <div class="col-md-12 mt-5">
@@ -67,6 +67,26 @@
                     {!! $offer->content !!}
                 </div>
             </div>
+            @if($is_solved && $resolution)
+                <div class="col-md-12 mt-5">
+                    <div class="row">
+                        <div class="col-md-2">{{__('pages/community/offers/reports/show.content.resolution')}}</div>
+                        <div class="col-md-10 font-weight-bold">{{$resolution}}</div>
+                    </div>
+                    @if($resolved_by)
+                        <div class="row">
+                            <div class="col-md-2">{{__('pages/community/offers/reports/show.content.resolved_by')}}</div>
+                            <div class="col-md-10 font-weight-bold">{{$resolved_by}}</div>
+                        </div>
+                    @endif
+                    @if($resolved_at)
+                        <div class="row">
+                            <div class="col-md-2">{{__('pages/community/offers/reports/show.content.resolved_at')}}</div>
+                            <div class="col-md-10 font-weight-bold">{{$resolved_at}}</div>
+                        </div>
+                    @endif
+                </div>
+            @endif
             @if(count($offer['media']) > 0)
                 <div class="media justify-content-center align-items-center">
                     <div id="animated-thumbnails-gallery" class="text-center" data-id="post-{{$offer['id']}}">

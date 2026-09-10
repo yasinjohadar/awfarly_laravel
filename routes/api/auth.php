@@ -27,6 +27,10 @@ Route::post('register', [RegisterController::class, 'register'])
 // Login
 Route::post('login', [LoginController::class, 'login']);
 
+// Login with WhatsApp OTP
+Route::post('login/otp/request', [LoginController::class, 'loginOtpRequest']);
+Route::post('login/otp/verify', [LoginController::class, 'loginOtpVerify']);
+
 // Check
 Route::get('check', [LoginController::class, 'check'])
     ->middleware([

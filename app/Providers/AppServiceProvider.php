@@ -4,7 +4,11 @@ namespace App\Providers;
 
 use App\Helpers\Settings;
 use App\Models\Languages\Language;
+use App\Models\Offers\Offer;
 use App\Models\Pages\Page;
+use App\Models\Posts\Post;
+use App\Observers\OfferObserver;
+use App\Observers\PostObserver;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
@@ -46,6 +50,10 @@ class AppServiceProvider extends ServiceProvider
     {
         //round diffForHumans() to the nearest unit (e.g. 5d 23h -> "6 days ago") instead of truncating down
         Carbon::enableHumanDiffOption(Carbon::ROUND);
+
+        //notify the owning advertiser when an admin approves/declines their post or offer
+        Post::observe(PostObserver::class);
+        Offer::observe(OfferObserver::class);
 
         //admin-managed Firebase credentials override the static .env path, read once per
         //request before anything resolves the Firebase container bindings. Guarded so
@@ -126,7 +134,7 @@ class AppServiceProvider extends ServiceProvider
 
                 $view->with([
                     'languages' => $languages,
-                    'user_language' => $user_language
+                    'user_language' => $user_language,
                 ]);
             }
         );

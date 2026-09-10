@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'content' => [
+        'reject' => 'Reject Offer',
+    ],
     'datatable' => [
         'image' => 'Image',
         'user_id' => 'Advertiser #',

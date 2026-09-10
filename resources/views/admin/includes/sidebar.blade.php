@@ -106,7 +106,7 @@
                 {{--/Users--}}
 
                 {{--Community--}}
-                @canany(['posts.inquiry','posts.reported','comments.inquiry','comments.reported','offers.inquiry','offers.reported','proposals.inquiry','proposals.reported','chats.inquiry'])
+                @canany(['posts.inquiry','posts.reported','comments.inquiry','comments.reported','offers.inquiry','offers.reported','chats.inquiry'])
                     @canany(['posts.inquiry','posts.reported','comments.inquiry','comments.reported'])
                         <li id="community" class="nav-item nav-item-submenu{{(Request::routeIs('admin.community.posts.*') || Request::routeIs('admin.community.comments.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
                             <a class="nav-link cursor-pointer">
@@ -234,34 +234,7 @@
                             </ul>
                         </li>
                     @endcanany
-                    @canany(['proposals.inquiry','proposals.reported',])
-                        <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.community.proposals.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
-                            <a class="nav-link cursor-pointer">
-                                <i class="icon-cart"></i>
-                                <span>{{__('sidebar.community.proposals.title')}}</span>
-                            </a>
-                            <ul class="nav nav-group-sub"
-                                data-submenu-title="{{__('sidebar.community.proposals.title')}}">
-                                @can('proposals.inquiry')
-                                    <li class="nav-item">
-                                        <a href="{{route('admin.community.proposals.index')}}"
-                                           class="nav-link{{Request::routeIs('admin.community.proposals.index') || Request::routeIs('admin.community.proposals.show') ? ' active' : ''}}">
-                                            {{__('sidebar.inquiry')}}
-                                        </a>
-                                    </li>
-                                @endcan
-                                @can('proposals.reported')
-                                    <li class="nav-item">
-                                        <a href="{{route('admin.community.proposals.reports')}}"
-                                           class="nav-link{{Request::routeIs('admin.community.proposals.reports') ? ' active' : ''}}">
-                                            {{__('sidebar.community.proposals.reported')}}
-                                        </a>
-                                    </li>
-                                @endcan
-                            </ul>
-                        </li>
-                    @endcanany
-                    @canany(['posts.reported','comments.reported','offers.reported','proposals.reported'])
+                    @canany(['posts.reported','comments.reported','offers.reported'])
                         <li class="nav-item nav-item-submenu{{(Request::routeIs('admin.community.reports.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
                             <a class="nav-link cursor-pointer">
                                 <i class="icon-flag3"></i>
@@ -290,14 +263,6 @@
                                         <a href="{{route('admin.community.reports.offers')}}"
                                            class="nav-link{{Request::routeIs('admin.community.reports.offers') ? ' active' : ''}}">
                                             {{__('sidebar.community.reports.offers')}}
-                                        </a>
-                                    </li>
-                                @endcan
-                                @can('proposals.reported')
-                                    <li class="nav-item">
-                                        <a href="{{route('admin.community.reports.proposals')}}"
-                                           class="nav-link{{Request::routeIs('admin.community.reports.proposals') ? ' active' : ''}}">
-                                            {{__('sidebar.community.reports.proposals')}}
                                         </a>
                                     </li>
                                 @endcan
@@ -683,9 +648,9 @@
                 {{--/Requests --}}
 
                 {{--System--}}
-                @canany(['settings.inquiry', 'export.database', 'logs.inquiry', 'countries.inquiry', 'countries.add', 'governorates.inquiry', 'governorates.add', 'cities.inquiry', 'cities.add'])
-                    @canany(['settings.inquiry', 'countries.inquiry', 'countries.add', 'governorates.inquiry', 'governorates.add', 'cities.inquiry', 'cities.add'])
-                        <li id="system" class="nav-item nav-item-submenu{{(Request::routeIs('admin.system.settings.index') || Request::routeIs('admin.system.firebase.index') || Request::routeIs('admin.countries.*') || Request::routeIs('admin.governorates.*') || Request::routeIs('admin.cities.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
+                @canany(['settings.inquiry', 'export.database', 'logs.inquiry', 'countries.inquiry', 'countries.add', 'governorates.inquiry', 'governorates.add', 'cities.inquiry', 'cities.add', 'whatsapp.inquiry'])
+                    @canany(['settings.inquiry', 'countries.inquiry', 'countries.add', 'governorates.inquiry', 'governorates.add', 'cities.inquiry', 'cities.add', 'whatsapp.inquiry'])
+                        <li id="system" class="nav-item nav-item-submenu{{(Request::routeIs('admin.system.settings.index') || Request::routeIs('admin.system.firebase.index') || Request::routeIs('admin.system.whatsapp.*') || Request::routeIs('admin.countries.*') || Request::routeIs('admin.governorates.*') || Request::routeIs('admin.cities.*')) ? ' nav-item-expanded nav-item-open' : ''}}">
                             <a class="nav-link cursor-pointer">
                                 <i class="icon-cog"></i>
                                 <span>{{__('sidebar.system.settings.title')}}</span>
@@ -705,7 +670,7 @@
                                             {{__('sidebar.system.settings.chat')}}
                                         </a>
                                     </li>
-                                    <li class="nav-item nav-item-submenu{{(isset($settingType) && in_array($settingType, ['posts', 'offers', 'proposals'])) ? ' nav-item-expanded nav-item-open' : ''}}">
+                                    <li class="nav-item nav-item-submenu{{(isset($settingType) && in_array($settingType, ['posts', 'offers'])) ? ' nav-item-expanded nav-item-open' : ''}}">
                                         <a class="nav-link cursor-pointer">
                                             <span>{{__('sidebar.system.settings.community')}}</span>
                                         </a>
@@ -720,12 +685,6 @@
                                                 <a href="{{route('admin.system.settings.index', 'offers')}}"
                                                    class="nav-link{{(isset($settingType) && $settingType === 'offers') ? ' active' : ''}}">
                                                     {{__('sidebar.system.settings.offers')}}
-                                                </a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a href="{{route('admin.system.settings.index', 'proposals')}}"
-                                                   class="nav-link{{(isset($settingType) && $settingType === 'proposals') ? ' active' : ''}}">
-                                                    {{__('sidebar.system.settings.proposals')}}
                                                 </a>
                                             </li>
                                         </ul>
@@ -766,6 +725,14 @@
                                         <a href="{{route('admin.system.firebase.index')}}"
                                            class="nav-link{{Request::routeIs('admin.system.firebase.index') ? ' active' : ''}}">
                                             {{__('sidebar.system.firebase')}}
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('whatsapp.inquiry')
+                                    <li class="nav-item">
+                                        <a href="{{route('admin.system.whatsapp.settings')}}"
+                                           class="nav-link{{Request::routeIs('admin.system.whatsapp.*') ? ' active' : ''}}">
+                                            {{__('sidebar.system.whatsapp')}}
                                         </a>
                                     </li>
                                 @endcan

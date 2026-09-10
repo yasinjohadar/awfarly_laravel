@@ -11,6 +11,18 @@
         </button>
     @endif
 
+    @if(!$deleted_at && ($status ?? null) !== 'unapproved')
+        <button title="{{ __('pages/community/posts/inquiry.content.reject') }}"
+                @cannot('posts.edit') disabled @endcannot
+                wire:click="reject({{ $id }})"
+                wire:loading.attr="disabled"
+                wire:target="reject({{ $id }})"
+                onclick="return confirm('{{ __('pages/community/posts/inquiry.content.reject') }}?')"
+                class="btn btn-danger mx-1">
+            <i class="icon-cross2"></i>
+        </button>
+    @endif
+
     <button title="Edit" @cannot('posts.edit') disabled @endcannot  wire:click="showEditModal({{ $id }})" class="btn btn-secondary mx-1">
         <i class="icon-pencil7"></i>
     </button>

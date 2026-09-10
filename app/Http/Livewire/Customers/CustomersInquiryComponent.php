@@ -641,11 +641,25 @@ class CustomersInquiryComponent extends LivewireDatatable
         $customer = CustomerUser::withTrashed()->findOrFail($id);
 
         $this->viewed_user_name = $customer->name;
+        //mapped to plain arrays (not left as a Collection of Category models):
+        //this is a public Livewire property, so it round-trips through
+        //Livewire's wire protocol on every subsequent action (e.g. a search)
+        //while the modal's markup stays in the DOM — a Collection of Eloquent
+        //models sent that way sometimes comes back re-hydrated as plain
+        //arrays instead of model instances, and the view's `->name_ar` then
+        //fatals with "Attempt to read property on array". Plain arrays have
+        //no such ambiguity.
         $this->viewed_categories = $customer->categories()
             ->with('category')
             ->get()
             ->pluck('category')
-            ->filter();
+            ->filter()
+            ->map(fn ($category) => [
+                'id' => $category->id,
+                'name_ar' => $category->name_ar,
+                'name_en' => $category->name_en,
+            ])
+            ->values();
 
         $this->showCategoriesModal = true;
     }

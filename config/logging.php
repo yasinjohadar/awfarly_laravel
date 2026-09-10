@@ -47,6 +47,13 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
         ],
 
+        'whatsapp' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/whatsapp.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

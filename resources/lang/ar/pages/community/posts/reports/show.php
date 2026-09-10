@@ -22,12 +22,16 @@ return [
         'solved' => 'تم حلها',
         'unsolved' => 'لم يتم حلها',
         'reports_count' => 'عدد البلاغات',
+        'resolution' => 'كيف تم حل البلاغ',
+        'resolved_by' => 'تم الحل بواسطة',
+        'resolved_at' => 'تم الحل في',
         'sections' => [
             'author' => 'صاحب المنشور',
             'stats' => 'إحصائيات',
             'content' => 'محتوى المنشور',
             'media' => 'الوسائط المرفقة',
             'reports' => 'تفاصيل البلاغات',
+            'resolution' => 'حل البلاغ',
         ],
         'datatable' => [
             'post_id' => 'منشور #',
@@ -62,6 +66,8 @@ return [
         'solve' => [
             'title' => 'حدد كبلاغات تم حلها',
             'content' => 'هل أنت متأكد أنك تريد تحديد هذه البلاغات كبلاغات تم حلها؟',
+            'resolution_label' => 'كيف تم حل البلاغ؟',
+            'resolution_placeholder' => 'اشرح الإجراء الذي تم اتخاذه لحل هذا البلاغ...',
             'submit' => 'موافق',
             'cancel' => 'إلغاء',
         ],

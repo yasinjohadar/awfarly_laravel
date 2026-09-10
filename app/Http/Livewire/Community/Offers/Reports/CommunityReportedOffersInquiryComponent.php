@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Mediconesystems\LivewireDatatables\Column;
 use Mediconesystems\LivewireDatatables\DateColumn;
@@ -27,13 +28,16 @@ class CommunityReportedOffersInquiryComponent extends LivewireDatatable
     public $exportable = true;
     public $hideable = 'select';
     public $model = Report::class;
-    public $afterTableSlot = '';
+    public $afterTableSlot = 'modals.community.offers.reports.delete-post';
     public string $status = 'all';
     public string $afterTableSlot2 = '';
     public $beforeTableSlot = 'livewire.datatables.selected';
     public bool $has_delete = true;
     public bool $showDeleteModal = false;
     public array $deleteModalTexts;
+    public bool $showDeletePostModal = false;
+    public ?int $deletePostId = null;
+    public array $deletePostModalTexts;
     /**
      * @var array
      */
@@ -68,12 +72,35 @@ class CommunityReportedOffersInquiryComponent extends LivewireDatatable
                 ->filterable()
                 ->searchable()
                 ->linkTo('admin/community/offers'),
+            Column::callback(['reported_id'], function ($reported_id) {
+                $offer = Offer::withTrashed()->find($reported_id);
+                return Str::limit($offer->content ?? '-', 40);
+            }, ['offer_content'])
+                ->label(__('pages/community/offers/reports/reports.content.datatable.offer_content'))
+                ->unsortable(),
             NumberColumn::callback(['id', 'user_type'], function ($id, $user_type) {
                 return Report::findOrFail($id)
                     ->reports_count;
             })
                 ->label(__('pages/community/offers/reports/reports.content.datatable.reports_count'))
                 ->searchable(),
+            Column::callback(['reported_id'], function ($reported_id) {
+                $latest = Report::where('reported_type', Offer::class)
+                    ->where('reported_id', $reported_id)
+                    ->latest()
+                    ->first();
+
+                if (!$latest) {
+                    return '-';
+                }
+
+                $type = __('pages/community/offers/reports/show.content.datatable.types.' . $latest->type);
+                $reason = Str::limit($latest->reason ?? '-', 30);
+
+                return "{$type} — {$reason}";
+            }, ['latest_reason'])
+                ->label(__('pages/community/offers/reports/reports.content.datatable.latest_reason'))
+                ->unsortable(),
             DateColumn::name('created_at')
                 ->label(__('datatable.created_at'))
                 ->filterable()
@@ -116,9 +143,15 @@ class CommunityReportedOffersInquiryComponent extends LivewireDatatable
 
     /**
      * show delete modal
+     * @param int|null $id when provided (per-row trigger), pre-select only that reported_id
+     *                     so that the existing bulk deleteSelected() acts on this row alone.
      */
-    public function showDeleteModal()
+    public function showDeleteModal($id = null)
     {
+        if ($id) {
+            $this->selected = [$id];
+        }
+
         $this->showDeleteModal = true;
     }
 
@@ -184,5 +217,75 @@ class CommunityReportedOffersInquiryComponent extends LivewireDatatable
             'cancel' => __('pages/community/offers/reports/reports.modal.delete.cancel'),
             'submit' => __('pages/community/offers/reports/reports.modal.delete.submit'),
         ];
+
+        $this->deletePostModalTexts = [
+            'title' => __('pages/community/offers/reports/reports.modal.delete_post.title'),
+            'content' => __('pages/community/offers/reports/reports.modal.delete_post.content'),
+            'cancel' => __('pages/community/offers/reports/reports.modal.delete_post.cancel'),
+            'submit' => __('pages/community/offers/reports/reports.modal.delete_post.submit'),
+        ];
+    }
+
+    public function showDeletePostModal($id)
+    {
+        $this->deletePostId = $id;
+        $this->showDeletePostModal = true;
+    }
+
+    public function closeDeletePostModal()
+    {
+        $this->showDeletePostModal = false;
+        $this->deletePostId = null;
+    }
+
+    public function deletePost()
+    {
+        if (!Auth::guard('admin')->user()->can('offers.delete')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        if (!$this->deletePostId) {
+            $this->showDeletePostModal = false;
+            return null;
+        }
+
+        DB::beginTransaction();
+        try {
+            $offer = Offer::withTrashed()->findOrFail($this->deletePostId);
+
+            $offer->delete();
+
+            Report::where('reported_type', Offer::class)
+                ->where('reported_id', $this->deletePostId)
+                ->update([
+                    'status' => 'solved',
+                ]);
+
+            AdminLogs::log('delete', 'offers', [
+                'offer' => $offer,
+            ], "Delete: offer #$this->deletePostId");
+
+            $this->alert('success', __('toastr.delete'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+
+            $this->showDeletePostModal = false;
+            $this->deletePostId = null;
+
+            $this->emitUp('recountCounters');
+        } catch (Throwable $e) {
+            DB::rollBack();
+
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+        DB::commit();
     }
 }

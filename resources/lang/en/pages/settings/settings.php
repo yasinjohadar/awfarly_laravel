@@ -23,8 +23,6 @@ return [
         "Subscribed Posts Pagination Limit" => "Subscribed Posts Pagination Limit",
         "Posts Comments Pagination Limit" => "Posts Comments Pagination Limit",
         "Reported Posts Comments Pagination Limit" => "Reported Posts Comments Pagination Limit",
-        "Proposals Pagination Limit" => "Proposals Pagination Limit",
-        "Reported Proposals Pagination Limit" => "Reported Proposals Pagination Limit",
         "Username Change Pagination Limit" => "Username Change Pagination Limit",
         "Username Change Limit (in days)" => "Username Change Limit (in days)",
         "Chat Channels Pagination Limit" => "Chat Channels Pagination Limit",
@@ -53,6 +51,7 @@ return [
         "Offers Auto Delete After Days" => "Auto-Delete Offers After (Days)",
         "Maximum Advertiser Monthly Offers" => "Maximum Advertiser Monthly Offers",
         "Personalize Elite Advertisers" => "Personalize Elite Advertisers",
+        "Phone Verification Enabled" => "Phone Verification Enabled",
     ],
     'descriptions' => [
         "Site name" => "This is for Site name.",
@@ -77,8 +76,6 @@ return [
         "Subscribed Posts Pagination Limit" => "Subscribed Posts Pagination Limit is how many posts sent per page while showing subscribed posts.",
         "Posts Comments Pagination Limit" => "Posts Comments Pagination Limit is how many comments sent per page while showing posts comments.",
         "Reported Posts Comments Pagination Limit" => "Reported posts comments Pagination Limit is how many posts comments sent per page while showing reported posts comments.",
-        "Proposals Pagination Limit" => "Proposals Pagination Limit is how many posts sent per page while showing proposals posts.",
-        "Reported Proposals Pagination Limit" => "Reported Proposals Pagination Limit is how many proposals sent per page while showing reported proposals.",
         "Username Change Pagination Limit" => "Username Change Pagination Limit is how many requests sent per page while showing username change requests.",
         "Username Change Limit (in days)" => "time limit between username change request and another one.",
         "Chat Channels Pagination Limit" => "Chat Channels Pagination Limit is how many channels sent per page while showing chat channels.",
@@ -107,5 +104,6 @@ return [
         "Offers Auto Delete After Days" => "Number of days after publish to permanently delete offers. 0 disables auto-delete.",
         "Maximum Advertiser Monthly Offers" => "Maximum number of offers an advertiser can create per calendar month.",
         "Personalize Elite Advertisers" => "When enabled, the Featured/Elite Advertisers strip and listing are filtered by the viewing user's followed interest categories and saved preferred governorate/city. When disabled, all elite advertisers are shown generally.",
+        "Phone Verification Enabled" => "When enabled, the user must enter a code sent via WhatsApp to prove ownership of their mobile number before the account is created. When disabled, the account is created immediately without verification.",
     ]
 ];

@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'content' => [
+        'reject' => 'رفض العرض',
+    ],
     'datatable' => [
         'image' => 'الصورة',
         'user_id' => 'معلن #',

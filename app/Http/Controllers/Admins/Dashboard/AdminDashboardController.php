@@ -9,7 +9,6 @@ use App\Models\Offers\Comments\OffersComments;
 use App\Models\Offers\Offer;
 use App\Models\Posts\Comments\PostComments;
 use App\Models\Posts\Post;
-use App\Models\Proposals\Proposal;
 use App\Models\Reports\Report;
 use App\Models\Requests\ContactForms;
 use App\Models\Requests\UsernameRequests;
@@ -35,12 +34,12 @@ class AdminDashboardController extends Controller
             'customers_counters' => $this->customersCounters(),
             'users_by_countries' => $this->getUsersByCountry(),
             'transactions_counters' => $this->getTransactionsCounter(),
-            'proposals' => $this->getProposalsCounters(),
             'users' => $this->getUsersCounters(),
             'packages_counters' => $this->getPackagesCounters(),
             'requests_counters' => $this->getRequestsCounters(),
             'reports_counters' => $this->getReportsCounters(),
             'community_counters' => $this->getCommunityCounters(),
+            'moderation_counters' => $this->getModerationCounters(),
         ]);
     }
 
@@ -264,49 +263,6 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Get proposals counters
-     * @return array|array[]
-     */
-    public function getProposalsCounters(): array
-    {
-        //Get students
-        $unanswered = Proposal::whereNull('answer')
-            ->orWhere('answer', '')
-            ->whereBetween('updated_at', [
-                Carbon::now()->subMonth(),
-                Carbon::now(),
-            ])
-            ->count();
-        $unanswered = Filter::RestyleNumbers($unanswered);
-
-        $answered = Proposal::whereNotNull('answer')
-            ->where('answer', '!=', '')
-            ->whereBetween('updated_at', [
-                Carbon::now()->subMonth(),
-                Carbon::now(),
-            ])
-            ->count();
-        $answered = Filter::RestyleNumbers($answered);
-
-        return [
-            'types' => [
-                __('pages/dashboard/index.content.proposals_statistics.types.answered'),
-                __('pages/dashboard/index.content.proposals_statistics.types.unanswered')
-            ],
-            'data' => [
-                [
-                    'name' => __('pages/dashboard/index.content.proposals_statistics.types.answered'),
-                    'value' => $answered,
-                ],
-                [
-                    'name' => __('pages/dashboard/index.content.proposals_statistics.types.unanswered'),
-                    'value' => $unanswered,
-                ],
-            ]
-        ];
-    }
-
-    /**
      * Get users counters
      * @return array|array[]
      */
@@ -414,11 +370,6 @@ class AdminDashboardController extends Controller
             ->count();
         $reported_offers = Filter::RestyleNumbers($reported_offers);
 
-        $reported_proposals = Report::where('reported_type', Proposal::class)
-            ->where('status', 'pending')
-            ->count();
-        $reported_proposals = Filter::RestyleNumbers($reported_proposals);
-
         $reported_posts_comments = Report::where('reported_type', PostComments::class)
             ->where('status', 'pending')
             ->count();
@@ -432,7 +383,6 @@ class AdminDashboardController extends Controller
         return [
             'posts' => $reported_posts,
             'offers' => $reported_offers,
-            'proposals' => $reported_proposals,
             'posts_comments' => $reported_posts_comments,
             'offers_comments' => $reported_offers_comments,
         ];
@@ -456,15 +406,32 @@ class AdminDashboardController extends Controller
         $offers_comments = OffersComments::count();
         $offers_comments = Filter::RestyleNumbers($offers_comments);
 
-        $proposals = Proposal::count();
-        $proposals = Filter::RestyleNumbers($proposals);
-
         return [
             'posts' => $posts,
             'posts_comments' => $posts_comments,
             'offers' => $offers,
             'offers_comments' => $offers_comments,
-            'proposals' => $proposals,
+        ];
+    }
+
+    /**
+     * Posts/offers pending first-time approval
+     * @return array
+     */
+    public function getModerationCounters(): array
+    {
+        $pending_posts = Post::where('status', 'pending')
+            ->whereNull('advertisement_id')
+            ->count();
+        $pending_posts = Filter::RestyleNumbers($pending_posts);
+
+        $pending_offers = Offer::where('status', 'pending')
+            ->count();
+        $pending_offers = Filter::RestyleNumbers($pending_offers);
+
+        return [
+            'posts' => $pending_posts,
+            'offers' => $pending_offers,
         ];
     }
 

@@ -4,7 +4,18 @@
     </x-slot>
 
     <x-slot name="content">
-        {{ $solveModalTexts['content'] }}
+        <p>{{ $solveModalTexts['content'] }}</p>
+
+        <div class="form-group mb-0">
+            <label>{{ __('pages/community/offers/reports/show.modal.solve.resolution_label') }}</label>
+            <textarea class="form-control @error('resolution') is-invalid @enderror"
+                      rows="3"
+                      wire:model.defer="resolution"
+                      placeholder="{{ __('pages/community/offers/reports/show.modal.solve.resolution_placeholder') }}"></textarea>
+            @error('resolution')
+                <span class="invalid-feedback d-block">{{ $message }}</span>
+            @enderror
+        </div>
     </x-slot>
 
     <x-slot name="footer">

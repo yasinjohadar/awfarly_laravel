@@ -138,6 +138,19 @@ class CommunityOffersCommentsController extends Controller
 
         Notifications::sendForCommunity($offer->advertiser, 'offers.comments', 'offers.comment_add', 'add', $customProperties);
 
+        //a reply to someone's own comment is a real, personal interaction, so it
+        //always pushes (even if the recipient is online) — same as commenting
+        //directly on someone's offer does
+        if ($data['comment_id']) {
+            $parentCommentAuthor = optional(OffersComments::find($data['comment_id']))->user;
+            $isReplyToSelf = $parentCommentAuthor
+                && $parentCommentAuthor->user_type === 'customer'
+                && $parentCommentAuthor->id == Auth::guard('customer-api')->id();
+            if ($parentCommentAuthor && !$isReplyToSelf) {
+                Notifications::notifyCommentReply($parentCommentAuthor, 'offers.comments', Auth::guard('customer-api')->user()->name, $customProperties);
+            }
+        }
+
         return $this->apiResponse([
             'message' => __('api/customers/community/offers/comments/comments.comment-added'),
             'data' => CommunityOffersCommentsResource::make($comment),

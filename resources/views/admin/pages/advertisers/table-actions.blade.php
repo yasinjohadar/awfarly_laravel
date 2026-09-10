@@ -153,6 +153,15 @@
                     {{ __('pages/advertisers/index.actions.restore') }}
                 </button>
             @endcan
+
+            @can('advertisers.delete')
+                <div class="divider"></div>
+                <button type="button" class="text-danger" wire:click="permanentDeleteAdvertiser({{ $id }})"
+                        onclick="return confirm('{{ __('pages/advertisers/index.actions.permanent_delete_confirm') }}')">
+                    <i class="icon-trash mr-2"></i>
+                    {{ __('pages/advertisers/index.actions.permanent_delete') }}
+                </button>
+            @endcan
         @endif
     </div>
 </details>

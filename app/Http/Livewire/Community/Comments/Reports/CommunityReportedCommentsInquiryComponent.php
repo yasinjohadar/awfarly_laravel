@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Mediconesystems\LivewireDatatables\Column;
 use Mediconesystems\LivewireDatatables\DateColumn;
@@ -27,12 +28,15 @@ class CommunityReportedCommentsInquiryComponent extends LivewireDatatable
     public $hideable = 'select';
     public $beforeTableSlot = 'livewire.datatables.selected';
     public $model = Report::class;
-    public $afterTableSlot = '';
+    public $afterTableSlot = 'modals.community.comments.reports.delete-post';
     public string $status = 'all';
     public string $afterTableSlot2 = '';
     public bool $has_delete = true;
     public bool $showDeleteModal = false;
     public array $deleteModalTexts;
+    public bool $showDeletePostModal = false;
+    public ?int $deletePostId = null;
+    public array $deletePostModalTexts;
 
     /**
      * @var array
@@ -68,12 +72,35 @@ class CommunityReportedCommentsInquiryComponent extends LivewireDatatable
                 ->label(__('pages/community/comments/reports/reports.content.datatable.comment_id'))
                 ->filterable()
                 ->searchable(),
+            Column::callback(['reported_id'], function ($reported_id) {
+                $comment = PostComments::withTrashed()->find($reported_id);
+                return Str::limit($comment->comment ?? '-', 40);
+            }, ['comment_content'])
+                ->label(__('pages/community/comments/reports/reports.content.datatable.comment_content'))
+                ->unsortable(),
             NumberColumn::callback(['id', 'user_type'], function ($id, $user_type) {
                 return Report::findOrFail($id)
                     ->reports_count;
             })
                 ->label(__('pages/community/comments/reports/reports.content.datatable.reports_count'))
                 ->searchable(),
+            Column::callback(['reported_id'], function ($reported_id) {
+                $latest = Report::where('reported_type', PostComments::class)
+                    ->where('reported_id', $reported_id)
+                    ->latest()
+                    ->first();
+
+                if (!$latest) {
+                    return '-';
+                }
+
+                $type = __('pages/community/comments/reports/show.content.datatable.types.' . $latest->type);
+                $reason = Str::limit($latest->reason ?? '-', 30);
+
+                return "{$type} — {$reason}";
+            }, ['latest_reason'])
+                ->label(__('pages/community/comments/reports/reports.content.datatable.latest_reason'))
+                ->unsortable(),
             DateColumn::name('created_at')
                 ->label(__('datatable.created_at'))
                 ->filterable()
@@ -125,10 +152,27 @@ class CommunityReportedCommentsInquiryComponent extends LivewireDatatable
     }
 
     /**
-     * show delete modal
+     * show delete modal for selected rows, or a single reported comment by id
+     * @param int|null $id
      */
-    public function showDeleteModal()
+    public function showDeleteModal($id = null)
     {
+        if ($id !== null) {
+            $this->selected = [(string) $id];
+        }
+
+        if (empty($this->selected)) {
+            return;
+        }
+
+        $this->deleteModalTexts = [
+            'title' => __('pages/community/comments/reports/reports.modal.delete.title'),
+            'content' => count($this->selected) === 1
+                ? __('pages/community/comments/reports/reports.modal.delete.content_single')
+                : __('pages/community/comments/reports/reports.modal.delete.content'),
+            'cancel' => __('pages/community/comments/reports/reports.modal.delete.cancel'),
+            'submit' => __('pages/community/comments/reports/reports.modal.delete.submit'),
+        ];
         $this->showDeleteModal = true;
     }
 
@@ -194,5 +238,83 @@ class CommunityReportedCommentsInquiryComponent extends LivewireDatatable
             'cancel' => __('pages/community/comments/reports/reports.modal.delete.cancel'),
             'submit' => __('pages/community/comments/reports/reports.modal.delete.submit'),
         ];
+
+        $this->deletePostModalTexts = [
+            'title' => __('pages/community/comments/reports/reports.modal.delete_post.title'),
+            'content' => __('pages/community/comments/reports/reports.modal.delete_post.content'),
+            'cancel' => __('pages/community/comments/reports/reports.modal.delete_post.cancel'),
+            'submit' => __('pages/community/comments/reports/reports.modal.delete_post.submit'),
+        ];
+    }
+
+    /**
+     * show the confirmation modal for deleting the comment itself (not just its reports)
+     * @param int $id
+     */
+    public function showDeletePostModal($id)
+    {
+        $this->deletePostId = $id;
+        $this->showDeletePostModal = true;
+    }
+
+    public function closeDeletePostModal()
+    {
+        $this->showDeletePostModal = false;
+        $this->deletePostId = null;
+    }
+
+    /**
+     * delete the reported comment itself (soft delete) and mark its reports as solved.
+     * This does NOT delete the report records — use deleteSelected() for that.
+     */
+    public function deletePost()
+    {
+        if (!Auth::guard('admin')->user()->can('comments.delete')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        if (!$this->deletePostId) {
+            $this->showDeletePostModal = false;
+            return null;
+        }
+
+        DB::beginTransaction();
+        try {
+            $comment = PostComments::withTrashed()->findOrFail($this->deletePostId);
+
+            $comment->delete();
+
+            Report::where('reported_type', PostComments::class)
+                ->where('reported_id', $this->deletePostId)
+                ->update([
+                    'status' => 'solved',
+                ]);
+
+            AdminLogs::log('delete', 'comments', [
+                'comment' => $comment,
+            ], "Delete: comment #$this->deletePostId");
+
+            $this->alert('success', __('toastr.delete'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+
+            $this->showDeletePostModal = false;
+            $this->deletePostId = null;
+
+            $this->emitUp('recountCounters');
+        } catch (Throwable $e) {
+            DB::rollBack();
+
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+        DB::commit();
     }
 }

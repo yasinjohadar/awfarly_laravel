@@ -12,6 +12,7 @@ class CommunityPostsComponent extends Component
 
     public string $page_type = 'all';
     private ?int $post_id = null;
+    protected $queryString = ['page_type' => ['except' => 'all']];
     protected $listeners = ['setPostId', 'recountCounters'];
     public ?int $all_posts_count = null;
     public ?int $active_posts_count = null;

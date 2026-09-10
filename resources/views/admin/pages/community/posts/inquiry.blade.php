@@ -297,6 +297,18 @@
                     {{ __('pages/community/posts/inquiry.content.approve') }}
                 </button>
             @endif
+            @if(!$isDeleted && $post->status !== 'unapproved')
+                <button type="button"
+                        class="btn btn-danger"
+                        @cannot('posts.edit') disabled @endcannot
+                        wire:click="reject({{ $post->id }})"
+                        wire:loading.attr="disabled"
+                        wire:target="reject({{ $post->id }})"
+                        onclick="return confirm('{{ __('pages/community/posts/inquiry.content.reject') }}?')">
+                    <i class="icon-cross2 mr-1"></i>
+                    {{ __('pages/community/posts/inquiry.content.reject') }}
+                </button>
+            @endif
             <button type="button"
                     class="btn btn-primary"
                     @cannot('posts.edit') disabled @endcannot

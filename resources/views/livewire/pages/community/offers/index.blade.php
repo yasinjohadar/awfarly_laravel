@@ -171,7 +171,7 @@
                         </button>
                     </li>
                 </ul>
-                @livewire('community.offers.community-offers-inquiry-component', ['activeNumberFilters' => $activeNumberFilters ?? []])
+                @livewire('community.offers.community-offers-inquiry-component', ['activeNumberFilters' => $activeNumberFilters ?? [], 'page_type' => $page_type])
             </div>
         @endif
     </div>

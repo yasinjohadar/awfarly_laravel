@@ -78,12 +78,6 @@ class RolesAndPermissionsTableSeeder extends Seeder
         $permissions['offers']['delete'] = Permission::create(['guard_name' => 'admin', 'name' => 'offers.delete']);
         $permissions['offers']['reported'] = Permission::create(['guard_name' => 'admin', 'name' => 'offers.reported']);
 
-        //Create Proposals permissions
-        $permissions['proposals']['inquiry'] = Permission::create(['guard_name' => 'admin', 'name' => 'proposals.inquiry']);
-        $permissions['proposals']['edit'] = Permission::create(['guard_name' => 'admin', 'name' => 'proposals.edit']);
-        $permissions['proposals']['delete'] = Permission::create(['guard_name' => 'admin', 'name' => 'proposals.delete']);
-        $permissions['proposals']['reported'] = Permission::create(['guard_name' => 'admin', 'name' => 'proposals.reported']);
-
         //Create Packages permissions
         $permissions['packages']['inquiry'] = Permission::create(['guard_name' => 'admin', 'name' => 'packages.inquiry']);
         $permissions['packages']['add'] = Permission::create(['guard_name' => 'admin', 'name' => 'packages.add']);
@@ -175,7 +169,6 @@ class RolesAndPermissionsTableSeeder extends Seeder
         //statistics permissions
         $permissions['statistics']['payments'] = Permission::create(['guard_name' => 'admin', 'name' => 'statistics.payments']);
         $permissions['statistics']['packages'] = Permission::create(['guard_name' => 'admin', 'name' => 'statistics.packages']);
-        $permissions['statistics']['proposals'] = Permission::create(['guard_name' => 'admin', 'name' => 'statistics.proposals']);
         $permissions['statistics']['users'] = Permission::create(['guard_name' => 'admin', 'name' => 'statistics.users']);
         $permissions['statistics']['requests'] = Permission::create(['guard_name' => 'admin', 'name' => 'statistics.requests']);
         $permissions['statistics']['reports'] = Permission::create(['guard_name' => 'admin', 'name' => 'statistics.reports']);
@@ -233,12 +226,6 @@ class RolesAndPermissionsTableSeeder extends Seeder
             $permissions['offers']['edit'],
             $permissions['offers']['delete'],
             $permissions['offers']['reported'],
-
-            //Create Proposals permissions
-            $permissions['proposals']['inquiry'],
-            $permissions['proposals']['edit'],
-            $permissions['proposals']['delete'],
-            $permissions['proposals']['reported'],
 
             //Create Packages permissions
             $permissions['packages']['inquiry'],
@@ -331,7 +318,6 @@ class RolesAndPermissionsTableSeeder extends Seeder
             //statistics permissions
             $permissions['statistics']['payments'],
             $permissions['statistics']['packages'],
-            $permissions['statistics']['proposals'],
             $permissions['statistics']['users'],
             $permissions['statistics']['requests'],
             $permissions['statistics']['reports'],

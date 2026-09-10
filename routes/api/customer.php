@@ -17,7 +17,6 @@ use App\Http\Controllers\API\Customers\Community\Posts\CommunityPostsController;
 use App\Http\Controllers\API\Customers\Community\Offers\CommunityOffersController;
 use App\Http\Controllers\API\Customers\Community\Posts\Saved\SavedPostsController;
 use App\Http\Controllers\API\Customers\Community\Comments\CommunityCommentsController;
-use App\Http\Controllers\API\Customers\Community\Proposals\CommunityProposalsController;
 use App\Http\Controllers\API\Customers\Community\Posts\Subscribed\SubscribedPostsController;
 use App\Http\Controllers\API\Customers\Advertisers\HiddenAdvertisers\HiddenAdvertisersController;
 use App\Http\Controllers\API\Customers\Community\Offers\Comments\CommunityOffersCommentsController;
@@ -281,39 +280,6 @@ Route::group([
             Route::get('/reports', [CommunityCommentsController::class, 'getReportedComments'])
                 ->name('comments.reports.get');
         });
-    });
-
-    //proposals
-    Route::group([
-        'prefix' => 'proposals',
-        'as' => 'proposals.'
-    ], function () {
-        Route::get('/', [CommunityProposalsController::class, 'getUserProposals'])
-            ->name('proposals.get');
-
-        Route::post('/', [CommunityProposalsController::class, 'addProposal'])
-            ->name('proposal.post');
-
-        Route::post('/{id}', [CommunityProposalsController::class, 'editProposal'])
-            ->name('proposal.edit');
-
-        Route::delete('/{id}', [CommunityProposalsController::class, 'deleteProposal'])
-            ->name('proposal.delete');
-
-        //report proposal
-        Route::post('{id}/reports', [CommunityProposalsController::class, 'reportProposal'])
-            ->name('proposals.report.add');
-
-        //get reported proposals
-        Route::get('/reports', [CommunityProposalsController::class, 'getReportedProposals'])
-            ->name('proposals.reports.get');
-
-        //edit proposal report
-        Route::post('/reports/{id}', [CommunityProposalsController::class, 'editProposalReport'])
-            ->name('proposals.report.edit');
-
-        Route::get('/{id}', [CommunityProposalsController::class, 'getProposal'])
-            ->name('proposal.get');
     });
 
     //Offers

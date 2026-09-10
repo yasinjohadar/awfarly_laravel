@@ -24,6 +24,7 @@ class CommunityReportedOfferInquiryComponent extends Component
     public string $active;
     public array $solveModalTexts;
     public array $deleteModalTexts;
+    public string $resolution = '';
 
     public function __construct($id = null)
     {
@@ -40,7 +41,18 @@ class CommunityReportedOfferInquiryComponent extends Component
 
         $offer['created_at'] = isset($offer['created_at']) ? Carbon::make($offer['created_at'])->format('Y-m-d h:i A') : null;
         $offer['media'] = MediaResource::collection($offer->getMedia('offers'))->resolve();
-        return view('livewire.pages.community.offers.reports.show', ['offer' => $offer]);
+
+        //get latest report
+        $report = $offer->reports()->latest()->first();
+        $is_solved = optional($report)->status === 'solved' || (bool) $offer->deleted_at;
+
+        return view('livewire.pages.community.offers.reports.show', [
+            'offer' => $offer,
+            'is_solved' => $is_solved,
+            'resolution' => optional($report)->resolution,
+            'resolved_at' => optional($report)->resolved_at,
+            'resolved_by' => optional(optional($report)->resolvedByAdmin)->name,
+        ]);
     }
 
     /**
@@ -137,6 +149,11 @@ class CommunityReportedOfferInquiryComponent extends Component
             ]);
             return null;
         }
+
+        $this->validate([
+            'resolution' => ['required', 'string', 'max:2000'],
+        ]);
+
         $offer = Offer::withTrashed()
             ->where('id', $this->offer_id)
             ->first();
@@ -153,14 +170,20 @@ class CommunityReportedOfferInquiryComponent extends Component
 
             //add log
             AdminLogs::log('decline', 'reports', [
-                'offer' => $offer
+                'offer' => $offer,
+                'resolution' => $this->resolution,
             ], "Solve: offer #$this->offer_id");
 
             Report::where('reported_type', Offer::class)
                 ->where('reported_id', $this->offer_id)
                 ->update([
-                    'status' => 'solved'
+                    'status' => 'solved',
+                    'resolution' => $this->resolution,
+                    'resolved_by' => Auth::guard('admin')->id(),
+                    'resolved_at' => now(),
                 ]);
+
+            $this->reset('resolution');
         } catch (Throwable $e) {
 
             //rollback changes

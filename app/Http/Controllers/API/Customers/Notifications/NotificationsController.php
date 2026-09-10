@@ -23,7 +23,7 @@ class NotificationsController extends Controller
     public function getNotifications(Request $request)
     {
         //get limit
-        $limit = ($request->has('limit') && $request->get('limit') > 0) ? $request->get('limit') : Settings::Get('proposals.pagination.limit', 10);
+        $limit = ($request->has('limit') && $request->get('limit') > 0) ? $request->get('limit') : Settings::Get('notifications.pagination.limit', 10);
 
         $notifications = Auth::guard('customer-api')->user()
             ->notifications()

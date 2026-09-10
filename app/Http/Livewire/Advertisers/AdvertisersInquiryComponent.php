@@ -609,6 +609,46 @@ class AdvertisersInquiryComponent extends LivewireDatatable
     }
 
     /**
+     * Permanently delete a soft-deleted advertiser (and cascade-related data via the
+     * model's own delete() override — see AdvertiserUser::delete()).
+     */
+    public function permanentDeleteAdvertiser($id)
+    {
+        if (!Auth::guard('admin')->user()->can('advertisers.delete')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        DB::beginTransaction();
+        try {
+            $advertiser = AdvertiserUser::withTrashed()->findOrFail($id);
+            $advertiserId = $advertiser->id;
+            $advertiserName = $advertiser->name;
+
+            $advertiser->forceDelete();
+
+            AdminLogs::log('delete', 'advertisers', [
+                'advertiser_id' => $advertiserId,
+                'advertiser_name' => $advertiserName,
+            ], "Permanently delete advertiser #{$advertiserId}");
+
+            $this->alert('success', __('toastr.delete'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+            return null;
+        }
+        DB::commit();
+    }
+
+    /**
      * show edit modal
      * @param $id
      */
@@ -987,11 +1027,25 @@ class AdvertisersInquiryComponent extends LivewireDatatable
         $advertiser = AdvertiserUser::withTrashed()->findOrFail($id);
 
         $this->viewed_user_name = $advertiser->name;
+        //mapped to plain arrays (not left as a Collection of Category models):
+        //this is a public Livewire property, so it round-trips through
+        //Livewire's wire protocol on every subsequent action (e.g. a search)
+        //while the modal's markup stays in the DOM — a Collection of Eloquent
+        //models sent that way sometimes comes back re-hydrated as plain
+        //arrays instead of model instances, and the view's `->name_ar` then
+        //fatals with "Attempt to read property on array". Plain arrays have
+        //no such ambiguity.
         $this->viewed_categories = $advertiser->categories()
             ->with('category')
             ->get()
             ->pluck('category')
-            ->filter();
+            ->filter()
+            ->map(fn ($category) => [
+                'id' => $category->id,
+                'name_ar' => $category->name_ar,
+                'name_en' => $category->name_en,
+            ])
+            ->values();
 
         $this->showCategoriesModal = true;
     }

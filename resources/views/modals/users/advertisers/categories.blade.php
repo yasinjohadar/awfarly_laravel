@@ -7,7 +7,7 @@
             <div class="d-flex flex-wrap" style="gap: .4rem">
                 @foreach($viewed_categories as $category)
                     <span class="badge badge-primary p-2">
-                        {{ App::getLocale() === 'ar' ? $category->name_ar : $category->name_en }}
+                        {{ App::getLocale() === 'ar' ? $category['name_ar'] : $category['name_en'] }}
                     </span>
                 @endforeach
             </div>

@@ -134,6 +134,54 @@ class CommunityPostsShowComponent extends Component
             $this->alert('success', __('toastr.success'), [
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
             ]);
+
+            $this->emit('recountCounters');
+        } catch (Throwable $e) {
+            DB::rollBack();
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+            return null;
+        }
+        DB::commit();
+    }
+
+    /**
+     * reject a pending post — mirrors approve(), but sets `unapproved` and never
+     * notifies followers (only the post's own advertiser, via PostObserver)
+     */
+    public function reject($id)
+    {
+        if (!Auth::guard('admin')->user()->can('posts.edit')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        DB::beginTransaction();
+        try {
+            $post = Post::withTrashed()->findOrFail($id);
+
+            //nothing to do if it is already unapproved
+            if ($post->status === 'unapproved') {
+                DB::rollBack();
+                return null;
+            }
+
+            AdminLogs::log('edit', 'posts', [
+                'old' => $post,
+                'new' => ['status' => 'unapproved'],
+            ], "Reject: post #$id");
+
+            tap($post)->update(['status' => 'unapproved']);
+
+            $this->alert('success', __('toastr.success'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+
+            $this->emit('recountCounters');
         } catch (Throwable $e) {
             DB::rollBack();
             $this->alert('error', __('toastr.error'), [

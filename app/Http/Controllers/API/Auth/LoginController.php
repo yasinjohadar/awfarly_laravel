@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers\API\Auth;
 
+use App\Helpers\ActivationCodeService;
 use App\Helpers\Settings;
+use App\Helpers\WhatsAppOtpSender;
 use App\Http\Controllers\Controller;
+use App\Models\Users\Advertisers\AdvertiserUser;
+use App\Models\Users\Customers\CustomerUser;
 use App\Models\Users\Shared\Social\SocialAccount;
 use Exception;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -244,6 +248,110 @@ class LoginController extends Controller
         }
 
         return $this->apiExceptionResponse(__('api/auth/auth.wrong-credentials'));
+    }
+
+    /**
+     * Request a WhatsApp OTP code to log in with, for an existing account.
+     *
+     * @param Request $request
+     *
+     * @return Application|ResponseFactory|Response
+     */
+    public function loginOtpRequest(Request $request)
+    {
+        //Maintenance mode
+        if (Settings::Get('maintenance.mode', 0)) {
+            return $this->apiExceptionResponse(__('api/auth/auth.maintenance'));
+        }
+
+        $data = $this->validate($request, [
+            'mobile' => 'required|string',
+        ]);
+
+        $user = CustomerUser::where('mobile', $data['mobile'])->first()
+            ?? AdvertiserUser::where('mobile', $data['mobile'])->first();
+
+        if (!$user) {
+            return $this->apiBadRequestResponse(__('api/auth/auth.no-user'));
+        }
+
+        if ($user->status == 'banned') {
+            return $this->apiExceptionResponse(__('api/auth/auth.banned-account'));
+        }
+
+        ActivationCodeService::generate($data['mobile']);
+        $code = ActivationCodeService::get($data['mobile']);
+        $messageSent = WhatsAppOtpSender::send($data['mobile'], $code, 'login_otp');
+
+        if (!$messageSent) {
+            return $this->apiExceptionResponse(__('api/auth/auth.something-wrong'));
+        }
+
+        return $this->apiResponse([
+            'message' => __('api/auth/auth.activation-sent'),
+            'data' => ['isMessageSent' => true],
+        ]);
+    }
+
+    /**
+     * Verify a WhatsApp OTP login code and issue an access token.
+     *
+     * @param Request $request
+     *
+     * @return Application|ResponseFactory|Response
+     */
+    public function loginOtpVerify(Request $request)
+    {
+        //Maintenance mode
+        if (Settings::Get('maintenance.mode', 0)) {
+            return $this->apiExceptionResponse(__('api/auth/auth.maintenance'));
+        }
+
+        $data = $this->validate($request, [
+            'mobile' => 'required|string',
+            'code' => 'required|string',
+            'fcmToken' => 'nullable|string',
+        ]);
+
+        $user = CustomerUser::where('mobile', $data['mobile'])->first()
+            ?? AdvertiserUser::where('mobile', $data['mobile'])->first();
+
+        if (!$user) {
+            return $this->apiBadRequestResponse(__('api/auth/auth.no-user'));
+        }
+
+        if (ActivationCodeService::get($data['mobile']) != $data['code']) {
+            return $this->apiExceptionResponse(__('api/auth/auth.invalid-verification'));
+        }
+
+        if ($user->status == 'banned') {
+            return $this->apiExceptionResponse(__('api/auth/auth.banned-account'));
+        }
+
+        ActivationCodeService::remove($data['mobile']);
+
+        $token = $user->createToken($user->user_type, [$user->user_type])->accessToken;
+
+        if (isset($data['fcmToken']) && $data['fcmToken']) {
+            $user->update(['fcm_token' => $data['fcmToken']]);
+        }
+
+        $user->update([
+            'last_login_at' => now(),
+            'last_online_at' => now(),
+            'is_online' => true,
+        ]);
+
+        return $this->apiResponse([
+            'user' => [
+                'id' => $user->id,
+                'type' => $user->user_type,
+                'status' => $user->status,
+                'isActive' => $user->status == 'active',
+            ],
+            'token' => $token,
+            'scope' => [$user->user_type],
+        ]);
     }
 
     /**

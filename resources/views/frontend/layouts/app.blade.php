@@ -26,7 +26,7 @@
     <meta name="twitter:description" content="@yield('meta-description', Settings::Get('site.description'))"/>
 
     <!-- Start SmartBanner configuration -->
-    <meta name="google-play-app" content="app-id=com.m3rady.app">
+    <meta name="google-play-app" content="app-id=com.price.crush.app">
     <meta name="apple-itunes-app" content="app-id=1573227010">
     <meta name="smartbanner:title" content="{{Settings::Get('site.name')}}">
     <meta name="smartbanner:author" content="{{Settings::Get('site.name')}}">

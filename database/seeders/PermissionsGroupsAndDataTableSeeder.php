@@ -21,35 +21,37 @@ class PermissionsGroupsAndDataTableSeeder extends Seeder
         Schema::enableForeignKeyConstraints();
 
         //create permissions groups
+        //note: ids are explicit (rather than relying on insertion-order auto-increment)
+        //so that group_id 9 ("Proposals", removed with the Proposals feature) stays
+        //retired instead of shifting every group after it down by one.
         DB::table('permissions_groups')->insert([
-            ['name' => 'Admins', 'is_allowed' => true,],
-            ['name' => 'Admins Roles', 'is_allowed' => true,],
-            ['name' => 'Customers', 'is_allowed' => true,],
-            ['name' => 'Advertisers', 'is_allowed' => true,],
-            ['name' => 'Categories', 'is_allowed' => true,],
-            ['name' => 'Posts', 'is_allowed' => true,],
-            ['name' => 'Comments', 'is_allowed' => true,],
-            ['name' => 'Offers', 'is_allowed' => true,],
-            ['name' => 'Proposals', 'is_allowed' => true,],
-            ['name' => 'Packages', 'is_allowed' => true,],
-            ['name' => 'Promotions', 'is_allowed' => true,],
-            ['name' => 'Payments', 'is_allowed' => true,],
-            ['name' => 'Income', 'is_allowed' => true,],
-            ['name' => 'Languages', 'is_allowed' => true,],
-            ['name' => 'Requests', 'is_allowed' => true,],
-            ['name' => 'Pages', 'is_allowed' => true,],
-            ['name' => 'Advertisements', 'is_allowed' => true,],
-            ['name' => 'Marketing Tools', 'is_allowed' => true,],
-            ['name' => 'Settings', 'is_allowed' => true,],
-            ['name' => 'Backup', 'is_allowed' => true,],
-            ['name' => 'Logs', 'is_allowed' => true,],
-            ['name' => 'Countries', 'is_allowed' => true,],
-            ['name' => 'Governorates', 'is_allowed' => true,],
-            ['name' => 'Business Types', 'is_allowed' => true,],
-            ['name' => 'Chats', 'is_allowed' => true,],
-            ['name' => 'Ratings', 'is_allowed' => true,],
-            ['name' => 'Statistics', 'is_allowed' => true,],
-            ['name' => 'Cities', 'is_allowed' => true,],
+            ['id' => 1, 'name' => 'Admins', 'is_allowed' => true,],
+            ['id' => 2, 'name' => 'Admins Roles', 'is_allowed' => true,],
+            ['id' => 3, 'name' => 'Customers', 'is_allowed' => true,],
+            ['id' => 4, 'name' => 'Advertisers', 'is_allowed' => true,],
+            ['id' => 5, 'name' => 'Categories', 'is_allowed' => true,],
+            ['id' => 6, 'name' => 'Posts', 'is_allowed' => true,],
+            ['id' => 7, 'name' => 'Comments', 'is_allowed' => true,],
+            ['id' => 8, 'name' => 'Offers', 'is_allowed' => true,],
+            ['id' => 10, 'name' => 'Packages', 'is_allowed' => true,],
+            ['id' => 11, 'name' => 'Promotions', 'is_allowed' => true,],
+            ['id' => 12, 'name' => 'Payments', 'is_allowed' => true,],
+            ['id' => 13, 'name' => 'Income', 'is_allowed' => true,],
+            ['id' => 14, 'name' => 'Languages', 'is_allowed' => true,],
+            ['id' => 15, 'name' => 'Requests', 'is_allowed' => true,],
+            ['id' => 16, 'name' => 'Pages', 'is_allowed' => true,],
+            ['id' => 17, 'name' => 'Advertisements', 'is_allowed' => true,],
+            ['id' => 18, 'name' => 'Marketing Tools', 'is_allowed' => true,],
+            ['id' => 19, 'name' => 'Settings', 'is_allowed' => true,],
+            ['id' => 20, 'name' => 'Backup', 'is_allowed' => true,],
+            ['id' => 21, 'name' => 'Logs', 'is_allowed' => true,],
+            ['id' => 22, 'name' => 'Countries', 'is_allowed' => true,],
+            ['id' => 23, 'name' => 'Governorates', 'is_allowed' => true,],
+            ['id' => 24, 'name' => 'Business Types', 'is_allowed' => true,],
+            ['id' => 25, 'name' => 'Chats', 'is_allowed' => true,],
+            ['id' => 26, 'name' => 'Ratings', 'is_allowed' => true,],
+            ['id' => 27, 'name' => 'Statistics', 'is_allowed' => true,],
+            ['id' => 28, 'name' => 'Cities', 'is_allowed' => true,],
         ]);
 
 
@@ -64,7 +66,7 @@ class PermissionsGroupsAndDataTableSeeder extends Seeder
          * Posts = 6
          * Comments = 7
          * Offers = 8
-         * Proposals = 9
+         * (9 was Proposals, removed along with the feature)
          * Packages = 10
          * Promotions = 11
          * Payments = 12
@@ -133,12 +135,6 @@ class PermissionsGroupsAndDataTableSeeder extends Seeder
             ['group_id' => 8, 'name' => "Offers edit", 'key' => 'offers.edit', 'is_allowed' => true,],
             ['group_id' => 8, 'name' => "Offers delete", 'key' => 'offers.delete', 'is_allowed' => true,],
             ['group_id' => 8, 'name' => "Reported offers", 'key' => 'offers.reported', 'is_allowed' => true,],
-
-            //Create Proposals permissions
-            ['group_id' => 9, 'name' => "Proposals inquiry", 'key' => 'proposals.inquiry', 'is_allowed' => true,],
-            ['group_id' => 9, 'name' => "Proposals edit", 'key' => 'proposals.edit', 'is_allowed' => true,],
-            ['group_id' => 9, 'name' => "Proposals delete", 'key' => 'proposals.delete', 'is_allowed' => true,],
-            ['group_id' => 9, 'name' => "Reported proposals", 'key' => 'proposals.reported', 'is_allowed' => true,],
 
             //Create Packages permissions
             ['group_id' => 10, 'name' => "Packages inquiry", 'key' => 'packages.inquiry', 'is_allowed' => true,],
@@ -226,7 +222,6 @@ class PermissionsGroupsAndDataTableSeeder extends Seeder
             //Create Statistics permissions
             ['group_id' => 27, 'name' => "Statistics Payments", 'key' => 'statistics.payments', 'is_allowed' => true,],
             ['group_id' => 27, 'name' => "Statistics Packages", 'key' => 'statistics.packages', 'is_allowed' => true,],
-            ['group_id' => 27, 'name' => "Statistics Proposals", 'key' => 'statistics.proposals', 'is_allowed' => true,],
             ['group_id' => 27, 'name' => "Statistics Users", 'key' => 'statistics.users', 'is_allowed' => true,],
             ['group_id' => 27, 'name' => "Statistics Requests", 'key' => 'statistics.requests', 'is_allowed' => true,],
             ['group_id' => 27, 'name' => "Statistics Reports", 'key' => 'statistics.reports', 'is_allowed' => true,],

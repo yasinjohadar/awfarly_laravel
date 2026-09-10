@@ -48,15 +48,6 @@ return [
                 ]
             ]
         ],
-        'proposals_statistics' => [
-            'title' => 'Proposals statistics (last 30 days)',
-            'text' => 'Proposals statistics',
-            'subText' => 'Answered to unanswered proposals',
-            'types' => [
-                'answered' => 'Answered',
-                'unanswered' => 'Unanswered',
-            ]
-        ],
         'users' => [
             'title' => 'Users Statistics',
             'text' => 'Customers / Advertisers statistics',
@@ -73,13 +64,24 @@ return [
             'contact-us' => 'Contact Us',
             'username-change' => 'Change Username',
         ],
+        'attention_statistics' => [
+            'title' => 'Needs Your Attention',
+            'pending_review' => 'Pending Approval',
+            'reports' => 'User Reports',
+        ],
+
+        'moderation_statistics' => [
+            'title' => 'Pending Review',
+            'posts' => 'New Posts Pending Review',
+            'offers' => 'New Offers Pending Review',
+        ],
+
         'reports_statistics' => [
             'title' => 'Reports Statistics',
             'posts' => 'Unreviewed Posts Reports',
             'posts-comments' => 'Unreviewed Posts Comments Reports',
             'offers-comments' => 'Unreviewed Offers Comments Reports',
             'offers' => 'Unreviewed Offers Reports',
-            'proposals' => 'Unreviewed Proposals Reports',
         ],
         'community_statistics' => [
             'title' => 'Community Statistics',
@@ -87,7 +89,6 @@ return [
             'posts-comments' => 'Posts Comments',
             'offers-comments' => 'Offers Comments',
             'offers' => 'Offers',
-            'proposals' => 'Proposals',
         ],
     ],
 ];

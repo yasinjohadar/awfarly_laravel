@@ -154,12 +154,27 @@ class CommunityCommentsController extends Controller
                 return $subscription->user;
             });
 
-        //send notifications
-        Notifications::sendForCommunity($posts_subscriptions, 'posts.comments', 'posts.comment_add_subscription', 'add', $customProperties);
+        //send notifications — silent (no push), just persisted + badge count, since
+        //this fires for every comment on a post any of these users merely subscribed
+        //to and would otherwise be too frequent/impersonal to interrupt them for
+        Notifications::sendForCommunity($posts_subscriptions, 'posts.comments', 'posts.comment_add_subscription', 'add', $customProperties, true);
 
         $isPostOwner = ($post->user && $post->user->user_type === 'advertiser' && $post->user->id == Auth::guard('advertiser-api')->id());
         if (!$isPostOwner && !$post->advertisement_id) {
             Notifications::sendForCommunity($post->user, 'posts.comments', 'posts.comment_add', 'add', $customProperties);
+        }
+
+        //a reply to someone's own comment is a real, personal interaction — unlike
+        //the generic subscription broadcast above, this always pushes (even if the
+        //recipient is online), same as commenting directly on someone's post does
+        if ($data['comment_id']) {
+            $parentCommentAuthor = optional(PostComments::find($data['comment_id']))->user;
+            $isReplyToSelf = $parentCommentAuthor
+                && $parentCommentAuthor->user_type === 'advertiser'
+                && $parentCommentAuthor->id == Auth::guard('advertiser-api')->id();
+            if ($parentCommentAuthor && !$isReplyToSelf) {
+                Notifications::notifyCommentReply($parentCommentAuthor, 'posts.comments', Auth::guard('advertiser-api')->user()->name, $customProperties);
+            }
         }
 
         return $this->apiResponse([

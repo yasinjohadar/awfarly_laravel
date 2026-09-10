@@ -51,6 +51,7 @@
             box-shadow: 0 6px 14px rgba(15, 23, 42, 0.18);
         }
 
+        .dash-section__title-icon.is-moderation { background: #ef6c00; }
         .dash-section__title-icon.is-users { background: #1565c0; }
         .dash-section__title-icon.is-requests { background: #00695c; }
         .dash-section__title-icon.is-community { background: #00695c; }
@@ -253,6 +254,79 @@
         .dash-stat--green:hover { border-color: #16a34a; }
         .dash-stat--green:hover .dash-stat__go { background: #16a34a; color: #fff; }
 
+        .dash-alert-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+            gap: var(--dash-gap);
+        }
+
+        .dash-alert-stat {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: .6rem;
+            padding: 1.5rem 1rem;
+            border-radius: 1.15rem;
+            text-decoration: none !important;
+            color: #fff;
+            min-height: 10rem;
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        .dash-alert-stat:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 38px rgba(15, 23, 42, 0.22);
+            text-decoration: none !important;
+            color: #fff;
+        }
+
+        .dash-alert-stat__icon {
+            width: 3.25rem;
+            height: 3.25rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, .22);
+            font-size: 1.4rem;
+        }
+
+        .dash-alert-stat__value {
+            font-size: 2.6rem;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -.03em;
+        }
+
+        .dash-alert-stat__label {
+            font-size: .88rem;
+            font-weight: 700;
+            opacity: .95;
+        }
+
+        .dash-alert-stat--amber { background: linear-gradient(135deg, #ffb74d 0%, #fb8c00 55%, #ef6c00 100%); }
+        .dash-alert-stat--red { background: linear-gradient(135deg, #ef5350 0%, #d32f2f 55%, #b71c1c 100%); }
+
+        .dash-alert-stat.is-empty {
+            background: #eef2f7;
+            color: #64748b;
+            box-shadow: inset 0 0 0 1.5px #d8e0ea;
+        }
+
+        .dash-alert-stat.is-empty .dash-alert-stat__icon { background: rgba(100, 116, 139, .12); color: #64748b; }
+
+        .dash-alert-stat.is-empty:hover {
+            transform: none;
+            box-shadow: inset 0 0 0 1.5px #94a3b8;
+            color: #475569;
+        }
+
+        .dash-section__title-icon.is-alert { background: linear-gradient(135deg, #ff7043, #d32f2f); }
+
         .dash-chart-wrap,
         .dash-map-wrap {
             border: 1.5px solid #d5dee8;
@@ -263,6 +337,85 @@
     </style>
 
     <div class="dash">
+        @canany(['posts.inquiry', 'offers.inquiry', 'statistics.reports'])
+            <section class="card dash-section">
+                <div class="card-header dash-section__header header-elements-inline">
+                    <h5 class="dash-section__title">
+                        <span class="dash-section__title-icon is-alert"><i class="icon-warning22"></i></span>
+                        {{ __('pages/dashboard/index.content.attention_statistics.title') }}
+                    </h5>
+                    <div class="header-elements">
+                        <div class="list-icons">
+                            <a class="list-icons-item" data-action="collapse"></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body collapse show dash-section__body">
+                    @canany(['posts.inquiry', 'offers.inquiry'])
+                        <div class="dash-group">
+                            <p class="dash-subsection">{{ __('pages/dashboard/index.content.attention_statistics.pending_review') }}</p>
+                            <div class="dash-alert-grid">
+                                @can('posts.inquiry')
+                                    <x-dashboard-alert
+                                        :href="route('admin.community.posts.index', ['page_type' => 'unreviewed'])"
+                                        :label="__('pages/dashboard/index.content.moderation_statistics.posts')"
+                                        :value="$moderation_counters['posts']"
+                                        icon="icon-file-text2"
+                                        tone="amber"
+                                    />
+                                @endcan
+                                @can('offers.inquiry')
+                                    <x-dashboard-alert
+                                        :href="route('admin.community.offers.index', ['page_type' => 'unreviewed'])"
+                                        :label="__('pages/dashboard/index.content.moderation_statistics.offers')"
+                                        :value="$moderation_counters['offers']"
+                                        icon="icon-price-tags2"
+                                        tone="amber"
+                                    />
+                                @endcan
+                            </div>
+                        </div>
+                    @endcanany
+
+                    @canany(['statistics.reports'])
+                        <div class="dash-group">
+                            <p class="dash-subsection">{{ __('pages/dashboard/index.content.attention_statistics.reports') }}</p>
+                            <div class="dash-alert-grid">
+                                <x-dashboard-alert
+                                    :href="route('admin.community.reports.posts')"
+                                    :label="__('pages/dashboard/index.content.reports_statistics.posts')"
+                                    :value="$reports_counters['posts']"
+                                    icon="icon-flag3"
+                                    tone="red"
+                                />
+                                <x-dashboard-alert
+                                    :href="route('admin.community.reports.offers')"
+                                    :label="__('pages/dashboard/index.content.reports_statistics.offers')"
+                                    :value="$reports_counters['offers']"
+                                    icon="icon-flag4"
+                                    tone="red"
+                                />
+                                <x-dashboard-alert
+                                    :href="route('admin.community.reports.comments')"
+                                    :label="__('pages/dashboard/index.content.reports_statistics.posts-comments')"
+                                    :value="$reports_counters['posts_comments']"
+                                    icon="icon-bubble-notification"
+                                    tone="red"
+                                />
+                                <x-dashboard-alert
+                                    :href="route('admin.community.offers.comments.reports')"
+                                    :label="__('pages/dashboard/index.content.reports_statistics.offers-comments')"
+                                    :value="$reports_counters['offers_comments']"
+                                    icon="icon-bubble-lines4"
+                                    tone="red"
+                                />
+                            </div>
+                        </div>
+                    @endcanany
+                </div>
+            </section>
+        @endcanany
+
         @canany(['advertisers.inquiry', 'customers.inquiry'])
             <section class="card dash-section">
                 <div class="card-header dash-section__header header-elements-inline">
@@ -375,6 +528,46 @@
             </section>
         @endcanany
 
+        @canany(['posts.inquiry', 'offers.inquiry'])
+            <section class="card dash-section">
+                <div class="card-header dash-section__header header-elements-inline">
+                    <h5 class="dash-section__title">
+                        <span class="dash-section__title-icon is-moderation"><i class="icon-hourglass"></i></span>
+                        {{ __('pages/dashboard/index.content.moderation_statistics.title') }}
+                    </h5>
+                    <div class="header-elements">
+                        <div class="list-icons">
+                            <a class="list-icons-item" data-action="collapse"></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body collapse show dash-section__body">
+                    <div class="dash-group">
+                        <div class="dash-grid">
+                            @can('posts.inquiry')
+                                <x-dashboard-stat
+                                    :href="route('admin.community.posts.index', ['page_type' => 'unreviewed'])"
+                                    :label="__('pages/dashboard/index.content.moderation_statistics.posts')"
+                                    :value="$moderation_counters['posts']"
+                                    icon="icon-file-text2"
+                                    tone="rose"
+                                />
+                            @endcan
+                            @can('offers.inquiry')
+                                <x-dashboard-stat
+                                    :href="route('admin.community.offers.index', ['page_type' => 'unreviewed'])"
+                                    :label="__('pages/dashboard/index.content.moderation_statistics.offers')"
+                                    :value="$moderation_counters['offers']"
+                                    icon="icon-price-tags2"
+                                    tone="amber"
+                                />
+                            @endcan
+                        </div>
+                    </div>
+                </div>
+            </section>
+        @endcanany
+
         @canany(['statistics.reports'])
             <section class="card dash-section">
                 <div class="card-header dash-section__header header-elements-inline">
@@ -404,13 +597,6 @@
                                 :value="$community_counters['offers']"
                                 icon="icon-price-tags2"
                                 tone="amber"
-                            />
-                            <x-dashboard-stat
-                                :href="route('admin.community.proposals.index')"
-                                :label="__('pages/dashboard/index.content.community_statistics.proposals')"
-                                :value="$community_counters['proposals']"
-                                icon="icon-clipboard3"
-                                tone="violet"
                             />
                         </div>
                     </div>
@@ -463,13 +649,6 @@
                                 :value="$reports_counters['offers']"
                                 icon="icon-flag4"
                                 tone="amber"
-                            />
-                            <x-dashboard-stat
-                                :href="route('admin.community.reports.proposals')"
-                                :label="__('pages/dashboard/index.content.reports_statistics.proposals')"
-                                :value="$reports_counters['proposals']"
-                                icon="icon-flag7"
-                                tone="violet"
                             />
                         </div>
                     </div>
@@ -589,58 +768,32 @@
             </section>
         @endcanany
 
-        @canany(['statistics.proposals', 'statistics.users'])
+        @can('statistics.users')
             <div class="row">
-                @can('statistics.proposals')
-                    <div class="col-xl-6">
-                        <section class="card dash-section">
-                            <div class="card-header dash-section__header header-elements-inline">
-                                <h5 class="dash-section__title">
-                                    <span class="dash-section__title-icon is-charts"><i class="icon-pie-chart5"></i></span>
-                                    {{ __('pages/dashboard/index.content.proposals_statistics.title') }}
-                                </h5>
-                                <div class="header-elements">
-                                    <div class="list-icons">
-                                        <a class="list-icons-item" data-action="collapse"></a>
-                                    </div>
+                <div class="col-xl-6">
+                    <section class="card dash-section">
+                        <div class="card-header dash-section__header header-elements-inline">
+                            <h5 class="dash-section__title">
+                                <span class="dash-section__title-icon is-charts"><i class="icon-pie-chart8"></i></span>
+                                {{ __('pages/dashboard/index.content.users.title') }}
+                            </h5>
+                            <div class="header-elements">
+                                <div class="list-icons">
+                                    <a class="list-icons-item" data-action="collapse"></a>
                                 </div>
                             </div>
-                            <div class="card-body collapse show dash-section__body">
-                                <div class="dash-group">
-                                    <div class="dash-chart-wrap" style="border:0;padding:0;background:transparent;">
-                                        <div class="chart has-fixed-height" id="proposals_statistics"></div>
-                                    </div>
+                        </div>
+                        <div class="card-body collapse show dash-section__body">
+                            <div class="dash-group">
+                                <div class="dash-chart-wrap" style="border:0;padding:0;background:transparent;">
+                                    <div class="chart has-fixed-height" id="users_statistics"></div>
                                 </div>
                             </div>
-                        </section>
-                    </div>
-                @endcan
-                @can('statistics.users')
-                    <div class="col-xl-6">
-                        <section class="card dash-section">
-                            <div class="card-header dash-section__header header-elements-inline">
-                                <h5 class="dash-section__title">
-                                    <span class="dash-section__title-icon is-charts"><i class="icon-pie-chart8"></i></span>
-                                    {{ __('pages/dashboard/index.content.users.title') }}
-                                </h5>
-                                <div class="header-elements">
-                                    <div class="list-icons">
-                                        <a class="list-icons-item" data-action="collapse"></a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-body collapse show dash-section__body">
-                                <div class="dash-group">
-                                    <div class="dash-chart-wrap" style="border:0;padding:0;background:transparent;">
-                                        <div class="chart has-fixed-height" id="users_statistics"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-                @endcan
+                        </div>
+                    </section>
+                </div>
             </div>
-        @endcanany
+        @endcan
     </div>
 @endsection
 
@@ -767,65 +920,6 @@
                     ],
                 },
             ]
-        });
-
-        /*Proposals*/
-        let proposals = {!! json_encode($proposals) !!};
-
-        echarts.init(document.getElementById('proposals_statistics')).setOption({
-            color: [
-                '#2ec7c9', '#b6a2de', '#5ab1ef', '#ffb980', '#d87a80',
-                '#8d98b3', '#e5cf0d', '#97b552', '#95706d', '#dc69aa',
-                '#07a2a4', '#9a7fd1', '#588dd5', '#f5994e', '#c05050',
-                '#59678c', '#c9ab00', '#7eb00a', '#6f5553', '#c14089'
-            ],
-            textStyle: {
-                fontFamily: 'Roboto, Arial, Verdana, sans-serif',
-                fontSize: 13
-            },
-            title: {
-                text: "{{__('pages/dashboard/index.content.proposals_statistics.text')}}",
-                subtext: "{{__('pages/dashboard/index.content.proposals_statistics.subText')}}",
-                left: 'center',
-                textStyle: {
-                    fontSize: 17,
-                    fontWeight: 500
-                },
-                subtextStyle: {
-                    fontSize: 12
-                }
-            },
-            tooltip: {
-                trigger: 'item',
-                backgroundColor: 'rgba(0,0,0,0.75)',
-                padding: [10, 15],
-                textStyle: {
-                    fontSize: 13,
-                    fontFamily: 'Roboto, sans-serif'
-                },
-                formatter: "{a} <br/>{b}: {c} ({d}%)"
-            },
-            legend: {
-                orient: 'vertical',
-                top: 'center',
-                left: 0,
-                data: proposals.types,
-                itemHeight: 8,
-                itemWidth: 8
-            },
-            series: [{
-                name: '{{__('pages/dashboard/index.content.proposals_statistics.text')}}',
-                type: 'pie',
-                radius: '70%',
-                center: ['50%', '57.5%'],
-                itemStyle: {
-                    normal: {
-                        borderWidth: 1,
-                        borderColor: '#fff'
-                    }
-                },
-                data: proposals.data
-            }]
         });
 
         /*Customers to advertisers*/

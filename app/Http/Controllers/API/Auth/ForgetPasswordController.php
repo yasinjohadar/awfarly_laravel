@@ -17,7 +17,7 @@ use App\Models\Users\Advertisers\AdvertiserUser;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use App\Mail\Auth\ActivationCode\ActivationCodeMail;
-use App\Services\SmsServices\SaudiGateway\SaudiSmsService;
+use App\Helpers\WhatsAppOtpSender;
 
 class ForgetPasswordController extends Controller
 {
@@ -106,9 +106,7 @@ class ForgetPasswordController extends Controller
 
             $code = ActivationCodeService::get($data['mobile']);
 
-            $message = "$code is your activation code for Ma3rdy app";
-
-            $message_sent = (new SaudiSmsService)->send($request->mobile, $message);
+            $message_sent = WhatsAppOtpSender::send($data['mobile'], $code, 'password_reset_otp');
 
             // // if error happend stop request
             if (!$message_sent) return $this->apiExceptionResponse(__('api/auth/auth.something-wrong'));
@@ -125,6 +123,7 @@ class ForgetPasswordController extends Controller
             isset($data['sms_otp']) && !is_null($data['sms_otp']) && ActivationCodeService::get($data['mobile']) == $data['sms_otp']
         ) {
             if (!is_null($data['password']) && $data['password'] != '') {
+                DB::beginTransaction();
                 try {
                     $user->update([
                         'password' => Hash::make($data['password']),

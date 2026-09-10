@@ -13,6 +13,7 @@ class CommunityOffersComponent extends Component
 
     public string $page_type = 'all';
     private ?int $offer_id = null;
+    protected $queryString = ['page_type' => ['except' => 'all']];
     protected $listeners = ['setOfferId', 'recountCounters'];
     public ?int $all_offers_count = null;
     public ?int $active_offers_count = null;

@@ -6,8 +6,11 @@ return [
         ],
         'comment_add_subscription' => ":name علق علي منشور :owner",
         'comment_add' => ':name علق علي منشورك',
+        'comment_reply' => ':name رد على تعليقك',
         'comment_like' => ':name أُعجب بتعليقك',
         'like' => ':name أُعجب بمنشورك',
+        'approved' => "وافق المسؤول على منشورك",
+        'declined' => "رفض مسؤول منشورك",
         'title' => 'المنشورات',
     ],
     'chats' => [
@@ -29,6 +32,7 @@ return [
             'title' => 'التعليقات'
         ],
         'comment_add' => ":name علق علي عرضك",
+        'comment_reply' => ':name رد على تعليقك',
         'comment_like' => ':name أُعجب بتعليقك',
         'like' => ':name أُعجب بعرضك',
         'approved' => "وافق المسؤول على عرضك",
@@ -39,11 +43,6 @@ return [
         'followed' => ':name قام بمتابعتك',
         'requested' => ':name يريد متابعتك',
         'title' => 'المتابعة',
-    ],
-    'proposals' => [
-        'requested' => ':name قام بطلب تسعيير',
-        'answered' => ':name قام بالرد علي طلب تسعيرك',
-        'title' => 'طلبات التسعير'
     ],
     'something-wrong' => 'حدث خطأ ما، برجاء المحاوله لاحقاً!',
     'read' => 'تم تحديد الإشعارات كمقروءه بنجاح!',

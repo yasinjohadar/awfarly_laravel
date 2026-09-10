@@ -310,7 +310,7 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
                 'offers' => $offers
             ], "Delete: offers");
 
-            $this->emitUp('recountCounters');
+            $this->emit('recountCounters');
         } catch (Throwable $e) {
             //rollback
             DB::rollBack();
@@ -457,7 +457,7 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
             ]);
 
-            $this->emitUp('recountCounters');
+            $this->emit('recountCounters');
         } catch (Exception $e) {
             //rollback
             DB::rollBack();
@@ -522,7 +522,57 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
             ]);
 
-            $this->emitUp('recountCounters');
+            $this->emit('recountCounters');
+        } catch (Exception $e) {
+            DB::rollBack();
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+            return null;
+        }
+        DB::commit();
+    }
+
+    /**
+     * One-click rejection straight from the actions column, without opening the
+     * edit modal. Mirrors approve(), but sets `unapproved` and never notifies
+     * followers (only the offer's own advertiser, via OfferObserver).
+     *
+     * @param $id
+     * @return void|null
+     */
+    public function reject($id)
+    {
+        if (!Auth::guard('admin')->user()->can('offers.edit')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        DB::beginTransaction();
+        try {
+            $offer = Offer::withTrashed()->findOrFail($id);
+
+            //already unapproved — nothing to do
+            if ($offer->status === 'unapproved') {
+                DB::rollBack();
+                return null;
+            }
+
+            AdminLogs::log('edit', 'offers', [
+                'old' => $offer,
+                'new' => ['status' => 'unapproved'],
+            ], "Reject: offer #$id");
+
+            tap($offer)->update(['status' => 'unapproved']);
+
+            $this->alert('success', __('toastr.success'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+
+            $this->emit('recountCounters');
         } catch (Exception $e) {
             DB::rollBack();
             $this->alert('error', __('toastr.error'), [
@@ -592,7 +642,7 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
 
             $this->reset('restore');
             $this->showRestoreModal = false;
-            $this->emitUp('recountCounters');
+            $this->emit('recountCounters');
         } catch (Exception $e) {
             //rollback
             DB::rollBack();

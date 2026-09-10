@@ -6,8 +6,11 @@ return [
         ],
         'comment_add_subscription' => ":name commented on :owner's post",
         'comment_add' => ':name commented on your post',
+        'comment_reply' => ':name replied to your comment',
         'comment_like' => ':name liked your comment',
         'like' => ':name liked your post',
+        'approved' => "An admin approved your post",
+        'declined' => "An admin declined your post",
         'title' => 'Posts',
     ],
     'chats' => [
@@ -29,6 +32,7 @@ return [
             'title' => 'Comments'
         ],
         'comment_add' => ":name commented on your offer",
+        'comment_reply' => ':name replied to your comment',
         'comment_like' => ':name liked your comment',
         'like' => ":name liked your offer",
         'approved' => "An admin approved your offer",
@@ -39,11 +43,6 @@ return [
         'followed' => ':name has followed you',
         'requested' => ':name has requested to follow you',
         'title' => 'Followings',
-    ],
-    'proposals' => [
-        'requested' => ':name requested a proposal',
-        'answered' => ':name has answered your proposal',
-        'title' => 'Proposals'
     ],
     'something-wrong' => 'Something went wrong, Please try again later!',
     'read' => 'Notifications has been successfully marked as read!',

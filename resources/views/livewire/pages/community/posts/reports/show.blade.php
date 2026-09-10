@@ -408,6 +408,33 @@
         </div>
     </div>
 
+    @if($isSolved && $resolution)
+        <div class="post-report-show__panel">
+            <h5 class="post-report-show__panel-title">
+                <i class="icon-checkmark3"></i>
+                {{ __('pages/community/posts/reports/show.content.sections.resolution') }}
+            </h5>
+            <div class="post-report-show__fields">
+                <div class="post-report-show__field">
+                    <div class="post-report-show__field-label">{{ __('pages/community/posts/reports/show.content.resolution') }}</div>
+                    <div class="post-report-show__field-value">{{ $resolution }}</div>
+                </div>
+                @if($resolved_by)
+                    <div class="post-report-show__field">
+                        <div class="post-report-show__field-label">{{ __('pages/community/posts/reports/show.content.resolved_by') }}</div>
+                        <div class="post-report-show__field-value">{{ $resolved_by }}</div>
+                    </div>
+                @endif
+                @if($resolved_at)
+                    <div class="post-report-show__field">
+                        <div class="post-report-show__field-label">{{ __('pages/community/posts/reports/show.content.resolved_at') }}</div>
+                        <div class="post-report-show__field-value">{{ $resolved_at }}</div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
+
     @if(count($post['media']) > 0)
         <div class="post-report-show__panel">
             <h5 class="post-report-show__panel-title">

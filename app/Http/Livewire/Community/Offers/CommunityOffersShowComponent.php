@@ -381,7 +381,7 @@ class CommunityOffersShowComponent extends Component
             $offer->delete();
 
             $this->closeOfferDeleteModal();
-            $this->emitUp('recountCounters');
+            $this->emit('recountCounters');
             $this->emitUp('setOfferId', null);
         } catch (Throwable $e) {
             DB::rollBack();

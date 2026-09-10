@@ -27,6 +27,7 @@ class SettingsController extends Controller
         return $this->apiResponse([
             'name' => Settings::Get('site.name', config('app.name')),
             'logoUrl' => $logo,
+            'phoneVerificationEnabled' => (bool) Settings::Get('auth.phone_verification.enabled', false),
         ]);
     }
 }

@@ -306,22 +306,6 @@ class SettingsTableSeeder extends Seeder
                 'description' => 'Reported posts comments Pagination Limit is how many posts comments sent per page while showing reported posts comments.',
             ],
             [
-                'name' => 'Proposals Pagination Limit',
-                'key' => 'proposals.pagination.limit',
-                'value' => '12',
-                'value_type' => 'integer',
-                'type' => 'proposals',
-                'description' => 'Proposals Pagination Limit is how many posts sent per page while showing proposals posts.',
-            ],
-            [
-                'name' => 'Reported Proposals Pagination Limit',
-                'key' => 'reported.proposals.pagination.limit',
-                'value' => '12',
-                'value_type' => 'integer',
-                'type' => 'proposals',
-                'description' => 'Reported Proposals Pagination Limit is how many proposals sent per page while showing reported proposals.',
-            ],
-            [
                 'name' => 'Username Change Pagination Limit',
                 'key' => 'username.change.pagination.limit',
                 'value' => '12',

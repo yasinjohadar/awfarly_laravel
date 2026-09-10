@@ -39,16 +39,11 @@ return [
                 'reported' => 'Reported Comments',
             ],
         ],
-        'proposals' => [
-            'title' => 'Proposals',
-            'reported' => 'Reported Proposals',
-        ],
         'reports' => [
             'title' => 'Reports',
             'posts' => 'Reported Posts',
             'comments' => 'Reported Posts Comments',
             'offers' => 'Reported Offers',
-            'proposals' => 'Reported Proposals',
         ],
         'chats' => 'Chats',
     ],
@@ -97,7 +92,6 @@ return [
             'community' => 'Community',
             'posts' => 'Posts',
             'offers' => 'Offers',
-            'proposals' => 'Proposals',
             'users' => 'Users',
             'media' => 'Media',
             'maintenance' => 'Maintenance',
@@ -114,5 +108,6 @@ return [
             'admins-actions' => 'Admins Actions',
         ],
         'firebase' => 'Firebase Settings',
+        'whatsapp' => 'WhatsApp',
     ],
 ];

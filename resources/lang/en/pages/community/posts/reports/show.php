@@ -22,12 +22,16 @@ return [
         'solved' => 'Solved',
         'unsolved' => 'Unsolved',
         'reports_count' => 'Reports count',
+        'resolution' => 'How the report was resolved',
+        'resolved_by' => 'Resolved by',
+        'resolved_at' => 'Resolved at',
         'sections' => [
             'author' => 'Post author',
             'stats' => 'Stats',
             'content' => 'Post content',
             'media' => 'Attached media',
             'reports' => 'Report details',
+            'resolution' => 'Resolution',
         ],
         'datatable' => [
             'post_id' => 'Post #',
@@ -62,6 +66,8 @@ return [
         'solve' => [
             'title' => 'Solve Report',
             'content' => 'Are you sure you want to set these reports as solved?',
+            'resolution_label' => 'How was this report resolved?',
+            'resolution_placeholder' => 'Explain the action taken to resolve this report...',
             'submit' => 'Submit',
             'cancel' => 'Cancel',
         ],

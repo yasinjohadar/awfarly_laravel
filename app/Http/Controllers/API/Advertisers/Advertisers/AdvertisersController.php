@@ -78,6 +78,9 @@ class AdvertisersController extends Controller
             ->whereNotIn('advertisers_users.id', $blocks)
             ->where('advertisers_users.is_elite', true)
             ->where('advertisers_users.status', 'active')
+            ->whereHas('business', function ($q) {
+                $q->where('has_categories', true);
+            })
             ->leftJoin('advertiser_categories', 'advertiser_categories.advertiser_id', 'advertisers_users.id');
 
 
@@ -171,6 +174,9 @@ class AdvertisersController extends Controller
             ->select('advertisers_users.*')
             ->whereNotIn('advertisers_users.id', $blocks)
             ->where('advertisers_users.status', 'active')
+            ->whereHas('business', function ($q) {
+                $q->where('has_categories', true);
+            })
             ->leftJoin('advertiser_categories', 'advertiser_categories.advertiser_id', 'advertisers_users.id');
 
         //filter keyword
@@ -265,6 +271,9 @@ class AdvertisersController extends Controller
             ->select('advertisers_users.*')
             ->whereNotIn('advertisers_users.id', $blocks)
             ->where('advertisers_users.status', 'active')
+            ->whereHas('business', function ($q) {
+                $q->where('has_categories', true);
+            })
             ->leftJoin('advertiser_categories', 'advertiser_categories.advertiser_id', 'advertisers_users.id');;
 
 

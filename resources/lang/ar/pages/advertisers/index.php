@@ -59,6 +59,8 @@ return [
         'activate' => 'تفعيل',
         'restore' => 'استعادة',
         'delete' => 'حذف',
+        'permanent_delete' => 'حذف نهائي',
+        'permanent_delete_confirm' => 'سيتم حذف هذا المعلن نهائيًا مع كل بياناته المرتبطة، ولا يمكن التراجع عن ذلك. هل أنت متأكد؟',
     ],
     'modal' => [
         'edit' => [

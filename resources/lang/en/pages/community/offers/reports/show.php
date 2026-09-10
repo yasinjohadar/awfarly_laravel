@@ -21,6 +21,9 @@ return [
         'status' => 'Status: ',
         'solved' => 'Solved',
         'unsolved' => 'Unsolved',
+        'resolution' => 'How the report was resolved',
+        'resolved_by' => 'Resolved by',
+        'resolved_at' => 'Resolved at',
         'datatable' => [
             'offer_id' => 'Offer #',
             'user_type' => 'User Type',
@@ -55,6 +58,8 @@ return [
         'solve' => [
             'title' => 'Solve Report',
             'content' => 'Are you sure you want to set these reports as solved?',
+            'resolution_label' => 'How was this report resolved?',
+            'resolution_placeholder' => 'Explain the action taken to resolve this report...',
             'submit' => 'Submit',
             'cancel' => 'Cancel',
         ],

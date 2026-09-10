@@ -7,7 +7,6 @@ use App\Models\Offers\Comments\OffersComments;
 use App\Models\Offers\Offer;
 use App\Models\Posts\Comments\PostComments;
 use App\Models\Posts\Post;
-use App\Models\Proposals\Proposal;
 use App\Models\Subscriptions\Packages\Advertisers\AdvertiserPackages;
 use Carbon\Carbon;
 use DB;
@@ -61,9 +60,6 @@ class PermanentlyDeleteSoftDeletedItems extends Command
 
             //delete offers comments exceeded 30 days of soft deletion
             $this->deleteOffersComments();
-
-            //delete offers exceeded 30 days of soft deletion
-            $this->deleteProposals();
 
             //delete advertisers packages exceeded 30 days of soft deletion
             $this->deleteAdvertisersPackages();
@@ -156,28 +152,6 @@ class PermanentlyDeleteSoftDeletedItems extends Command
         try {
             //check offers comments
             OffersComments::onlyTrashed()
-                ->where('deleted_at', '<=', Carbon::now()->subMonth())
-                ->get()
-                ->each
-                ->forceDelete();
-
-        } catch (Exception $e) {
-            DB::rollBack();
-            return false;
-        }
-        DB::commit();
-        return true;
-    }
-
-    /**
-     * @return bool
-     */
-    public function deleteProposals(): bool
-    {
-        DB::beginTransaction();
-        try {
-            //check proposals
-            Proposal::onlyTrashed()
                 ->where('deleted_at', '<=', Carbon::now()->subMonth())
                 ->get()
                 ->each

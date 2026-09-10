@@ -26,6 +26,24 @@
         <h4>{{__('pages/community/offers/reports/show.modal.show.content.created_at')}}
             <code>{{$log['created_at'] ?? null}}</code>
         </h4>
+        <h4>{{__('pages/community/offers/reports/show.content.status')}}
+            <code>{{($log['status'] ?? null) === 'solved' ? __('pages/community/offers/reports/show.content.solved') : __('pages/community/offers/reports/show.content.unsolved')}}</code>
+        </h4>
+        @if(($log['status'] ?? null) === 'solved' && !empty($log['resolution']))
+            <h4>{{__('pages/community/offers/reports/show.content.resolution')}}
+                <code>{{$log['resolution']}}</code>
+            </h4>
+            @if(!empty($log['resolved_by']))
+                <h4>{{__('pages/community/offers/reports/show.content.resolved_by')}}
+                    <code>{{$log['resolved_by']}}</code>
+                </h4>
+            @endif
+            @if(!empty($log['resolved_at']))
+                <h4>{{__('pages/community/offers/reports/show.content.resolved_at')}}
+                    <code>{{$log['resolved_at']}}</code>
+                </h4>
+            @endif
+        @endif
     </x-slot>
 
     <x-slot name="footer">

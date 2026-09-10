@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Mediconesystems\LivewireDatatables\Column;
 use Mediconesystems\LivewireDatatables\DateColumn;
@@ -27,13 +28,16 @@ class CommunityReportedPostsInquiryComponent extends LivewireDatatable
     public $exportable = true;
     public $hideable = 'select';
     public $model = Report::class;
-    public $afterTableSlot = '';
+    public $afterTableSlot = 'modals.community.posts.reports.delete-post';
     public string $status = 'all';
     public string $afterTableSlot2 = '';
     public $beforeTableSlot = 'livewire.datatables.selected';
     public bool $has_delete = true;
     public bool $showDeleteModal = false;
     public array $deleteModalTexts;
+    public bool $showDeletePostModal = false;
+    public ?int $deletePostId = null;
+    public array $deletePostModalTexts;
 
     /**
      * @var array
@@ -69,12 +73,35 @@ class CommunityReportedPostsInquiryComponent extends LivewireDatatable
                 ->filterable()
                 ->searchable()
             ->linkTo('admin/community/posts'),
+            Column::callback(['reported_id'], function ($reported_id) {
+                $post = Post::withTrashed()->find($reported_id);
+                return Str::limit($post->content ?? '-', 40);
+            }, ['post_content'])
+                ->label(__('pages/community/posts/reports/reports.content.datatable.post_content'))
+                ->unsortable(),
             NumberColumn::callback(['id', 'user_type'], function ($id, $user_type) {
                 return Report::findOrFail($id)
                     ->reports_count;
             })
                 ->label(__('pages/community/posts/reports/reports.content.datatable.reports_count'))
                 ->searchable(),
+            Column::callback(['reported_id'], function ($reported_id) {
+                $latest = Report::where('reported_type', Post::class)
+                    ->where('reported_id', $reported_id)
+                    ->latest()
+                    ->first();
+
+                if (!$latest) {
+                    return '-';
+                }
+
+                $type = __('pages/community/posts/reports/show.content.datatable.types.' . $latest->type);
+                $reason = Str::limit($latest->reason ?? '-', 30);
+
+                return "{$type} — {$reason}";
+            }, ['latest_reason'])
+                ->label(__('pages/community/posts/reports/reports.content.datatable.latest_reason'))
+                ->unsortable(),
             DateColumn::name('created_at')
                 ->label(__('datatable.created_at'))
                 ->filterable()
@@ -199,5 +226,83 @@ class CommunityReportedPostsInquiryComponent extends LivewireDatatable
             'cancel' => __('pages/community/posts/reports/reports.modal.delete.cancel'),
             'submit' => __('pages/community/posts/reports/reports.modal.delete.submit'),
         ];
+
+        $this->deletePostModalTexts = [
+            'title' => __('pages/community/posts/reports/reports.modal.delete_post.title'),
+            'content' => __('pages/community/posts/reports/reports.modal.delete_post.content'),
+            'cancel' => __('pages/community/posts/reports/reports.modal.delete_post.cancel'),
+            'submit' => __('pages/community/posts/reports/reports.modal.delete_post.submit'),
+        ];
+    }
+
+    /**
+     * show the confirmation modal for deleting the post itself (not just its reports)
+     * @param int $id
+     */
+    public function showDeletePostModal($id)
+    {
+        $this->deletePostId = $id;
+        $this->showDeletePostModal = true;
+    }
+
+    public function closeDeletePostModal()
+    {
+        $this->showDeletePostModal = false;
+        $this->deletePostId = null;
+    }
+
+    /**
+     * delete the reported post itself (soft delete) and mark its reports as solved.
+     * This does NOT delete the report records — use deleteSelected() for that.
+     */
+    public function deletePost()
+    {
+        if (!Auth::guard('admin')->user()->can('posts.delete')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        if (!$this->deletePostId) {
+            $this->showDeletePostModal = false;
+            return null;
+        }
+
+        DB::beginTransaction();
+        try {
+            $post = Post::withTrashed()->findOrFail($this->deletePostId);
+
+            $post->delete();
+
+            Report::where('reported_type', Post::class)
+                ->where('reported_id', $this->deletePostId)
+                ->update([
+                    'status' => 'solved',
+                ]);
+
+            AdminLogs::log('delete', 'posts', [
+                'post' => $post,
+            ], "Delete: post #$this->deletePostId");
+
+            $this->alert('success', __('toastr.delete'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+
+            $this->showDeletePostModal = false;
+            $this->deletePostId = null;
+
+            $this->emitUp('recountCounters');
+        } catch (Throwable $e) {
+            DB::rollBack();
+
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+        DB::commit();
     }
 }

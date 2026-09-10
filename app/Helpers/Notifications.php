@@ -19,6 +19,7 @@ use App\Notifications\Community\CommunityNotifications;
 use Exception;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Log;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 
 class Notifications
@@ -29,8 +30,15 @@ class Notifications
      * @param string $message
      * @param string $action
      * @param array|null $customProperties
+     * @param bool $skipPush When true, the notification is still persisted (so it
+     *                       shows in the in-app list) and the Firestore unread
+     *                       count still updates (bell badge), but no FCM push is
+     *                       sent regardless of online status — used for "someone
+     *                       commented on a post/offer you're subscribed to"
+     *                       broadcasts, which are too frequent/impersonal to
+     *                       warrant interrupting the recipient.
      */
-    public static function sendForCommunity($user, string $type, string $message, string $action, array $customProperties = null)
+    public static function sendForCommunity($user, string $type, string $message, string $action, array $customProperties = null, bool $skipPush = false)
     {
         if (is_a($user, Collection::class)) {
             foreach ($user as $item) {
@@ -54,9 +62,17 @@ class Notifications
                         ]);
 
                 } catch (Exception $e) {
-
+                    //silently-failing here means the in-app bell badge never updates for
+                    //this user with zero visibility into why (e.g. the PHP grpc extension
+                    //required by google/cloud-firestore missing on this server) — log it
+                    //so a broken Firestore write is diagnosable instead of invisible.
+                    Log::warning('Failed to update Firestore notification count', [
+                        'user_type' => $item->user_type ?? null,
+                        'user_id' => $item->id ?? null,
+                        'error' => $e->getMessage(),
+                    ]);
                 } finally {
-                    if (!$item->is_online && $item->fcm_token && $type !== 'chats') {
+                    if (!$skipPush && !$item->is_online && $item->fcm_token && $type !== 'chats') {
                         $fcmData = self::buildFcmMessage($item, $type, $message, $customProperties);
 
                         FcmHelper::sendFcmNotification($fcmData, [$item->fcm_token], $customProperties);
@@ -85,9 +101,13 @@ class Notifications
                     ]);
 
             } catch (Exception $e) {
-
+                Log::warning('Failed to update Firestore notification count', [
+                    'user_type' => $user->user_type ?? null,
+                    'user_id' => $user->id ?? null,
+                    'error' => $e->getMessage(),
+                ]);
             } finally {
-                if (!$user->is_online && $user->fcm_token && $type !== 'chats') {
+                if (!$skipPush && !$user->is_online && $user->fcm_token && $type !== 'chats') {
                     $fcmData = self::buildFcmMessage($user, $type, $message, $customProperties);
 
                     FcmHelper::sendFcmNotification($fcmData, [$user->fcm_token], $customProperties);
@@ -108,6 +128,12 @@ class Notifications
     private static function buildFcmMessage($recipient, string $type, string $message, ?array $customProperties): array
     {
         $result = [];
+
+        // The admin-configured site logo, so every push shows current branding
+        // (e.g. after a rebrand) instead of whatever generic icon the client
+        // app was originally built with — unless the caller already supplied
+        // a more specific image (e.g. the reported post's own photo).
+        $result['image'] = $customProperties['image'] ?? url(Settings::Logo());
 
         foreach (['ar' => 'title', 'en' => 'title_en'] as $locale => $key) {
             $result[$key] = trans("api/notifications/notifications.{$type}.title", [], $locale);
@@ -160,7 +186,11 @@ class Notifications
                 ]);
 
         } catch (Exception $e) {
-
+            Log::warning('Failed to update Firestore notification count', [
+                'user_type' => $user->user_type ?? null,
+                'user_id' => $user->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -204,7 +234,8 @@ class Notifications
         $title = $customProperties['title'] ?? trans("api/notifications/notifications.{$type}.title", [], 'ar');
         $titleEn = $customProperties['title_en'] ?? trans("api/notifications/notifications.{$type}.title", [], 'en');
         $bodyEn = $customProperties['body_en'] ?? $message;
-        $image = $customProperties['image'] ?? null;
+        // Same site-logo default as buildFcmMessage() — see its comment.
+        $image = $customProperties['image'] ?? url(Settings::Logo());
 
         foreach ($users as $user) {
             $user->notify(new CommunityNotifications([
@@ -228,7 +259,11 @@ class Notifications
                     ]);
 
             } catch (Exception $e) {
-
+                Log::warning('Failed to update Firestore notification count', [
+                    'user_type' => $user->user_type ?? null,
+                    'user_id' => $user->id ?? null,
+                    'error' => $e->getMessage(),
+                ]);
             }
 
             if ($user->fcm_token) {
@@ -361,5 +396,98 @@ class Notifications
 
         self::sendFromAdmin($users, 'offers', $offer->content, 'add', $customProperties);
         self::sendFromAdmin($advertisers, 'offers', $offer->content, 'add', $customProperties);
+    }
+
+    /**
+     * Notify a post's own advertiser that the admin approved or declined a
+     * (re-)review of their post — the review is triggered either by the admin's
+     * own approve/reject action, or automatically because editing a post resets
+     * it to `pending`. Never fired for the initial auto-approve-at-creation case,
+     * since `updated()` (the only caller, via PostObserver) never fires on `create()`.
+     *
+     * `status` is also forwarded via customProperties so the Flutter app can tell
+     * an approval apart from a decline (both share the existing `posts` type/icon
+     * and navigate to the same post).
+     *
+     * @param Post $post
+     * @return void
+     */
+    public static function notifyOwnerPostStatusChanged(Post $post): void
+    {
+        $advertiser = $post->advertiser;
+        if (!$advertiser || !in_array($post->status, ['approved', 'unapproved'])) {
+            return;
+        }
+
+        $key = $post->status === 'approved' ? 'approved' : 'declined';
+        $message = trans("api/notifications/notifications.posts.{$key}", [], 'ar');
+        $messageEn = trans("api/notifications/notifications.posts.{$key}", [], 'en');
+
+        $customProperties = [
+            'body_en' => $messageEn,
+            'postId' => $post->id,
+            'status' => $post->status,
+        ];
+
+        self::sendFromAdmin(collect([$advertiser]), 'posts', $message, 'view', $customProperties);
+    }
+
+    /**
+     * Notify an offer's own advertiser that the admin approved or declined a
+     * (re-)review of their offer. See notifyOwnerPostStatusChanged() for the
+     * exact same reasoning (only fired by OfferObserver::updated()).
+     *
+     * @param Offer $offer
+     * @return void
+     */
+    public static function notifyOwnerOfferStatusChanged(Offer $offer): void
+    {
+        $advertiser = $offer->advertiser;
+        if (!$advertiser || !in_array($offer->status, ['approved', 'unapproved'])) {
+            return;
+        }
+
+        $key = $offer->status === 'approved' ? 'approved' : 'declined';
+        $message = trans("api/notifications/notifications.offers.{$key}", [], 'ar');
+        $messageEn = trans("api/notifications/notifications.offers.{$key}", [], 'en');
+
+        $customProperties = [
+            'body_en' => $messageEn,
+            'offerId' => $offer->id,
+            'status' => $offer->status,
+        ];
+
+        self::sendFromAdmin(collect([$advertiser]), 'offers', $message, 'view', $customProperties);
+    }
+
+    /**
+     * Notify a comment's author that someone replied to it. Unlike the generic
+     * "someone commented on a post/offer you're subscribed to" broadcast (sent
+     * via sendForCommunity() with $skipPush = true — too frequent/impersonal to
+     * interrupt the recipient for), a direct reply is a real push regardless of
+     * the recipient's online status: sendFromAdmin() has no online-status gate
+     * at all, unlike sendForCommunity().
+     *
+     * @param AdvertiserUser|CustomerUser|null $recipient The parent comment's author
+     * @param string $type 'posts.comments' or 'offers.comments'
+     * @param string $commenterName
+     * @param array $customProperties Same shape the caller already built for its
+     *                                own comment notifications (postId/offerId,
+     *                                commentId, userId/userType of the replier)
+     * @return void
+     */
+    public static function notifyCommentReply($recipient, string $type, string $commenterName, array $customProperties): void
+    {
+        if (!$recipient) {
+            return;
+        }
+
+        $key = $type === 'offers.comments' ? 'offers.comment_reply' : 'posts.comment_reply';
+        $message = trans("api/notifications/notifications.{$key}", ['name' => $commenterName], 'ar');
+        $messageEn = trans("api/notifications/notifications.{$key}", ['name' => $commenterName], 'en');
+
+        $customProperties['body_en'] = $messageEn;
+
+        self::sendFromAdmin(collect([$recipient]), $type, $message, 'add', $customProperties);
     }
 }

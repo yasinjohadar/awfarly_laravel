@@ -67,11 +67,16 @@ class NotificationsResource extends JsonResource
             if (isset($this->data['customProperties']['status'])) {
                 $data['status'] = $this->data['customProperties']['status'];
             }
-            if (isset($this->data['customProperties']['proposalId'])) {
-                $data['proposalId'] = $this->data['customProperties']['proposalId'];
-            }
             if (isset($this->data['customProperties']['followId'])) {
                 $data['followId'] = $this->data['customProperties']['followId'];
+            }
+            //forwarded so the client can deep-link to whoever triggered this
+            //notification (e.g. "X rated you" -> X's own profile)
+            if (isset($this->data['customProperties']['userId'])) {
+                $data['userId'] = $this->data['customProperties']['userId'];
+            }
+            if (isset($this->data['customProperties']['userType'])) {
+                $data['userType'] = $this->data['customProperties']['userType'];
             }
         }
 
@@ -96,7 +101,32 @@ class NotificationsResource extends JsonResource
                     $content = $this->data['customProperties']['body'];
                 }
             } else {
-                $content = $this->data['message'];
+                //sendForCommunity() (unlike sendFromAdmin()) stores $message as a
+                //translation KEY, not literal display text — e.g. 'posts.like',
+                //'advertisers.rates.advertiser_rate' — so it must be resolved via
+                //trans() here, same as the comment_add_subscription case above.
+                //Only whitelisted keys go through trans(): a raw notification
+                //message (e.g. $post->content forwarded by sendFromAdmin) must
+                //never be treated as a translation key, since trans() returns the
+                //untranslated key STRING ITSELF (with this method's own
+                //"api/notifications/notifications." prefix included) when no
+                //matching translation exists — silently corrupting real content.
+                $translatableMessages = [
+                    'posts.comment_add',
+                    'posts.comment_like',
+                    'posts.like',
+                    'offers.comment_add',
+                    'offers.comment_like',
+                    'offers.like',
+                    'offers.rates.offer_rate',
+                    'advertisers.rates.advertiser_rate',
+                ];
+
+                if (in_array($this->data['message'], $translatableMessages, true)) {
+                    $content = __("api/notifications/notifications.{$this->data['message']}", ['name' => $user->name]);
+                } else {
+                    $content = $this->data['message'];
+                }
             }
         } else {
             $content = $this->data['message'];

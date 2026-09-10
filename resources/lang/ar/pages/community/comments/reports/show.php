@@ -19,6 +19,9 @@ return [
         'status' => 'الحالة: ',
         'solved' => 'تم حلها',
         'unsolved' => 'لم يتم حلها',
+        'resolution' => 'كيف تم حل البلاغ',
+        'resolved_by' => 'تم الحل بواسطة',
+        'resolved_at' => 'تم الحل في',
         'datatable' => [
             'comment_id' => 'تعليق #',
             'user_type' => 'نوع المستخدم',
@@ -52,6 +55,8 @@ return [
         'solve' => [
             'title' => 'حدد كبلاغات تم حلها',
             'content' => 'هل أنت متأكد أنك تريد تحديد هذه البلاغات كبلاغات تم حلها؟',
+            'resolution_label' => 'كيف تم حل البلاغ؟',
+            'resolution_placeholder' => 'اشرح الإجراء الذي تم اتخاذه لحل هذا البلاغ...',
             'submit' => 'موافق',
             'cancel' => 'إلغاء',
         ],

@@ -2,8 +2,10 @@
 
 namespace App\Models\Reports;
 
+use App\Models\Users\Admins\AdminUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Report extends Model
@@ -24,6 +26,13 @@ class Report extends Model
         'reported_id',
         'reason',
         'status',
+        'resolution',
+        'resolved_by',
+        'resolved_at',
+    ];
+
+    protected $casts = [
+        'resolved_at' => 'datetime',
     ];
 
     /**
@@ -50,5 +59,14 @@ class Report extends Model
     public function reported(): MorphTo
     {
         return $this->morphTo()->withTrashed();
+    }
+
+    /**
+     * The admin who marked this report as solved
+     * @return BelongsTo
+     */
+    public function resolvedByAdmin(): BelongsTo
+    {
+        return $this->belongsTo(AdminUser::class, 'resolved_by');
     }
 }

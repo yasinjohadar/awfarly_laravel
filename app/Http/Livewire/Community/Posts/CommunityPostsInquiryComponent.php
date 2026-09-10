@@ -303,7 +303,7 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
                 'posts' => $posts
             ], "Delete: posts");
 
-            $this->emitUp('recountCounters');
+            $this->emit('recountCounters');
         } catch (Throwable $e) {
             //rollback
             DB::rollBack();
@@ -466,7 +466,7 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
                 'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
             ]);
 
-            $this->emitUp('recountCounters');
+            $this->emit('recountCounters');
         } catch (Exception $e) {
             //rollback
             DB::rollBack();
@@ -524,7 +524,58 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
             ]);
 
             //refresh the tab counters so "unreviewed" drops by one
-            $this->emitUp('recountCounters');
+            $this->emit('recountCounters');
+        } catch (Exception $e) {
+            DB::rollBack();
+            $this->alert('error', __('toastr.error'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                'text' => $e->getMessage(),
+            ]);
+            return null;
+        }
+        DB::commit();
+    }
+
+    /**
+     * One-click rejection straight from the actions column, without opening the
+     * edit modal. Mirrors approve(), but sets `unapproved` and never notifies
+     * followers (only the post's own advertiser, via PostObserver).
+     *
+     * @param $id
+     * @return void|null
+     */
+    public function reject($id)
+    {
+        if (!Auth::guard('admin')->user()->can('posts.edit')) {
+            $this->alert('error', __('permissions.insufficient_permissions'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+            return null;
+        }
+
+        DB::beginTransaction();
+        try {
+            $post = Post::withTrashed()->findOrFail($id);
+
+            //nothing to do if it is already unapproved
+            if ($post->status === 'unapproved') {
+                DB::rollBack();
+                return null;
+            }
+
+            AdminLogs::log('edit', 'posts', [
+                'old' => $post,
+                'new' => ['status' => 'unapproved'],
+            ], "Reject: post #$id");
+
+            tap($post)->update(['status' => 'unapproved']);
+
+            $this->alert('success', __('toastr.success'), [
+                'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+            ]);
+
+            //refresh the tab counters so "unreviewed" drops by one
+            $this->emit('recountCounters');
         } catch (Exception $e) {
             DB::rollBack();
             $this->alert('error', __('toastr.error'), [
@@ -596,7 +647,7 @@ class CommunityPostsInquiryComponent extends LivewireDatatable
             $this->reset('restore');
             $this->showRestoreModal = false;
 
-            $this->emitUp('recountCounters');
+            $this->emit('recountCounters');
         } catch (Exception $e) {
             //rollback
             DB::rollBack();

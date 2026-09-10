@@ -24,6 +24,7 @@ class CommunityReportedPostInquiryComponent extends Component
     public string $active;
     public array $solveModalTexts;
     public array $deleteModalTexts;
+    public string $resolution = '';
 
     public function __construct($id = null)
     {
@@ -42,13 +43,17 @@ class CommunityReportedPostInquiryComponent extends Component
         $post['media'] = MediaResource::collection($post->getMedia('posts'))->resolve();
 
         //get report status
-        $report_status = optional($post->reports()->first())->status ?? 'pending';
+        $report = $post->reports()->latest()->first();
+        $report_status = optional($report)->status ?? 'pending';
         $reports_count = $post->reports()->count();
 
         return view('livewire.pages.community.posts.reports.show', [
             'post' => $post,
             'status' => $report_status,
             'reports_count' => $reports_count,
+            'resolution' => optional($report)->resolution,
+            'resolved_at' => optional($report)->resolved_at,
+            'resolved_by' => optional(optional($report)->resolvedByAdmin)->name,
         ]);
     }
 
@@ -150,6 +155,11 @@ class CommunityReportedPostInquiryComponent extends Component
             ]);
             return null;
         }
+
+        $this->validate([
+            'resolution' => ['required', 'string', 'max:2000'],
+        ]);
+
         $post = Post::withTrashed()
             ->where('id', $this->post_id)
             ->first();
@@ -166,14 +176,20 @@ class CommunityReportedPostInquiryComponent extends Component
 
             //add log
             AdminLogs::log('decline', 'reports', [
-                'post' => $post
+                'post' => $post,
+                'resolution' => $this->resolution,
             ], "Solve: post #$this->post_id");
 
             Report::where('reported_type', Post::class)
                 ->where('reported_id', $this->post_id)
                 ->update([
-                    'status' => 'solved'
+                    'status' => 'solved',
+                    'resolution' => $this->resolution,
+                    'resolved_by' => Auth::guard('admin')->id(),
+                    'resolved_at' => now(),
                 ]);
+
+            $this->reset('resolution');
 
             $this->emitUp('recountCounters');
         } catch (Throwable $e) {

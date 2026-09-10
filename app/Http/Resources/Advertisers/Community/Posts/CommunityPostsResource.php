@@ -76,6 +76,7 @@ class CommunityPostsResource extends JsonResource
         return [
             'id' => $this->id,
             'content' => $this->content,
+            'status' => $this->status,
             'websiteUrl' => route('post.index', ['id' => $this->id]),
             'media' => MediaResource::collection($this->getMedia('posts')),
             'statistics' => [

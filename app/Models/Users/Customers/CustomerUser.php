@@ -22,7 +22,6 @@ use App\Models\Posts\Post;
 use App\Models\Posts\Saved\SavedPost;
 use App\Models\Posts\Subscriptions\PostSubscriptions;
 use App\Models\Posts\Viewed\ViewedPost;
-use App\Models\Proposals\Proposal;
 use App\Models\Requests\ContactForms;
 use App\Models\Requests\UsernameRequests;
 use App\Models\Users\Advertisers\Ratings\AdvertiserRatings;
@@ -166,7 +165,6 @@ class CustomerUser extends Authenticatable
         $this->viewedOffers()->delete();
         $this->offersCommentsLikes()->delete();
         $this->offersComments()->delete();
-        $this->sentProposals()->delete();
         $this->messages()->delete();
         $this->chatsUsers()->delete();
         $this->usernameRequests()->delete();
@@ -442,14 +440,6 @@ class CustomerUser extends Authenticatable
     public function offersComments(): MorphMany
     {
         return $this->morphMany(OffersComments::class, 'user');
-    }
-
-    /**
-     * @return MorphMany
-     */
-    public function sentProposals(): MorphMany
-    {
-        return $this->morphMany(Proposal::class, 'user');
     }
 
     /**

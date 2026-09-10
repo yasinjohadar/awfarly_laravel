@@ -14,14 +14,13 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Helpers\ActivationCodeService;
-use App\Helpers\FirebaseAuth\FirebaseAuthHelper;
 use App\Models\Users\Customers\CustomerUser;
 use App\Models\Users\Advertisers\AdvertiserUser;
 use Illuminate\Contracts\Foundation\Application;
 use App\Models\Users\Shared\Social\SocialAccount;
 use Illuminate\Contracts\Routing\ResponseFactory;
-use App\Services\SmsServices\SaudiGateway\SaudiSmsService;
 use App\Models\Users\Advertisers\BusinessTypes\AdvertiserBusinessType;
+use App\Helpers\WhatsAppOtpSender;
 use Illuminate\Support\Facades\Log;
 
 class RegisterController extends Controller
@@ -103,39 +102,37 @@ class RegisterController extends Controller
 
         DB::beginTransaction();
         try {
-            /*
-             * ============================================================
-             * PREVIOUS FLOW (mobile verification / OTP) — kept for restore
-             * ============================================================
-             *
-             * if (
-             *     ($request->has('mobileVerificationCode') &&
-             *         is_null($data['mobileVerificationCode'])
-             *     ) ||
-             *     ($request->has('isRequestMobileVerificationCode') &&
-             *         $data['isRequestMobileVerificationCode'] == true
-             *     )
-             * ) {
-             *     // Send and generate mobile verification auth code
-             *     $activation_code = ActivationCodeService::generate($data['mobile']);
-             * } elseif (
-             *     isset($data['mobileVerificationCode']) &&
-             *     (ActivationCodeService::validate($data['mobile'], $data['mobileVerificationCode'])
-             *         || ActivationCodeService::get($data['mobile']) == $data['mobileVerificationCode']
-             *     )
-             * ) {
-             *     FirebaseAuthHelper::enableUserWithPhone($data['mobile']);
-             *     // ... then create user (same create block below) ...
-             * }
-             *
-             * After commit, old response branches:
-             * - if token → return user+token
-             * - elseif activation_code → send SMS for SA / return isMessageSent
-             * - elseif mobileVerificationCode present → invalid-verification
-             * ============================================================
-             */
+            // Phone verification via WhatsApp OTP (admin-toggleable, off by default).
+            // When enabled, the client calls this endpoint twice with the same form
+            // data: once to request the code (no mobileVerificationCode yet), and
+            // once more with the code to actually create the account.
+            if (Settings::Get('auth.phone_verification.enabled', false)) {
+                $hasCode = isset($data['mobileVerificationCode']) && $data['mobileVerificationCode'] !== null && $data['mobileVerificationCode'] !== '';
 
-            // CURRENT: create account immediately without OTP / Firebase phone verify
+                if (!$hasCode) {
+                    ActivationCodeService::generate($data['mobile']);
+                    $code = ActivationCodeService::get($data['mobile']);
+                    $messageSent = WhatsAppOtpSender::send($data['mobile'], $code, 'register_otp');
+
+                    if (!$messageSent) {
+                        DB::rollBack();
+                        return $this->apiExceptionResponse(__('api/auth/auth.something-wrong'));
+                    }
+
+                    DB::commit();
+
+                    return $this->apiResponse([
+                        'message' => __('api/auth/auth.activation-sent'),
+                        'data' => ['isMessageSent' => true],
+                    ]);
+                }
+
+                if (ActivationCodeService::get($data['mobile']) != $data['mobileVerificationCode']) {
+                    DB::rollBack();
+                    return $this->apiExceptionResponse(__('api/auth/auth.invalid-verification'));
+                }
+            }
+
             if ($data['type'] === 'advertiser' && $request->has('businessTypeId') && $request->get('businessTypeId')) {
                 $business_type = AdvertiserBusinessType::where('id', $data['businessTypeId'])
                     ->where('is_active', true)
@@ -249,27 +246,6 @@ class RegisterController extends Controller
                 'scope' => [$this->guard],
             ]);
         }
-
-        /*
-         * PREVIOUS post-commit OTP response branches (restore with old if/elseif above):
-         *
-         * } elseif (isset($activation_code) && $activation_code) {
-         *     $data = ['isMessageSent' => true, 'saudi_number' => false];
-         *     if ($request->countryCode == 'SA') {
-         *         $code = ActivationCodeService::get($request->mobile);
-         *         $message = "$code is your activation code for Price Crush app";
-         *         $message_sent = (new SaudiSmsService)->send($request->mobile, $message);
-         *         if (!$message_sent) return $this->apiExceptionResponse(__('api/auth/auth.something-wrong'));
-         *         $data = array_merge($data, ['saudi_number' => true]);
-         *     }
-         *     return $this->apiResponse([
-         *         'message' => __('api/auth/auth.activation-sent'),
-         *         'data' => $data,
-         *     ]);
-         * } elseif ($request->has('mobileVerificationCode') && $data['mobileVerificationCode']) {
-         *     return $this->apiExceptionResponse(__('api/auth/auth.invalid-verification'));
-         * }
-         */
 
         return $this->apiExceptionResponse(__('api/auth/auth.something-wrong'));
     }

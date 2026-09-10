@@ -58,6 +58,8 @@ return [
         'activate' => 'Activate',
         'restore' => 'Restore',
         'delete' => 'Delete',
+        'permanent_delete' => 'Permanent Delete',
+        'permanent_delete_confirm' => 'This advertiser and all related data will be permanently deleted and cannot be undone. Are you sure?',
     ],
     'modal' => [
         'edit' => [

@@ -20,13 +20,13 @@ use App\Http\Controllers\Admins\Community\Chats\CommunityChatsController;
 use App\Http\Controllers\Admins\Community\Posts\CommunityPostsController;
 use App\Http\Controllers\Admins\System\Settings\SystemSettingsController;
 use App\Http\Controllers\Admins\System\Firebase\SystemFirebaseController;
+use App\Http\Controllers\Admins\System\WhatsApp\SystemWhatsAppController;
 use App\Http\Controllers\Admins\Requests\UsernameChangeRequestsController;
 use App\Http\Controllers\Admins\Community\Offers\CommunityOffersController;
 use App\Http\Controllers\Admins\Countries\Cities\CountriesCitiesController;
 use App\Http\Controllers\Admins\Countries\Governorates\CountriesGovernoratesController;
 use App\Http\Controllers\Admins\Community\Comments\CommunityCommentsController;
 use App\Http\Controllers\Admins\MarketingTools\SMS\MarketingToolsSMSController;
-use App\Http\Controllers\Admins\Community\Proposals\CommunityProposalsController;
 use App\Http\Controllers\Admins\Advertisers\BusinessTypes\BusinessTypesController;
 use App\Http\Controllers\Admins\MarketingTools\Modals\MarketingToolsModalController;
 use App\Http\Controllers\Admins\MarketingTools\Emails\MarketingToolsEmailsController;
@@ -163,6 +163,17 @@ Route::group([
 
     Route::get('firebase', [SystemFirebaseController::class, 'index'])
         ->name('firebase.index');
+
+    Route::group([
+        'prefix' => 'whatsapp',
+        'as' => 'whatsapp.',
+    ], function () {
+        Route::get('settings', [SystemWhatsAppController::class, 'settings'])->name('settings');
+        Route::get('instances', [SystemWhatsAppController::class, 'instances'])->name('instances');
+        Route::get('send', [SystemWhatsAppController::class, 'send'])->name('send');
+        Route::get('groups', [SystemWhatsAppController::class, 'groups'])->name('groups');
+        Route::get('templates', [SystemWhatsAppController::class, 'templates'])->name('templates');
+    });
 });
 
 
@@ -244,16 +255,6 @@ Route::group([
             ->name('show');
     });
 
-    Route::get('/proposals/reports', [CommunityProposalsController::class, 'reportedProposals'])
-        ->name('proposals.reports');
-
-    //proposals controller
-    Route::resource('/proposals', CommunityProposalsController::class)
-        ->only([
-            'index',
-            'show',
-        ]);
-
     //chats controller
     Route::resource('/chats', CommunityChatsController::class)
         ->only([
@@ -272,9 +273,6 @@ Route::group([
 
         Route::get('/offers', [CommunityOffersController::class, 'reportedOffers'])
             ->name('offers');
-
-        Route::get('/proposals', [CommunityProposalsController::class, 'reportedProposals'])
-            ->name('proposals');
     });
 });
 

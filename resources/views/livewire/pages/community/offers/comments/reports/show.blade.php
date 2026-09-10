@@ -50,7 +50,7 @@
                 <div class="row">
                     <div class="col-md-2">{{__('pages/community/offers/comments/reports/show.content.status')}}</div>
                     <div
-                        class="col-md-10 font-weight-bold">{{($comment->deleted_at) ? __('pages/community/offers/comments/reports/show.content.solved') : __('pages/community/offers/comments/reports/show.content.unsolved')}}</div>
+                        class="col-md-10 font-weight-bold">{{$isSolved ? __('pages/community/offers/comments/reports/show.content.solved') : __('pages/community/offers/comments/reports/show.content.unsolved')}}</div>
                 </div>
             </div>
             <div class="col-md-12 mt-5">
@@ -60,6 +60,26 @@
                     {!! $comment->comment !!}
                 </div>
             </div>
+            @if($isSolved && $resolution)
+                <div class="col-md-12 mt-5">
+                    <div class="row">
+                        <div class="col-md-2">{{__('pages/community/offers/comments/reports/show.content.resolution')}}</div>
+                        <div class="col-md-10 font-weight-bold">{{ $resolution }}</div>
+                    </div>
+                    @if($resolved_by)
+                        <div class="row">
+                            <div class="col-md-2">{{__('pages/community/offers/comments/reports/show.content.resolved_by')}}</div>
+                            <div class="col-md-10 font-weight-bold">{{ $resolved_by }}</div>
+                        </div>
+                    @endif
+                    @if($resolved_at)
+                        <div class="row">
+                            <div class="col-md-2">{{__('pages/community/offers/comments/reports/show.content.resolved_at')}}</div>
+                            <div class="col-md-10 font-weight-bold">{{ $resolved_at }}</div>
+                        </div>
+                    @endif
+                </div>
+            @endif
         </div>
     </div>
     {{--@include('modals.community.comments.answers.edit')--}}

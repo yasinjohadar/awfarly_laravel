@@ -18,4 +18,10 @@ return [
         'logout' => 'Logout'
     ],
     'messages' => 'Messages',
+    'notifications' => [
+        'title' => 'Notifications',
+        'posts' => 'New posts pending review (:count)',
+        'offers' => 'New offers pending review (:count)',
+        'empty' => 'No new notifications',
+    ],
 ];

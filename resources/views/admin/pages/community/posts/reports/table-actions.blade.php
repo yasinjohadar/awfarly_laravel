@@ -3,15 +3,23 @@
         <button @cannot('posts.reported') disabled @endcannot
                 wire:click="$emitUp('setPostId', {{ $reported_id }})"
                 class="btn btn-secondary"
-                title="{{ __('datatable.actions') }}">
+                title="{{ __('pages/community/posts/reports/reports.content.datatable.action_view') }}">
             <i class="icon-folder-open"></i>
+        </button>
+    </div>
+    <div class="mx-1">
+        <button @cannot('posts.delete') disabled @endcannot
+                wire:click="showDeletePostModal({{ $reported_id }})"
+                class="btn btn-danger"
+                title="{{ __('pages/community/posts/reports/reports.content.datatable.action_delete_post') }}">
+            <i class="icon-file-minus"></i>
         </button>
     </div>
     <div class="mx-1">
         <button @cannot('posts.reported') disabled @endcannot
                 wire:click="showDeleteModal({{ $reported_id }})"
-                class="btn btn-danger"
-                title="{{ __('datatable.delete') }}">
+                class="btn btn-warning"
+                title="{{ __('pages/community/posts/reports/reports.content.datatable.action_delete_reports') }}">
             <i class="icon-trash"></i>
         </button>
     </div>

@@ -102,6 +102,17 @@ class CommunityReportedPostShowComponent extends LivewireDatatable
                 ->filterable()
                 ->searchable()
                 ->hide(),
+            Column::callback('status', function ($status) {
+                return $status === 'solved'
+                    ? __('pages/community/posts/reports/show.content.solved')
+                    : __('pages/community/posts/reports/show.content.unsolved');
+            })
+                ->label(__('pages/community/posts/reports/show.content.status'))
+                ->filterable([
+                    'pending' => __('pages/community/posts/reports/show.content.unsolved'),
+                    'solved' => __('pages/community/posts/reports/show.content.solved'),
+                ])
+                ->searchable(),
             DateColumn::name('created_at')
                 ->label(__('datatable.created_at'))
                 ->filterable()
@@ -166,6 +177,10 @@ class CommunityReportedPostShowComponent extends LivewireDatatable
             'user_name' => $report->user ? $report->user->name : __('pages/community/comments/reports/show.content.datatable.guest'),
             'reason' => $report->reason ?? '-',
             'created_at' => Carbon::make($report->created_at)->format('Y-m-d h:i A'),
+            'status' => $report->status,
+            'resolution' => $report->resolution,
+            'resolved_by' => optional($report->resolvedByAdmin)->name,
+            'resolved_at' => $report->resolved_at ? Carbon::make($report->resolved_at)->format('Y-m-d h:i A') : null,
         ];
 
         //set show more to true

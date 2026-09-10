@@ -47,6 +47,9 @@ class AdvertisersController extends Controller
         $advertisers = AdvertiserUser::select('advertisers_users.*')
             ->where('is_elite', true)
             ->where('status', 'active')
+            ->whereHas('business', function ($q) {
+                $q->where('has_categories', true);
+            })
             ->leftJoin('advertiser_categories', 'advertiser_categories.advertiser_id', 'advertisers_users.id');;
 
 
@@ -99,6 +102,9 @@ class AdvertisersController extends Controller
         //get advertisers
         $advertisers = AdvertiserUser::select('advertisers_users.*')
             ->where('status', 'active')
+            ->whereHas('business', function ($q) {
+                $q->where('has_categories', true);
+            })
             ->leftJoin('advertiser_categories', 'advertiser_categories.advertiser_id', 'advertisers_users.id');
 
         //filter keyword
@@ -159,6 +165,9 @@ class AdvertisersController extends Controller
         //get all elite advertisers
         $advertisers = AdvertiserUser::select('advertisers_users.*')
             ->where('status', 'active')
+            ->whereHas('business', function ($q) {
+                $q->where('has_categories', true);
+            })
             ->leftJoin('advertiser_categories', 'advertiser_categories.advertiser_id', 'advertisers_users.id');
 
         //Filter country code

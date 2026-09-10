@@ -37,6 +37,9 @@
                 @endforeach
             </div>
         </li>
+        @canany(['posts.inquiry', 'offers.inquiry'])
+            @livewire('navbar-notifications')
+        @endcanany
         <li class="nav-item nav-item-dropdown-lg dropdown dropdown-user h-100">
             <a href="#"
                class="navbar-nav-link navbar-nav-link-toggler dropdown-toggle d-inline-flex align-items-center h-100{{(Request::routeIs('admin.account.edit')) ? ' active' : ''}}"

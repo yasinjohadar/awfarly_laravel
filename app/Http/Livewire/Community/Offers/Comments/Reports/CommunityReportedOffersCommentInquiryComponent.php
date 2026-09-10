@@ -23,6 +23,7 @@ class CommunityReportedOffersCommentInquiryComponent extends Component
     public string $active;
     public array $solveModalTexts;
     public array $deleteModalTexts;
+    public string $resolution = '';
 
     public function __construct($id = null)
     {
@@ -36,12 +37,19 @@ class CommunityReportedOffersCommentInquiryComponent extends Component
         $comment = OffersComments::withTrashed()
             ->where('id', $this->comment_id)
             ->first();
-        $solved = $comment->reports->first()
-            ->status;
 
         $comment['created_at'] = isset($comment['created_at']) ? Carbon::make($comment['created_at'])->format('Y-m-d h:i A') : null;
 
-        return view('livewire.pages.community.offers.comments.reports.show', ['comment' => $comment, 'isSolved' => $solved]);
+        $latestReport = $comment->reports()->latest()->first();
+        $isSolved = optional($latestReport)->status === 'solved' || (bool) $comment->deleted_at;
+
+        return view('livewire.pages.community.offers.comments.reports.show', [
+            'comment' => $comment,
+            'isSolved' => $isSolved,
+            'resolution' => optional($latestReport)->resolution,
+            'resolved_at' => optional($latestReport)->resolved_at,
+            'resolved_by' => optional(optional($latestReport)->resolvedByAdmin)->name,
+        ]);
     }
 
     /**
@@ -138,6 +146,11 @@ class CommunityReportedOffersCommentInquiryComponent extends Component
             ]);
             return null;
         }
+
+        $this->validate([
+            'resolution' => ['required', 'string', 'max:2000'],
+        ]);
+
         $comment = OffersComments::withTrashed()
             ->where('id', $this->comment_id)
             ->first();
@@ -154,14 +167,20 @@ class CommunityReportedOffersCommentInquiryComponent extends Component
 
             //add log
             AdminLogs::log('decline', 'reports', [
-                'comment' => $comment
+                'comment' => $comment,
+                'resolution' => $this->resolution,
             ], "Solve: comment #$this->comment_id");
 
             Report::where('reported_type', OffersComments::class)
                 ->where('reported_id', $this->comment_id)
                 ->update([
-                    'status' => 'solved'
+                    'status' => 'solved',
+                    'resolution' => $this->resolution,
+                    'resolved_by' => Auth::guard('admin')->id(),
+                    'resolved_at' => now(),
                 ]);
+
+            $this->reset('resolution');
         } catch (Throwable $e) {
 
             //rollback changes
