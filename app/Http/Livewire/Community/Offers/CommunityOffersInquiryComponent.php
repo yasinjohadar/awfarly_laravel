@@ -3,10 +3,12 @@
 namespace App\Http\Livewire\Community\Offers;
 
 use App\Helpers\Admins\AdminLogs;
+use App\Helpers\Advertisers\OfferLimits;
 use App\Helpers\Filter;
 use App\Helpers\Notifications;
 use App\Helpers\Settings;
 use App\Models\Offers\Offer;
+use App\Models\Users\Advertisers\AdvertiserUser;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -422,6 +424,26 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
                 ->findOrFail($id);
             $wasApproved = $offer->status === 'approved';
 
+            //newly approving this offer must not push the advertiser past
+            //their configured concurrent-active-offers limit — creation
+            //already enforces this (OfferLimits::evaluate in the
+            //advertiser-facing API), but approving a pending offer here is a
+            //separate code path that was never checking it, letting an
+            //advertiser end up with more simultaneously active offers than
+            //their limit allows.
+            if (!$wasApproved && $this->offer['status'] === 'approved') {
+                $exceededLimit = $this->activeLimitIfExceeded($offer);
+                if ($exceededLimit !== null) {
+                    DB::rollBack();
+                    $this->alert('error', __('api/advertisers/community/offers/offers.exceeded-limit', [
+                        'count' => $exceededLimit,
+                    ]), [
+                        'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                    ]);
+                    return null;
+                }
+            }
+
             if ($this->offer['status'] === 'approved') {
                 if ($offer->status === $this->offer['status'] && $data['expires_in'] !== $offer->expires_in && $data['expires_in'] > 0) {
                     $expires_at = $offer->expires_at ? Carbon::make($offer->expires_at)->subDays($offer->expires_in) : Carbon::now();
@@ -474,6 +496,39 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
     }
 
     /**
+     * The advertiser's active-offers limit if approving $offer right now
+     * would exceed it, null otherwise. Locks the advertiser row first (same
+     * as the advertiser-facing create endpoint) so two admins approving
+     * different pending offers for the same advertiser at the same time
+     * can't both slip through. $offer's own row is excluded from the count —
+     * OfferLimits::activeCount() treats a null expires_at (which a
+     * not-yet-approved offer still has) as active, so counting it in would
+     * make this offer block itself.
+     */
+    protected function activeLimitIfExceeded(Offer $offer): ?int
+    {
+        $advertiser = AdvertiserUser::where('id', $offer->advertiser_id)
+            ->lockForUpdate()
+            ->first();
+
+        if (!$advertiser) {
+            return null;
+        }
+
+        $otherActiveCount = $advertiser->offers()
+            ->where('id', '!=', $offer->id)
+            ->where(function ($q) {
+                $q->where('expires_at', '>', now())
+                    ->orWhereNull('expires_at');
+            })
+            ->count();
+
+        $limit = OfferLimits::activeLimit($advertiser);
+
+        return $otherActiveCount >= $limit ? $limit : null;
+    }
+
+    /**
      * One-click approval straight from the actions column, without opening the
      * edit modal. Sets expires_at from the offer's own validity so it lands in
      * the "active" tab, and notifies interested users — mirroring update().
@@ -497,6 +552,17 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
             //already approved — nothing to do
             if ($offer->status === 'approved') {
                 DB::rollBack();
+                return null;
+            }
+
+            $exceededLimit = $this->activeLimitIfExceeded($offer);
+            if ($exceededLimit !== null) {
+                DB::rollBack();
+                $this->alert('error', __('api/advertisers/community/offers/offers.exceeded-limit', [
+                    'count' => $exceededLimit,
+                ]), [
+                    'position' => ((App::currentLocale() === 'ar') ? 'top-start' : 'top-end'),
+                ]);
                 return null;
             }
 

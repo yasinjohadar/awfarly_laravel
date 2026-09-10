@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Mediconesystems\LivewireDatatables\Column;
-use Mediconesystems\LivewireDatatables\DateColumn;
 use Mediconesystems\LivewireDatatables\Http\Livewire\LivewireDatatable;
 use Mediconesystems\LivewireDatatables\NumberColumn;
 use Throwable;
@@ -74,11 +73,16 @@ class AdvertisementsReportedCommentsInquiryComponent extends LivewireDatatable
             })
                 ->label(__('pages/community/comments/reports/reports.content.datatable.reports_count'))
                 ->searchable(),
-            DateColumn::name('created_at')
+            Column::callback(['reported_id'], function ($reported_id) {
+                $latest = Report::where('reported_type', PostComments::class)
+                    ->where('reported_id', $reported_id)
+                    ->latest()
+                    ->first();
+
+                return $latest?->created_at?->format('Y-m-d H:i') ?? '-';
+            }, ['latest_report_date'])
                 ->label(__('datatable.created_at'))
-                ->filterable()
-                ->searchable()
-                ->hide(),
+                ->unsortable(),
             Column::callback(['reported_id'], function ($reported_id) {
                 return view('admin.pages.community.comments.reports.table-actions', ['reported_id' => $reported_id]);
             })

@@ -116,8 +116,7 @@ class CommunityReportedOffersCommentShowComponent extends LivewireDatatable
             DateColumn::name('created_at')
                 ->label(__('datatable.created_at'))
                 ->filterable()
-                ->searchable()
-                ->hide(),
+                ->searchable(),
             Column::callback(['id', 'updated_at'], function ($id, $name) {
                 return view('admin.pages.community.offers.comments.reports.show-table-actions', ['id' => $id, 'name' => $name]);
             })

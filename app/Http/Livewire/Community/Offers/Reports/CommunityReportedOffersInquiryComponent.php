@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 use Mediconesystems\LivewireDatatables\Column;
-use Mediconesystems\LivewireDatatables\DateColumn;
 use Mediconesystems\LivewireDatatables\Http\Livewire\LivewireDatatable;
 use Mediconesystems\LivewireDatatables\NumberColumn;
 use Throwable;
@@ -101,11 +100,16 @@ class CommunityReportedOffersInquiryComponent extends LivewireDatatable
             }, ['latest_reason'])
                 ->label(__('pages/community/offers/reports/reports.content.datatable.latest_reason'))
                 ->unsortable(),
-            DateColumn::name('created_at')
+            Column::callback(['reported_id'], function ($reported_id) {
+                $latest = Report::where('reported_type', Offer::class)
+                    ->where('reported_id', $reported_id)
+                    ->latest()
+                    ->first();
+
+                return $latest?->created_at?->format('Y-m-d H:i') ?? '-';
+            }, ['latest_report_date'])
                 ->label(__('datatable.created_at'))
-                ->filterable()
-                ->searchable()
-                ->hide(),
+                ->unsortable(),
             Column::callback(['reported_id'], function ($reported_id) {
                 return view('admin.pages.community.offers.reports.table-actions', ['reported_id' => $reported_id]);
             })
