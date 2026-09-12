@@ -43,33 +43,23 @@ class OfferLimits
         return (int) Settings::Get('max.advertiser.monthly.offers', 30);
     }
 
+    /**
+     * Offers currently occupying one of the advertiser's active slots.
+     *
+     * A null expires_at counts, because an offer awaiting approval still holds
+     * its slot. A REJECTED offer does not: rejection leaves expires_at untouched,
+     * so without this it would keep occupying a slot forever and block the
+     * advertiser below the ceiling the admin actually set.
+     */
     public static function activeCount(AdvertiserUser $advertiser): int
     {
         return $advertiser->offers()
+            ->where('status', '!=', 'unapproved')
             ->where(function ($q) {
                 $q->where('expires_at', '>', now())
                     ->orWhereNull('expires_at');
             })
             ->count();
-    }
-
-    /**
-     * IDs of the advertiser's offers that should be visible to customers/guests:
-     * the N most recent customer-facing-active offers, where N = activeLimit().
-     * "Customer-facing active" = status approved AND expires_at in the future —
-     * intentionally narrower than activeCount()'s null-expiry-inclusive definition,
-     * to match the WHERE clauses already used by getOffersByUsername.
-     */
-    public static function cappedActiveOfferIds(AdvertiserUser $advertiser): \Illuminate\Support\Collection
-    {
-        $limit = max(0, self::activeLimit($advertiser));
-
-        return $advertiser->offers()
-            ->where('status', 'approved')
-            ->where('expires_at', '>', now())
-            ->orderBy('created_at', 'desc')
-            ->limit($limit)
-            ->pluck('id');
     }
 
     public static function monthlyCount(AdvertiserUser $advertiser, ?Carbon $at = null): int

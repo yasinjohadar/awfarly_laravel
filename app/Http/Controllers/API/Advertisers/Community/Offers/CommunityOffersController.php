@@ -109,7 +109,8 @@ class CommunityOffersController extends Controller
                 })
                 ->leftJoin('categories', 'categories.id', 'offers.category_id')
                 ->where('offers.status', 'approved')
-                ->where('offers.expires_at', '>', now());
+                ->where('offers.expires_at', '>', now())
+                ->withinAdvertiserActiveLimit(Auth::guard('advertiser-api')->id());
         }
 
         //"My offers" means every offer I created — it must not be narrowed by
@@ -184,8 +185,12 @@ class CommunityOffersController extends Controller
      */
     public function getOfferById($id)
     {
-        //get offer by id
+        //get offer by id. An offer pushed past its advertiser's active-offer
+        //ceiling is hidden here too, so a shared link or an old notification
+        //can't reach what the listings deliberately hide. My own offers stay
+        //reachable — I need them to decide which one to delete.
         $offer = Offer::where('id', $id)
+            ->withinAdvertiserActiveLimit(Auth::guard('advertiser-api')->id())
             ->first();
 
         //return error if offer wasn't found
@@ -302,7 +307,8 @@ class CommunityOffersController extends Controller
             })
             ->leftJoin('categories', 'categories.id', 'offers.category_id')
             ->where('offers.status', 'approved')
-            ->where('offers.expires_at', '>', now());
+            ->where('offers.expires_at', '>', now())
+            ->withinAdvertiserActiveLimit(Auth::guard('advertiser-api')->id());
 
         //filter keyword
         if (isset($data['keyword']) && !!trim($data['keyword'])) {
@@ -430,7 +436,7 @@ class CommunityOffersController extends Controller
             ->pluck('followed_id');
 
         //cap to the advertiser's currently allowed active-offer count
-        $cappedOfferIds = OfferLimits::cappedActiveOfferIds($advertiser);
+
 
         //get offers
         $offers = $advertiser->offers()
@@ -447,7 +453,7 @@ class CommunityOffersController extends Controller
             })
             ->where('offers.status', 'approved')
             ->where('offers.expires_at', '>', now())
-            ->whereIn('offers.id', $cappedOfferIds)
+            ->withinAdvertiserActiveLimit(Auth::guard('advertiser-api')->id())
             ->orderBy('offers.created_at', 'desc')
             ->paginate($limit);
 

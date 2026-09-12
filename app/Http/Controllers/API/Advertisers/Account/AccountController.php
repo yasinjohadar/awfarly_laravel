@@ -40,26 +40,6 @@ class AccountController extends Controller
     }
 
 
-    public function increase(Request $request)
-    {
-        $data = $request->validate([
-            'allowed_posts_count'    =>  'sometimes|nullable|integer|min:0',
-            'allowed_offers_count'    =>  'sometimes|nullable|integer|min:0'
-        ]);
-
-
-        $user = Auth::guard('advertiser-api')->user();
-
-        if($request->allowed_posts_count)
-        $user->increment('allowed_posts_count',$request->allowed_posts_count);
-
-        if($request->allowed_offers_count)
-        $user->increment('allowed_offers_count',$request->allowed_offers_count);
-
-        return $this->apiResponse(AccountResource::make(Auth::guard('advertiser-api')->user()));
-
-    }
-
     public function addPoints(Request $request)
     {
         $data = $request->validate([

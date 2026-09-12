@@ -2,6 +2,7 @@
 
 namespace App\Models\Offers;
 
+use App\Helpers\Settings;
 use App\Models\Reports\Report;
 use Spatie\MediaLibrary\HasMedia;
 use App\Models\Categories\Category;
@@ -52,6 +53,50 @@ class Offer extends Model implements HasMedia
     public function advertiser(): BelongsTo
     {
         return $this->belongsTo(AdvertiserUser::class, 'advertiser_id', 'id');
+    }
+
+    /**
+     * Keep only the offers a viewer is allowed to see: the newest N per
+     * advertiser, N being that advertiser's own active-offer ceiling.
+     *
+     * Expressed as "this offer has fewer than N newer siblings from the same
+     * advertiser", which is a plain WHERE predicate — so it stays correct under
+     * pagination, unlike filtering a fetched page in PHP. A correlated subquery
+     * rather than ROW_NUMBER() because the ceiling differs per advertiser and
+     * MySQL 8 cannot be assumed (nothing else in this codebase uses window
+     * functions).
+     *
+     * The ceiling is read from advertisers_users.allowed_offers_count, which
+     * PackageQuotas keeps in sync with the package / global setting.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int|null $exceptAdvertiserId Advertiser whose own offers stay fully
+     *   visible to themselves — they need to see every one to pick which to delete.
+     */
+    public function scopeWithinAdvertiserActiveLimit($query, ?int $exceptAdvertiserId = null)
+    {
+        $default = (int) Settings::Get('max.advertiser.active.offers', 20);
+
+        $condition = '(select count(*) from offers as newer
+                where newer.advertiser_id = offers.advertiser_id
+                  and newer.deleted_at is null
+                  and newer.status = ?
+                  and newer.expires_at > ?
+                  and (newer.created_at > offers.created_at
+                       or (newer.created_at = offers.created_at and newer.id > offers.id)))
+             < (select coalesce(a.allowed_offers_count, ?)
+                  from advertisers_users as a where a.id = offers.advertiser_id)';
+
+        $bindings = ['approved', now(), $default];
+
+        if ($exceptAdvertiserId) {
+            return $query->where(function ($q) use ($condition, $bindings, $exceptAdvertiserId) {
+                $q->whereRaw($condition, $bindings)
+                    ->orWhere('offers.advertiser_id', $exceptAdvertiserId);
+            });
+        }
+
+        return $query->whereRaw($condition, $bindings);
     }
 
     /**

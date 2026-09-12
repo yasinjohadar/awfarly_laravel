@@ -200,7 +200,9 @@ class CategoriesController extends Controller
         //current count and so locked a user at the limit out of ever changing
         //their selection, even to a smaller one
         if (count($requested) > $max_categories) {
-            return $this->apiExceptionResponse(__('api/advertisers/categories/categories.exceeded-limit'));
+            return $this->apiExceptionResponse(
+                __('api/advertisers/categories/categories.exceeded-limit', ['count' => $max_categories])
+            );
         }
 
         DB::beginTransaction();

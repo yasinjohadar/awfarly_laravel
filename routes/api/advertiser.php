@@ -21,7 +21,6 @@ use App\Http\Controllers\API\Advertisers\Community\Offers\CommunityOffersControl
 use App\Http\Controllers\API\Advertisers\Community\Posts\Saved\SavedPostsController;
 use App\Http\Controllers\API\Advertisers\Community\Comments\CommunityCommentsController;
 use App\Http\Controllers\API\Advertisers\Community\Posts\Subscribed\SubscribedPostsController;
-use App\Http\Controllers\API\Advertisers\Subscriptions\Payments\SubscriptionsPurchasedController;
 use App\Http\Controllers\API\Advertisers\Advertisers\HiddenAdvertisers\HiddenAdvertisersController;
 use App\Http\Controllers\API\Advertisers\Community\Offers\Comments\CommunityOffersCommentsController;
 
@@ -55,9 +54,6 @@ Route::post('/account', [AccountController::class, 'updateAccount'])
 Route::post('/account/addPoints', [AccountController::class, 'addPoints'])
     ->name('account.addPoints');
 
-
-Route::post('/account/increase', [AccountController::class, 'increase'])
-    ->name('account.increase');
 
 Route::post('/account/delete', [AccountController::class, 'delete'])
     ->name('account.delete');
@@ -462,7 +458,6 @@ Route::group([
         Route::get('/user', [PackagesController::class, 'getUserPackage']);
         Route::get('/payment-info', [PackageSubscriptionRequestController::class, 'paymentInfo']);
         Route::post('/requests', [PackageSubscriptionRequestController::class, 'store']);
-        Route::post('/validate', [SubscriptionsPurchasedController::class, 'addPurchase']);
         Route::get('/{id}', [PackagesController::class, 'getPackageById']);
     });
 });

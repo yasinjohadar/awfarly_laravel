@@ -356,10 +356,10 @@ class SettingsTableSeeder extends Seeder
             [
                 'name' => 'Maximum User Categories Interests',
                 'key' => 'max.user.categories.interests',
-                'value' => '5',
+                'value' => '200',
                 'value_type' => 'integer',
                 'type' => 'users',
-                'description' => 'This is to set Maximum User Categories Interests allowed for user.',
+                'description' => 'This is to set Maximum User Categories Interests allowed for user. Counts sub-categories too, since an advertiser picks parents and children together.',
             ],
             [
                 'name' => 'Maintenance Mode',

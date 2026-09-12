@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\API\Customers\Community\Offers;
 
 use App\Helpers\Filter;
-use App\Helpers\Advertisers\OfferLimits;
 use App\Helpers\Categories\CategoriesFilter;
 use App\Helpers\Geography\Geography;
 use App\Helpers\Notifications;
@@ -91,7 +90,8 @@ class CommunityOffersController extends Controller
             })
             ->leftJoin('categories', 'categories.id', 'offers.category_id')
             ->where('offers.status', 'approved')
-            ->where('offers.expires_at', '>', now());
+            ->where('offers.expires_at', '>', now())
+            ->withinAdvertiserActiveLimit();
 
         //Filter country code
         if (isset($data['countryCode']) && $data['countryCode']) {
@@ -154,12 +154,15 @@ class CommunityOffersController extends Controller
      */
     public function getOfferById($id)
     {
-        //get offer by id
+        //get offer by id. An offer pushed past its advertiser's active-offer
+        //ceiling is hidden here too, so a shared link or an old notification
+        //can't reach what the listings deliberately hide.
         $offer = Offer::where('id', $id)
             ->join('advertisers_users', function ($q) {
                 return $q->on('advertisers_users.id', 'offers.advertiser_id')
                     ->where('advertisers_users.status', 'active');
             })
+            ->withinAdvertiserActiveLimit()
             ->first();
 
         //return error if offer wasn't found
@@ -274,7 +277,8 @@ class CommunityOffersController extends Controller
             })
             ->leftJoin('categories', 'categories.id', 'offers.category_id')
             ->where('offers.status', 'approved')
-            ->where('offers.expires_at', '>', now());
+            ->where('offers.expires_at', '>', now())
+            ->withinAdvertiserActiveLimit();
 
         //filter keyword
         if (isset($data['keyword']) && !!trim($data['keyword'])) {
@@ -387,10 +391,7 @@ class CommunityOffersController extends Controller
 
         $blocks = array_unique([...$blockers, ...$blocked_advertisers]);
 
-        //cap to the advertiser's currently allowed active-offer count
-        $cappedOfferIds = OfferLimits::cappedActiveOfferIds($advertiser);
-
-        //get offers
+        //get offers, capped to the advertiser's allowed active-offer count
         $offers = $advertiser->offers()
             ->join('advertisers_users', function ($q) use ($followed_advertisers, $blocks) {
                 return $q->on('advertisers_users.id', 'offers.advertiser_id')
@@ -405,7 +406,7 @@ class CommunityOffersController extends Controller
             })
             ->where('offers.status', 'approved')
             ->where('offers.expires_at', '>', now())
-            ->whereIn('offers.id', $cappedOfferIds)
+            ->withinAdvertiserActiveLimit()
             ->orderBy('offers.created_at', 'desc')
             ->paginate($limit);
 

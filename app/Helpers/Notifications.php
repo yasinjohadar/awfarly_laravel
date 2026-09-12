@@ -368,11 +368,30 @@ class Notifications
         $advertiserIds = AdvertiserInterests::whereIn('category_id', $categoryIds)->pluck('advertiser_id')
             ->diff([$advertiser->id]);
 
+        $customersByInterest = $customerIds->count();
+        $advertisersByInterest = $advertiserIds->count();
+
         $governorateId = $advertiser->governorate_id;
         $cityId = $advertiser->city_id;
 
         $customerIds = Geography::candidatesInterestedInLocation($customerIds, CustomerPreferredGovernorate::class, CustomerPreferredCity::class, 'customer_id', $governorateId, $cityId);
         $advertiserIds = Geography::candidatesInterestedInLocation($advertiserIds, AdvertiserPreferredGovernorate::class, AdvertiserPreferredCity::class, 'advertiser_id', $governorateId, $cityId);
+
+        /// Every stage of this fan-out was previously invisible: a recipient can be
+        /// dropped by the category match or by the location match, and the counts
+        /// sendFromAdmin() returns were discarded, so "the offer never reached me"
+        /// could not be told apart from "it was sent and the push failed".
+        Log::info('[offer-notify] fan-out', [
+            'offer_id' => $offer->id,
+            'offer_category_id' => $offer->category_id,
+            'matched_category_ids' => $categoryIds,
+            'customers_by_interest' => $customersByInterest,
+            'advertisers_by_interest' => $advertisersByInterest,
+            'advertiser_governorate_id' => $governorateId,
+            'advertiser_city_id' => $cityId,
+            'customers_after_location' => $customerIds->count(),
+            'advertisers_after_location' => $advertiserIds->count(),
+        ]);
 
         $users = CustomerUser::whereIn('id', $customerIds)->get();
         $advertisers = AdvertiserUser::whereIn('id', $advertiserIds)->get();
@@ -394,8 +413,14 @@ class Notifications
             ],
         ];
 
-        self::sendFromAdmin($users, 'offers', $offer->content, 'add', $customProperties);
-        self::sendFromAdmin($advertisers, 'offers', $offer->content, 'add', $customProperties);
+        $customerResult = self::sendFromAdmin($users, 'offers', $offer->content, 'add', $customProperties);
+        $advertiserResult = self::sendFromAdmin($advertisers, 'offers', $offer->content, 'add', $customProperties);
+
+        Log::info('[offer-notify] sent', [
+            'offer_id' => $offer->id,
+            'customers' => $customerResult,
+            'advertisers' => $advertiserResult,
+        ]);
     }
 
     /**

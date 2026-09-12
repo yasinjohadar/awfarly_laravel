@@ -451,7 +451,10 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
                 } else if ($offer->status !== $this->offer['status'] && $data['expires_in'] > 0) {
                     $data['expires_at'] = Carbon::now()->addDays($data['expires_in']);
                 } else {
-                    $data['expires_at'] = null;
+                    //keep the expiry it already has. Nulling it here removed a
+                    //live offer from every feed (they all require
+                    //expires_at > now()) while it still occupied an active slot.
+                    $data['expires_at'] = $offer->expires_at;
                 }
             } else {
                 $data['expires_at'] = null;
@@ -515,8 +518,11 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
             return null;
         }
 
+        //mirrors OfferLimits::activeCount(): a rejected offer keeps its old
+        //expires_at, so it must not go on occupying a slot.
         $otherActiveCount = $advertiser->offers()
             ->where('id', '!=', $offer->id)
+            ->where('status', '!=', 'unapproved')
             ->where(function ($q) {
                 $q->where('expires_at', '>', now())
                     ->orWhereNull('expires_at');

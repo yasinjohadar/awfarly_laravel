@@ -817,7 +817,11 @@ class AdvertisersInquiryComponent extends LivewireDatatable
         $data['twitter_url'] = !empty($this->user['twitter_url']) ? Filter::RemoveHtml($this->user['twitter_url']) : null;
         $data['website_url'] = !empty($this->user['website_url']) ? Filter::RemoveHtml($this->user['website_url']) : null;
         $data['allowed_posts_count'] = !empty($this->user['allowed_posts_count']) ? $this->user['allowed_posts_count'] : null;
-        $data['allowed_offers_count'] = !empty($this->user['allowed_offers_count']) ? $this->user['allowed_offers_count'] : null;
+        //0 is a meaningful ceiling ("this advertiser may not publish"), so it
+        //must survive. !empty() treated it as blank and silently fell back.
+        $data['allowed_offers_count'] = isset($this->user['allowed_offers_count']) && $this->user['allowed_offers_count'] !== ''
+            ? $this->user['allowed_offers_count']
+            : null;
         $data['maximum_monthly_offers'] = isset($this->user['maximum_monthly_offers']) && $this->user['maximum_monthly_offers'] !== ''
             ? $this->user['maximum_monthly_offers']
             : null;
