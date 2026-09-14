@@ -4,6 +4,7 @@ return [
     'wrong-username' => 'There is no user found with this username.',
     'something-wrong' => 'Something went wrong, Please try again later!',
     'exceeded-limit' => "You can have :count active offers at a time. Delete an existing offer, or wait for one to expire, to add a new one.",
+    'exceeded-limit-with-date' => "You can have :count active offers at a time and all of them are in use. Your earliest offer expires on :date, so you can either wait until then or delete one of your active offers to publish a new one now.",
     'exceeded-monthly-limit' => "You've reached your monthly offers creation limit (:count offers this month).",
     'offer-added' => 'Offer has been added successfully.',
     'offer-edited' => 'Offer has been edited successfully.',

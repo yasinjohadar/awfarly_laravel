@@ -2,6 +2,7 @@
 
 namespace App\Models\Offers;
 
+use App\Helpers\Advertisers\OfferLimits;
 use App\Helpers\Settings;
 use App\Models\Reports\Report;
 use Spatie\MediaLibrary\HasMedia;
@@ -67,7 +68,9 @@ class Offer extends Model implements HasMedia
      * functions).
      *
      * The ceiling is read from advertisers_users.allowed_offers_count, which
-     * PackageQuotas keeps in sync with the package / global setting.
+     * PackageQuotas keeps in sync with the package / global setting, and is then
+     * capped by the max.advertiser.active.offers admin setting - the same hard
+     * ceiling OfferLimits applies when an offer is created.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param int|null $exceptAdvertiserId Advertiser whose own offers stay fully
@@ -77,6 +80,17 @@ class Offer extends Model implements HasMedia
     {
         $default = (int) Settings::Get('max.advertiser.active.offers', 20);
 
+        //allowed_offers_count still carries the package quota, which a package
+        //may set above what the admin permits. The admin setting is a hard
+        //ceiling, so the feed must not reveal slots past it either - otherwise
+        //an advertiser who filled 40 slots before the cap was lowered keeps
+        //showing all 40.
+        $cap = OfferLimits::settingCap('max.advertiser.active.offers', 20);
+
+        $ceiling = $cap === null
+            ? 'coalesce(a.allowed_offers_count, ?)'
+            : 'least(coalesce(a.allowed_offers_count, ?), ?)';
+
         $condition = '(select count(*) from offers as newer
                 where newer.advertiser_id = offers.advertiser_id
                   and newer.deleted_at is null
@@ -84,10 +98,12 @@ class Offer extends Model implements HasMedia
                   and newer.expires_at > ?
                   and (newer.created_at > offers.created_at
                        or (newer.created_at = offers.created_at and newer.id > offers.id)))
-             < (select coalesce(a.allowed_offers_count, ?)
+             < (select ' . $ceiling . '
                   from advertisers_users as a where a.id = offers.advertiser_id)';
 
-        $bindings = ['approved', now(), $default];
+        $bindings = $cap === null
+            ? ['approved', now(), $default]
+            : ['approved', now(), $default, $cap];
 
         if ($exceptAdvertiserId) {
             return $query->where(function ($q) use ($condition, $bindings, $exceptAdvertiserId) {

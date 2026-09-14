@@ -16,14 +16,14 @@ class OfferLimits
     {
         $package = self::currentPackage($advertiser);
         if ($package && $package->maximum_offers !== null) {
-            return (int) $package->maximum_offers;
+            $limit = (int) $package->maximum_offers;
+        } elseif ($advertiser->allowed_offers_count !== null) {
+            $limit = (int) $advertiser->allowed_offers_count;
+        } else {
+            $limit = (int) Settings::Get('max.advertiser.active.offers', 20);
         }
 
-        if ($advertiser->allowed_offers_count !== null) {
-            return (int) $advertiser->allowed_offers_count;
-        }
-
-        return (int) Settings::Get('max.advertiser.active.offers', 20);
+        return self::capBySetting($limit, 'max.advertiser.active.offers', 20);
     }
 
     /**
@@ -33,14 +33,50 @@ class OfferLimits
     {
         $package = self::currentPackage($advertiser);
         if ($package && $package->maximum_monthly_offers !== null) {
-            return (int) $package->maximum_monthly_offers;
+            $limit = (int) $package->maximum_monthly_offers;
+        } elseif ($advertiser->maximum_monthly_offers !== null) {
+            $limit = (int) $advertiser->maximum_monthly_offers;
+        } else {
+            $limit = (int) Settings::Get('max.advertiser.monthly.offers', 30);
         }
 
-        if ($advertiser->maximum_monthly_offers !== null) {
-            return (int) $advertiser->maximum_monthly_offers;
-        }
+        return self::capBySetting($limit, 'max.advertiser.monthly.offers', 30);
+    }
 
-        return (int) Settings::Get('max.advertiser.monthly.offers', 30);
+    /**
+     * The admin setting is a hard ceiling, not just a fallback: a package may
+     * sell a bigger quota, but no advertiser may publish past what the admin
+     * configured. A setting of 0 (or less) turns the ceiling off, matching how
+     * the other numeric settings read a 0.
+     */
+    public static function settingCap(string $key, int $default): ?int
+    {
+        $cap = (int) Settings::Get($key, $default);
+
+        return $cap > 0 ? $cap : null;
+    }
+
+    protected static function capBySetting(int $limit, string $key, int $default): int
+    {
+        $cap = self::settingCap($key, $default);
+
+        return $cap === null ? $limit : min($limit, $cap);
+    }
+
+    /**
+     * When every active slot is taken, the earliest of them frees itself on
+     * this date - the advertiser is told it instead of just being refused.
+     */
+    public static function nextExpiryAt(AdvertiserUser $advertiser): ?Carbon
+    {
+        $offer = $advertiser->offers()
+            ->where('status', '!=', 'unapproved')
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '>', now())
+            ->orderBy('expires_at')
+            ->first();
+
+        return $offer ? Carbon::make($offer->expires_at) : null;
     }
 
     /**

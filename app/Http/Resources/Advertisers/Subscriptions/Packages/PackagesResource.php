@@ -54,7 +54,12 @@ class PackagesResource extends JsonResource
         }
         $currency = $displayCurrency ? $displayCurrency->{$name} : $this->currency;
 
+        //the subscription window of the CURRENT subscription, so the app can
+        //show the advertiser when their package started, when it ends and how
+        //long is left without having to compute any of it from a formatted date
+        $starts_at = $is_subscribed ? $is_subscribed->starts_at : null;
         $ends_at = $is_subscribed ? $is_subscribed->ends_at : null;
+        $days_left = $ends_at ? max(0, now()->startOfDay()->diffInDays(Carbon::make($ends_at)->startOfDay(), false)) : null;
         return [
             'id' => $this->id,
             'productId' => $this->product_id,
@@ -73,7 +78,9 @@ class PackagesResource extends JsonResource
             'currencySymbol' => $displayCurrency->symbol ?? null,
             'isSubscribed' => (bool)$is_subscribed,
             'isTrial' => (bool)$this->is_trial,
+            'startsAt' => $starts_at ? Carbon::make($starts_at)->locale(App::currentLocale())->translatedFormat('d F Y') : null,
             'endsAt' => $ends_at ? Carbon::make($ends_at)->locale(App::currentLocale())->translatedFormat('d F Y') : null,
+            'daysLeft' => $days_left,
         ];
     }
 }

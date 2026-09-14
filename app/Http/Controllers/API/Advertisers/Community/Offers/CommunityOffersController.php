@@ -549,9 +549,22 @@ class CommunityOffersController extends Controller
 
             if ($limits['reason'] === 'active') {
                 DB::rollBack();
-                return $this->apiBadRequestResponse(__('api/advertisers/community/offers/offers.exceeded-limit', [
-                    'count' => $limits['activeLimit'],
-                ]));
+
+                //name the date the first slot frees itself, so the advertiser
+                //knows whether to wait or to delete one of their own offers
+                $next_expiry = OfferLimits::nextExpiryAt($lockedAdvertiser);
+
+                return $this->apiBadRequestResponse(__(
+                    $next_expiry
+                        ? 'api/advertisers/community/offers/offers.exceeded-limit-with-date'
+                        : 'api/advertisers/community/offers/offers.exceeded-limit',
+                    [
+                        'count' => $limits['activeLimit'],
+                        'date' => $next_expiry
+                            ? $next_expiry->locale(app()->getLocale())->translatedFormat('d F Y - h:i A')
+                            : null,
+                    ]
+                ));
             }
 
             if ($limits['reason'] === 'monthly') {
