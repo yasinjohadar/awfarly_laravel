@@ -140,7 +140,11 @@ class AccountResource extends JsonResource
                 'maximumActiveOffers' => $limits['activeLimit'],
                 'monthlyOffers' => $limits['monthlyCount'],
                 'maximumMonthlyOffers' => $limits['monthlyLimit'],
-                'leftMonthlyOffers' => max(0, $limits['monthlyLimit'] - $limits['monthlyCount']),
+                //null when the limit is switched off in the settings, so the
+                //app hides that quota rather than drawing an empty bar
+                'leftMonthlyOffers' => $limits['monthlyLimit'] === null
+                    ? null
+                    : max(0, $limits['monthlyLimit'] - $limits['monthlyCount']),
             ],
             //legacy key: for an advertiser this has always been the set the
             //post/offer category dropdown and the profile editor consume, i.e.

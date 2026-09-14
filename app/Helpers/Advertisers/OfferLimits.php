@@ -12,8 +12,12 @@ class OfferLimits
      * Max concurrent active (non-expired) offers.
      * allowed_offers_count is the assigned concurrent ceiling (from package/admin), not remaining credits.
      */
-    public static function activeLimit(AdvertiserUser $advertiser): int
+    public static function activeLimit(AdvertiserUser $advertiser): ?int
     {
+        if (!self::isEnabled('max.advertiser.active.offers', 20)) {
+            return null;
+        }
+
         $package = self::currentPackage($advertiser);
         if ($package && $package->maximum_offers !== null) {
             $limit = (int) $package->maximum_offers;
@@ -29,8 +33,12 @@ class OfferLimits
     /**
      * Max offers that may be created in the current calendar month.
      */
-    public static function monthlyLimit(AdvertiserUser $advertiser): int
+    public static function monthlyLimit(AdvertiserUser $advertiser): ?int
     {
+        if (!self::isEnabled('max.advertiser.monthly.offers', 30)) {
+            return null;
+        }
+
         $package = self::currentPackage($advertiser);
         if ($package && $package->maximum_monthly_offers !== null) {
             $limit = (int) $package->maximum_monthly_offers;
@@ -41,6 +49,17 @@ class OfferLimits
         }
 
         return self::capBySetting($limit, 'max.advertiser.monthly.offers', 30);
+    }
+
+    /**
+     * A setting of 0 switches its limit off completely: nothing is enforced and
+     * the app is told there is no such limit (a null in the account statistics),
+     * so the quota disappears from the interface instead of showing a confusing
+     * "0 of 0". Any positive value turns the limit back on as a hard ceiling.
+     */
+    public static function isEnabled(string $key, int $default): bool
+    {
+        return (int) Settings::Get($key, $default) > 0;
     }
 
     /**
@@ -112,7 +131,10 @@ class OfferLimits
     }
 
     /**
-     * @return array{allowed: bool, reason: string|null, activeCount: int, activeLimit: int, monthlyCount: int, monthlyLimit: int}
+     * A null activeLimit / monthlyLimit means that limit is switched off in the
+     * settings and must not be enforced or displayed.
+     *
+     * @return array{allowed: bool, reason: string|null, activeCount: int, activeLimit: int|null, monthlyCount: int, monthlyLimit: int|null}
      */
     public static function evaluate(AdvertiserUser $advertiser): array
     {
@@ -122,9 +144,9 @@ class OfferLimits
         $monthlyLimit = self::monthlyLimit($advertiser);
 
         $reason = null;
-        if ($activeCount >= $activeLimit) {
+        if ($activeLimit !== null && $activeCount >= $activeLimit) {
             $reason = 'active';
-        } elseif ($monthlyCount >= $monthlyLimit) {
+        } elseif ($monthlyLimit !== null && $monthlyCount >= $monthlyLimit) {
             $reason = 'monthly';
         }
 
