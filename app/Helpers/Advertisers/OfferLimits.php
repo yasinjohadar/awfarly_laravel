@@ -12,12 +12,8 @@ class OfferLimits
      * Max concurrent active (non-expired) offers.
      * allowed_offers_count is the assigned concurrent ceiling (from package/admin), not remaining credits.
      */
-    public static function activeLimit(AdvertiserUser $advertiser): ?int
+    public static function activeLimit(AdvertiserUser $advertiser): int
     {
-        if (!self::isEnabled('max.advertiser.active.offers', 20)) {
-            return null;
-        }
-
         $package = self::currentPackage($advertiser);
         if ($package && $package->maximum_offers !== null) {
             $limit = (int) $package->maximum_offers;
@@ -52,10 +48,12 @@ class OfferLimits
     }
 
     /**
-     * A setting of 0 switches its limit off completely: nothing is enforced and
-     * the app is told there is no such limit (a null in the account statistics),
-     * so the quota disappears from the interface instead of showing a confusing
-     * "0 of 0". Any positive value turns the limit back on as a hard ceiling.
+     * Only the MONTHLY limit can be switched off: a 0 there means the admin does
+     * not work with a monthly quota at all, so nothing is enforced and the app is
+     * told there is no such limit (a null in the account statistics) and drops it
+     * from the interface rather than showing a confusing "0 of 0". The active
+     * offers limit always applies - a 0 there only means "no admin ceiling", and
+     * the package quota governs.
      */
     public static function isEnabled(string $key, int $default): bool
     {
@@ -131,10 +129,10 @@ class OfferLimits
     }
 
     /**
-     * A null activeLimit / monthlyLimit means that limit is switched off in the
-     * settings and must not be enforced or displayed.
+     * A null monthlyLimit means the monthly quota is switched off in the settings
+     * and must not be enforced or displayed. activeLimit always applies.
      *
-     * @return array{allowed: bool, reason: string|null, activeCount: int, activeLimit: int|null, monthlyCount: int, monthlyLimit: int|null}
+     * @return array{allowed: bool, reason: string|null, activeCount: int, activeLimit: int, monthlyCount: int, monthlyLimit: int|null}
      */
     public static function evaluate(AdvertiserUser $advertiser): array
     {
@@ -144,7 +142,7 @@ class OfferLimits
         $monthlyLimit = self::monthlyLimit($advertiser);
 
         $reason = null;
-        if ($activeLimit !== null && $activeCount >= $activeLimit) {
+        if ($activeCount >= $activeLimit) {
             $reason = 'active';
         } elseif ($monthlyLimit !== null && $monthlyCount >= $monthlyLimit) {
             $reason = 'monthly';

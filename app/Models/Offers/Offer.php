@@ -78,12 +78,6 @@ class Offer extends Model implements HasMedia
      */
     public function scopeWithinAdvertiserActiveLimit($query, ?int $exceptAdvertiserId = null)
     {
-        //a setting of 0 switches the active-offers limit off altogether, so
-        //there is nothing to trim the feed down to
-        if (!OfferLimits::isEnabled('max.advertiser.active.offers', 20)) {
-            return $query;
-        }
-
         $default = (int) Settings::Get('max.advertiser.active.offers', 20);
 
         //allowed_offers_count still carries the package quota, which a package

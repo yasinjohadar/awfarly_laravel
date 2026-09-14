@@ -531,11 +531,6 @@ class CommunityOffersInquiryComponent extends LivewireDatatable
 
         $limit = OfferLimits::activeLimit($advertiser);
 
-        //null means the limit is switched off in the settings - nothing to block
-        if ($limit === null) {
-            return null;
-        }
-
         return $otherActiveCount >= $limit ? $limit : null;
     }
 
