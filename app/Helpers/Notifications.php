@@ -312,17 +312,42 @@ class Notifications
             return;
         }
 
-        $categoryIds = CategoriesFilter::categoryAndAncestorIds($post->category_id);
+        /// Same branch rule the feed filters by (CategoriesFilter::preferredCategoryIds),
+        /// read from the content end: everyone whose interest shares a root-to-leaf
+        /// path with this post's category. Matching only ancestors, as this did,
+        /// meant a post filed under a PARENT never notified the users who had
+        /// picked one of its children - even though the post does show up in their
+        /// feed, so the notification and the feed contradicted each other.
+        $categoryIds = CategoriesFilter::categoryMatchIds($post->category_id);
 
         $customerIds = CustomerCategories::whereIn('category_id', $categoryIds)->pluck('customer_id');
         $advertiserIds = AdvertiserInterests::whereIn('category_id', $categoryIds)->pluck('advertiser_id')
             ->diff([$advertiser->id]);
+
+        $customersByInterest = $customerIds->count();
+        $advertisersByInterest = $advertiserIds->count();
 
         $governorateId = $post->governorate_id ?? $advertiser->governorate_id;
         $cityId = $post->city_id ?? $advertiser->city_id;
 
         $customerIds = Geography::candidatesInterestedInLocation($customerIds, CustomerPreferredGovernorate::class, CustomerPreferredCity::class, 'customer_id', $governorateId, $cityId);
         $advertiserIds = Geography::candidatesInterestedInLocation($advertiserIds, AdvertiserPreferredGovernorate::class, AdvertiserPreferredCity::class, 'advertiser_id', $governorateId, $cityId);
+
+        /// Mirrors the [offer-notify] log below, for the same reason: a recipient
+        /// can be dropped by the category match or by the location match, and
+        /// without per-stage counts "the post never reached me" is indistinguishable
+        /// from "it was sent and the push failed".
+        Log::info('[post-notify] fan-out', [
+            'post_id' => $post->id,
+            'post_category_id' => $post->category_id,
+            'matched_category_ids' => $categoryIds,
+            'customers_by_interest' => $customersByInterest,
+            'advertisers_by_interest' => $advertisersByInterest,
+            'governorate_id' => $governorateId,
+            'city_id' => $cityId,
+            'customers_after_location' => $customerIds->count(),
+            'advertisers_after_location' => $advertiserIds->count(),
+        ]);
 
         $users = CustomerUser::whereIn('id', $customerIds)->get();
         $advertisers = AdvertiserUser::whereIn('id', $advertiserIds)->get();
@@ -362,7 +387,8 @@ class Notifications
             return;
         }
 
-        $categoryIds = CategoriesFilter::categoryAndAncestorIds($offer->category_id);
+        /// See notifyInterestedUsersForPost() - same branch rule as the feed filter.
+        $categoryIds = CategoriesFilter::categoryMatchIds($offer->category_id);
 
         $customerIds = CustomerCategories::whereIn('category_id', $categoryIds)->pluck('customer_id');
         $advertiserIds = AdvertiserInterests::whereIn('category_id', $categoryIds)->pluck('advertiser_id')

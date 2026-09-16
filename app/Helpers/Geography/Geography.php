@@ -197,37 +197,92 @@ class Geography
         }
     }
 
+    /**
+     * @param array $ids
+     * @return int[] positive, unique, re-indexed
+     */
+    private static function normalizeIds(array $ids): array
+    {
+        return array_values(array_unique(array_filter(array_map(static function ($id) {
+            return (int) $id;
+        }, $ids))));
+    }
+
     public static function hasExplicitLocationFilter(array $data): bool
     {
         return !empty($data['cityId']) || !empty($data['governorateId']);
     }
 
     /**
+     * The viewer's saved location interests, plus the governorates those cities
+     * imply.
+     *
+     * 'governorates' and 'cities' are what the user actually picked.
+     * 'derivedGovernorates' are the governorates their chosen cities sit in, and
+     * they are deliberately NOT merged into 'governorates', because the two mean
+     * different things to a filter:
+     *
+     *   - a picked governorate matches anything inside it, city included;
+     *   - a derived one may only match content that has no city of its own.
+     *
+     * Merging them would surface every sibling city: picking Douma would imply
+     * Rif Dimashq, and a post in Harasta carries Rif Dimashq too. See
+     * applyPreferredPostLocationFilter() for where that distinction is enforced.
+     *
      * @param mixed $user
-     * @return array{governorates: int[], cities: int[]}
+     * @return array{governorates: int[], cities: int[], derivedGovernorates: int[]}
      */
     public static function preferredLocationIds($user): array
     {
         if (!$user || !method_exists($user, 'preferredGovernorates') || !method_exists($user, 'preferredCities')) {
-            return ['governorates' => [], 'cities' => []];
+            return ['governorates' => [], 'cities' => [], 'derivedGovernorates' => []];
         }
 
+        $governorateIds = $user->preferredGovernorates()
+            ->pluck('governorate_id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->toArray();
+
+        $cityIds = $user->preferredCities()
+            ->pluck('city_id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->toArray();
+
         return [
-            'governorates' => $user->preferredGovernorates()
-                ->pluck('governorate_id')
-                ->map(fn ($id) => (int) $id)
-                ->values()
-                ->toArray(),
-            'cities' => $user->preferredCities()
-                ->pluck('city_id')
-                ->map(fn ($id) => (int) $id)
-                ->values()
-                ->toArray(),
+            'governorates' => $governorateIds,
+            'cities' => $cityIds,
+            //a governorate picked outright already matches more broadly, so keep
+            //the two sets disjoint
+            'derivedGovernorates' => array_values(array_diff(
+                LocationTree::governorateIdsOfCities($cityIds),
+                $governorateIds
+            )),
         ];
     }
 
     /**
      * Hard-filter posts by the user's saved location interests (multi select).
+     *
+     * The rule is the one the category feed uses, read onto the two-level
+     * governorate/city hierarchy: content is visible when its location and one of
+     * the viewer's saved locations lie on the same vertical line, and two cities
+     * in the same governorate are siblings that never match.
+     *
+     *   picked governorate -> everything inside it, whatever city
+     *   picked city        -> that city, plus governorate-LEVEL content
+     *   picked city        -> never a sibling city
+     *
+     * A post carries a governorate AND a city at once, which is what makes the
+     * middle line delicate: the governorate implied by a picked city may only be
+     * matched against content that has no city of its own, or every sibling city
+     * rides along with it (a post in Harasta carries Rif Dimashq exactly like a
+     * governorate-level one does). Hence the whereNull('posts.city_id') gate.
+     *
+     * Each branch also keeps its fallback for posts predating the location
+     * columns, which stand in the advertiser's own location for whichever column
+     * is null.
      *
      * @param Builder|\Illuminate\Database\Query\Builder $query
      * @param mixed $user
@@ -237,12 +292,13 @@ class Geography
         $prefs = self::preferredLocationIds($user);
         $governorateIds = $prefs['governorates'];
         $cityIds = $prefs['cities'];
+        $derivedGovernorateIds = $prefs['derivedGovernorates'];
 
         if (empty($governorateIds) && empty($cityIds)) {
             return $query;
         }
 
-        return $query->where(function ($q) use ($governorateIds, $cityIds, $advertiserTable) {
+        return $query->where(function ($q) use ($governorateIds, $cityIds, $derivedGovernorateIds, $advertiserTable) {
             if (!empty($cityIds)) {
                 $q->orWhereIn('posts.city_id', $cityIds)
                     ->orWhere(function ($legacy) use ($cityIds, $advertiserTable) {
@@ -258,11 +314,42 @@ class Geography
                             ->whereIn("{$advertiserTable}.governorate_id", $governorateIds);
                     });
             }
+
+            //a picked city also reaches content filed at its governorate's LEVEL,
+            //and only that.
+            //
+            //"Governorate level" has to mean the post has no EFFECTIVE city, not
+            //merely an empty posts.city_id: the branches above resolve a null
+            //posts.city_id to the advertiser's own city, so a post with a null
+            //city published by an advertiser in a neighbouring town is content in
+            //that town, not content addressed to the whole governorate. Matching
+            //it here would hand a Douma follower everything out of Harasta - the
+            //exact sibling leak this rule exists to prevent. So both cities must
+            //be null before the derived governorate is allowed to match, and the
+            //governorate itself then resolves the same way the branches above do.
+            if (!empty($derivedGovernorateIds)) {
+                $q->orWhere(function ($governorateLevel) use ($derivedGovernorateIds, $advertiserTable) {
+                    $governorateLevel->whereNull('posts.city_id')
+                        ->whereNull("{$advertiserTable}.city_id")
+                        ->where(function ($scope) use ($derivedGovernorateIds, $advertiserTable) {
+                            $scope->whereIn('posts.governorate_id', $derivedGovernorateIds)
+                                ->orWhere(function ($legacy) use ($derivedGovernorateIds, $advertiserTable) {
+                                    $legacy->whereNull('posts.governorate_id')
+                                        ->whereIn("{$advertiserTable}.governorate_id", $derivedGovernorateIds);
+                                });
+                        });
+                });
+            }
         });
     }
 
     /**
      * Hard-filter offers/advertisers by the user's saved location interests.
+     *
+     * Same rule as applyPreferredPostLocationFilter(). Offers carry no location
+     * of their own, so the advertiser's is the content's location here, and an
+     * advertiser who recorded a governorate but no city is the governorate-level
+     * case - the only thing a city-derived governorate is allowed to match.
      *
      * @param Builder|\Illuminate\Database\Query\Builder $query
      * @param mixed $user
@@ -272,18 +359,26 @@ class Geography
         $prefs = self::preferredLocationIds($user);
         $governorateIds = $prefs['governorates'];
         $cityIds = $prefs['cities'];
+        $derivedGovernorateIds = $prefs['derivedGovernorates'];
 
         if (empty($governorateIds) && empty($cityIds)) {
             return $query;
         }
 
-        return $query->where(function ($q) use ($governorateIds, $cityIds, $tablePrefix) {
+        return $query->where(function ($q) use ($governorateIds, $cityIds, $derivedGovernorateIds, $tablePrefix) {
             if (!empty($cityIds)) {
                 $q->orWhereIn("{$tablePrefix}.city_id", $cityIds);
             }
 
             if (!empty($governorateIds)) {
                 $q->orWhereIn("{$tablePrefix}.governorate_id", $governorateIds);
+            }
+
+            if (!empty($derivedGovernorateIds)) {
+                $q->orWhere(function ($governorateLevel) use ($derivedGovernorateIds, $tablePrefix) {
+                    $governorateLevel->whereNull("{$tablePrefix}.city_id")
+                        ->whereIn("{$tablePrefix}.governorate_id", $derivedGovernorateIds);
+                });
             }
         });
     }
@@ -330,29 +425,38 @@ class Geography
             );
         }
 
+        //governorate-LEVEL content (no city of its own) also reaches whoever
+        //follows a city inside it - the mirror of the feed's derived-governorate
+        //branch, and gated on $cityId being null for the same reason: content
+        //that names a city must never reach followers of a sibling city
+        if ($governorateId && !$cityId) {
+            $citiesInGovernorate = LocationTree::cityIdsOfGovernorates([$governorateId]);
+
+            if (!empty($citiesInGovernorate)) {
+                $matching = $matching->merge(
+                    $preferredCityModel::whereIn($ownerColumn, $candidateIds)
+                        ->whereIn('city_id', $citiesInGovernorate)
+                        ->pluck($ownerColumn)
+                );
+            }
+        }
+
         $withoutPrefs = $candidateIds->diff($withPrefs);
 
         return $matching->merge($withoutPrefs)->unique()->values();
     }
 
     /**
-     * A selected governorate's own city ids — mirrors CategoriesFilter::expandCategoryIds()
-     * for the location side: picking a governorate should also match candidates whose
-     * preference is set at the (more specific) city level within it.
+     * A selected governorate's own city ids: picking a governorate should also
+     * match candidates whose preference is set at the (more specific) city level
+     * within it.
      *
      * @param int[] $governorateIds
      * @return int[]
      */
     public static function expandGovernorateIdsToCities(array $governorateIds): array
     {
-        if (empty($governorateIds)) {
-            return [];
-        }
-
-        return City::whereIn('governorate_id', $governorateIds)
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->toArray();
+        return LocationTree::cityIdsOfGovernorates($governorateIds);
     }
 
     /**
@@ -386,15 +490,29 @@ class Geography
             ->merge($preferredCityModel::whereIn($ownerColumn, $candidateIds)->pluck($ownerColumn))
             ->unique();
 
+        //walk the hierarchy both ways, so the caller can pass exactly what was
+        //selected: a chosen governorate reaches whoever follows one of its
+        //cities, and a chosen city reaches whoever follows the governorate it
+        //sits in. Admin targeting is explicit, so unlike the feed there is no
+        //sibling hazard to guard against here.
+        $matchGovernorateIds = array_values(array_unique(array_merge(
+            self::normalizeIds($governorateIds),
+            LocationTree::governorateIdsOfCities($cityIds)
+        )));
+        $matchCityIds = array_values(array_unique(array_merge(
+            self::normalizeIds($cityIds),
+            LocationTree::cityIdsOfGovernorates($governorateIds)
+        )));
+
         $matching = collect();
-        if (!empty($governorateIds)) {
+        if (!empty($matchGovernorateIds)) {
             $matching = $matching->merge(
-                $preferredGovernorateModel::whereIn($ownerColumn, $candidateIds)->whereIn('governorate_id', $governorateIds)->pluck($ownerColumn)
+                $preferredGovernorateModel::whereIn($ownerColumn, $candidateIds)->whereIn('governorate_id', $matchGovernorateIds)->pluck($ownerColumn)
             );
         }
-        if (!empty($cityIds)) {
+        if (!empty($matchCityIds)) {
             $matching = $matching->merge(
-                $preferredCityModel::whereIn($ownerColumn, $candidateIds)->whereIn('city_id', $cityIds)->pluck($ownerColumn)
+                $preferredCityModel::whereIn($ownerColumn, $candidateIds)->whereIn('city_id', $matchCityIds)->pluck($ownerColumn)
             );
         }
 
@@ -414,12 +532,13 @@ class Geography
         $prefs = self::preferredLocationIds($user);
         $governorateIds = $prefs['governorates'];
         $cityIds = $prefs['cities'];
+        $derivedGovernorateIds = $prefs['derivedGovernorates'];
 
         if (empty($governorateIds) && empty($cityIds)) {
             return $query;
         }
 
-        return $query->where(function ($q) use ($governorateIds, $cityIds) {
+        return $query->where(function ($q) use ($governorateIds, $cityIds, $derivedGovernorateIds) {
             $q->where(function ($nationwide) {
                 $nationwide->whereNull('governorates')
                     ->whereNull('cities');
@@ -433,6 +552,24 @@ class Geography
             foreach ($governorateIds as $governorateId) {
                 $q->orWhereJsonContains('governorates', (string) $governorateId)
                     ->orWhereJsonContains('governorates', (int) $governorateId);
+            }
+
+            //an ad aimed at a governorate but at no city in particular is the
+            //governorate-level case, and is the only ad a city-derived
+            //governorate may match - an ad that names its cities must not reach
+            //followers of a sibling city
+            if (!empty($derivedGovernorateIds)) {
+                $q->orWhere(function ($governorateLevel) use ($derivedGovernorateIds) {
+                    $governorateLevel->where(function ($withoutCities) {
+                        $withoutCities->whereNull('cities')
+                            ->orWhereJsonLength('cities', 0);
+                    })->where(function ($inGovernorate) use ($derivedGovernorateIds) {
+                        foreach ($derivedGovernorateIds as $governorateId) {
+                            $inGovernorate->orWhereJsonContains('governorates', (string) $governorateId)
+                                ->orWhereJsonContains('governorates', (int) $governorateId);
+                        }
+                    });
+                });
             }
         });
     }

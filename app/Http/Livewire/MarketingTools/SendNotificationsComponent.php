@@ -189,11 +189,10 @@ class SendNotificationsComponent extends Component
 
                 $categoryIds = !empty($this->categories) ? CategoriesFilter::expandCategoryIds($this->categories) : null;
 
+                //pass the raw selection: candidatesInterestedInLocations() walks the
+                //governorate/city hierarchy both ways itself
                 $governorateIds = $this->governorates ?? [];
-                $cityIds = array_unique(array_merge(
-                    $this->cities ?? [],
-                    Geography::expandGovernorateIdsToCities($governorateIds)
-                ));
+                $cityIds = $this->cities ?? [];
 
                 $customerQuery = CustomerUser::where('status', 'active');
                 $advertiserQuery = AdvertiserUser::where('status', 'active');

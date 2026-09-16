@@ -2,7 +2,6 @@
 
 namespace App\Helpers\Categories;
 
-use App\Models\Categories\Category;
 use App\Models\Users\Advertisers\AdvertiserUser;
 use Illuminate\Support\Facades\DB;
 
@@ -34,59 +33,77 @@ class CategoriesFilter
     }
 
     /**
-     * Expand parent category ids to include their direct children.
-     * Posts/offers are usually tagged with child categories while interests save parents.
+     * A category plus everything filed under it - the BROWSE set, used when the
+     * client asks for one explicit categoryId (a category chip) and by the admin
+     * broadcast, where the categories were picked by hand.
+     *
+     * Downward only: browsing "Electronics" must not drag in whatever sits above
+     * it. The interest-driven feed uses preferredCategoryIds() instead, which is
+     * a different question with a different answer.
      *
      * @param array $categoryIds
      * @return int[]
      */
     public static function expandCategoryIds(array $categoryIds): array
     {
-        $ids = array_values(array_unique(array_filter(array_map(static function ($id) {
-            return (int) $id;
-        }, $categoryIds))));
-
-        if (empty($ids)) {
-            return [];
-        }
-
-        $children = Category::whereIn('parent_category_id', $ids)
-            ->pluck('id')
-            ->map(static fn ($id) => (int) $id)
-            ->toArray();
-
-        return array_values(array_unique(array_merge($ids, $children)));
+        return CategoryTree::subtreeIds($categoryIds);
     }
 
     /**
      * A category id plus all its ancestor ids, walking up parent_category_id.
-     * Interests are typically saved at a category's parent level while a specific
-     * post/offer is tagged with the more specific (child) category — so matching a
-     * post/offer against saved interests requires walking UP the tree, the mirror
-     * image of expandCategoryIds() (which walks down from a saved parent interest
-     * to the child categories actual content is tagged with).
+     *
+     * Kept for callers that genuinely want only the upward line. Anything asking
+     * "who is interested in this content?" wants categoryMatchIds() instead,
+     * which also covers the users who picked something further down.
      *
      * @param int $categoryId
      * @return int[]
      */
     public static function categoryAndAncestorIds(int $categoryId): array
     {
-        $ids = [];
-        $current = Category::find($categoryId);
-
-        while ($current && !in_array((int) $current->id, $ids, true)) {
-            $ids[] = (int) $current->id;
-            $current = $current->parent_category_id ? Category::find($current->parent_category_id) : null;
-        }
-
-        return $ids;
+        return array_values(array_unique(array_merge(
+            [$categoryId],
+            CategoryTree::ancestorIds([$categoryId])
+        )));
     }
 
     /**
-     * The categories the VIEWER follows — their interests, never the categories
-     * they publish under. Both user types expose interests() (on a customer it
-     * aliases categories(), since a customer publishes nothing), so no branch
-     * on the user type is needed here.
+     * The interest ids that content tagged $categoryId must be matched against -
+     * the mirror image of preferredCategoryIds(), read from the content end.
+     *
+     * The visibility rule is symmetric: content reaches a user iff the content's
+     * category and one of the user's interests lie on one root-to-leaf path. So
+     * "which interests does this post reach?" is the same branch walk as "which
+     * categories does this user see?", and both sides have to use it - otherwise
+     * a notification fan-out and the feed it points at disagree about who the
+     * content was for.
+     *
+     * @param int $categoryId
+     * @return int[]
+     */
+    public static function categoryMatchIds(int $categoryId): array
+    {
+        return CategoryTree::branchIds([$categoryId]);
+    }
+
+    /**
+     * Every category the VIEWER's saved interests make visible - their own
+     * interests, never the categories they publish under. Both user types expose
+     * interests() (on a customer it aliases categories(), since a customer
+     * publishes nothing), so no branch on the user type is needed here.
+     *
+     * Interests expand in BOTH directions, because the two directions answer two
+     * different halves of the same rule:
+     *
+     *   - downward, so picking a parent ("Programming") yields everything filed
+     *     under it, including content tagged with a child ("Web Development");
+     *   - upward, so picking a child also yields the parent-level content that
+     *     was never filed into any child.
+     *
+     * What it deliberately does NOT do is bridge siblings: picking "Web
+     * Development" must not surface "Mobile Development" merely because both
+     * hang off "Programming". CategoryTree::branchIds() is where that constraint
+     * is enforced - see its docblock for why the two walks must stay separate.
      *
      * @param mixed $user
      * @return int[]
@@ -97,7 +114,7 @@ class CategoriesFilter
             return [];
         }
 
-        return self::expandCategoryIds(
+        return CategoryTree::branchIds(
             $user->interests()->pluck('category_id')->toArray()
         );
     }

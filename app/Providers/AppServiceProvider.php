@@ -3,10 +3,16 @@
 namespace App\Providers;
 
 use App\Helpers\Settings;
+use App\Models\Categories\Category;
+use App\Models\Countries\Cities\City;
+use App\Models\Countries\Governorates\Governorate;
 use App\Models\Languages\Language;
 use App\Models\Offers\Offer;
 use App\Models\Pages\Page;
 use App\Models\Posts\Post;
+use App\Observers\CategoryObserver;
+use App\Observers\CityObserver;
+use App\Observers\GovernorateObserver;
 use App\Observers\OfferObserver;
 use App\Observers\PostObserver;
 use Illuminate\Support\Carbon;
@@ -54,6 +60,13 @@ class AppServiceProvider extends ServiceProvider
         //notify the owning advertiser when an admin approves/declines their post or offer
         Post::observe(PostObserver::class);
         Offer::observe(OfferObserver::class);
+
+        //interest filtering answers from cached copies of the category and
+        //governorate/city hierarchies, so any write to either has to invalidate
+        //them (see CategoryTree / LocationTree)
+        Category::observe(CategoryObserver::class);
+        City::observe(CityObserver::class);
+        Governorate::observe(GovernorateObserver::class);
 
         //admin-managed Firebase credentials override the static .env path, read once per
         //request before anything resolves the Firebase container bindings. Guarded so
