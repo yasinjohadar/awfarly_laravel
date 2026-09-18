@@ -25,5 +25,6 @@ return [
         'already-rated' => "You've already rated this offer, you can't rate the same offer more than once.",
         'something-wrong' => 'Something went wrong, Try again later.',
         'rated-successfully' => "You've rated this offer successfully!",
+        'updated-successfully' => "Your rating for this offer has been updated successfully!",
     ],
 ];

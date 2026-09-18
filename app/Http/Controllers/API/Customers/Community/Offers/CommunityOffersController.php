@@ -685,16 +685,11 @@ class CommunityOffersController extends Controller
             'rate' => ['required', 'numeric', 'max:5']
         ]);
 
-        //check whether user already rated this offer or not
-        $already_rated = Auth::guard('customer-api')->user()
+        //check whether user already rated this offer or not, so we update it instead of adding a duplicate
+        $existing_rating = Auth::guard('customer-api')->user()
             ->offersRated()
             ->where('offer_id', $data['offerId'])
-            ->exists();
-
-        //return error if already rated
-        if ($already_rated) {
-            return $this->apiBadRequestResponse(__('api/customers/community/offers/offers.rating.already-rated'));
-        }
+            ->first();
 
         //get user by id
         $offer = Offer::withTrashed()
@@ -710,15 +705,23 @@ class CommunityOffersController extends Controller
             //check whether rate should be auto approved or not
             $auto_approve = Settings::Get('offers.rate.auto.approve', true);
 
-            //add the rate
-            Auth::guard('customer-api')->user()
-                ->offersRated()
-                ->create([
-                    'offer_id' => $data['offerId'],
+            //add or update the rate
+            if ($existing_rating) {
+                $existing_rating->update([
                     'comment' => $data['comment'],
                     'rate' => $data['rate'],
                     'status' => $auto_approve ? 'approved' : 'pending',
                 ]);
+            } else {
+                Auth::guard('customer-api')->user()
+                    ->offersRated()
+                    ->create([
+                        'offer_id' => $data['offerId'],
+                        'comment' => $data['comment'],
+                        'rate' => $data['rate'],
+                        'status' => $auto_approve ? 'approved' : 'pending',
+                    ]);
+            }
             //update the rate if it's auto approve
             if ($auto_approve) {
                 //get average rate
@@ -747,9 +750,12 @@ class CommunityOffersController extends Controller
             Notifications::sendForCommunity($offer->advertiser, 'offers.rates', 'offers.rates.offer_rate', 'add', $customProperties);
         }
         return $this->apiResponse([
-            'message' => __('api/customers/community/offers/offers.rating.rated-successfully'),
+            'message' => $existing_rating
+                ? __('api/customers/community/offers/offers.rating.updated-successfully')
+                : __('api/customers/community/offers/offers.rating.rated-successfully'),
             'data' => [
                 'rate' => $offer->rate,
+                'myRate' => (float)$data['rate'],
                 'isRateApproved' => $auto_approve,
             ]
         ]);

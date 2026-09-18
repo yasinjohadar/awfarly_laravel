@@ -46,10 +46,12 @@ class CommunityOffersResource extends JsonResource
             $follow_status = 'unfollowed';
         }
 
-        $isRated = Auth::guard('advertiser-api')->user()
+        $myRating = Auth::guard('advertiser-api')->user()
             ->offersRated()
             ->where('offer_id', $this->id)
-            ->exists();
+            ->first();
+
+        $isRated = (bool)$myRating;
 
         //check whether user liked this post
         $isLiked = Auth::guard('advertiser-api')->user()
@@ -92,6 +94,7 @@ class CommunityOffersResource extends JsonResource
                 'discount_percentage' => $this->advertiser?->discount_percentage,
             ],
             'isRated' => $isRated,
+            'myRate' => $myRating?->rate,
             'websiteUrl' => route('offer.index', ['id' => $this->id]),
             'content' => $this->content ?? null,
             'categoryId' => $this->category_id ?? null,

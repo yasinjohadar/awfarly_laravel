@@ -51,10 +51,12 @@ class CommunityOffersResource extends JsonResource
             ->exists();
 
 
-        $isRated = Auth::guard('customer-api')->user()
+        $myRating = Auth::guard('customer-api')->user()
             ->offersRated()
             ->where('offer_id', $this->id)
-            ->exists();
+            ->first();
+
+        $isRated = (bool)$myRating;
 
         $false_permissions = !($this->advertiser->status === 'inactive' || Auth::guard('customer-api')->user()->status === 'inactive');
 
@@ -101,6 +103,7 @@ class CommunityOffersResource extends JsonResource
             'expiresAt' => $this->expires_at ? Carbon::make($this->expires_at)->format('Y-m-d h:i A') : null,
             'isExpired' => $is_expired,
             'isRated' => $isRated,
+            'myRate' => $myRating?->rate,
             'status' => $this->status,
             'statistics' => [
                 'views' => $this->views_count ?? 0,
