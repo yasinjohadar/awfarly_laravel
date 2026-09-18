@@ -55,19 +55,23 @@ class AccountResource extends JsonResource
             $current_pack = null;
         }
 
-        //check whether user is elite or not
-        if ($this->is_elite) {
-            //return maximum posts quantity
-            $maximum_posts = $current_pack ? $current_pack->maximum_posts : Settings::Get('user.allowed.posts', 10);
-        } else {
-            //return maximum posts quantity
-            $maximum_posts = Settings::Get('user.allowed.posts', 10);
-        }
-
         //check user posts count
         $user_posts = Auth::guard('advertiser-api')->user()
             ->posts()
             ->count();
+
+        //the actual quota enforced when creating a post (see
+        //CommunityPostsController::store) is allowed_posts_count, a running
+        //counter decremented per post — not the live package/settings value,
+        //which can change after the counter was assigned and would otherwise
+        //make "left" bigger than "maximum" in the UI.
+        if ($this->allowed_posts_count !== null) {
+            $left_posts = $this->allowed_posts_count;
+        } elseif ($this->is_elite) {
+            $left_posts = $current_pack ? $current_pack->maximum_posts : Settings::Get('user.allowed.posts', 10);
+        } else {
+            $left_posts = Settings::Get('user.allowed.posts', 10);
+        }
 
         //the advertiser's OWN business categories: what they publish under
         $userCategories = $this->categories()
@@ -134,8 +138,8 @@ class AccountResource extends JsonResource
             ],
             'statistics' => [
                 'totalPosts' => $user_posts,
-                'maximumPosts' => $maximum_posts,
-                'leftPosts' => $this->allowed_posts_count ?? Settings::Get('user.allowed.posts', 10),
+                'maximumPosts' => $user_posts + $left_posts,
+                'leftPosts' => $left_posts,
                 'activeOffers' => $limits['activeCount'],
                 'maximumActiveOffers' => $limits['activeLimit'],
                 'monthlyOffers' => $limits['monthlyCount'],
