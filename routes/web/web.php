@@ -26,7 +26,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home.index');
 //Android App Links verification — lets the OS confirm this domain belongs to
 //the app, so a shared post/offer link opens the app directly instead of the
 //browser when it's installed. Package/SHA256 are the real values for
-//com.price.crush.app's release keystore (android/app/cert/key.jks) — if the
+//com.awfarly.app's release keystore (android/app/cert/key.jks) — if the
 //app is later published via Play App Signing, Google may re-sign it with a
 //different certificate, in which case this fingerprint must be updated from
 //Play Console after publishing.
@@ -36,7 +36,7 @@ Route::get('/.well-known/assetlinks.json', function () {
             'relation' => ['delegate_permission/common.handle_all_urls'],
             'target' => [
                 'namespace' => 'android_app',
-                'package_name' => 'com.price.crush.app',
+                'package_name' => 'com.awfarly.app',
                 'sha256_cert_fingerprints' => [
                     '4C:A6:FB:CE:16:BB:22:3D:F1:F5:A6:D7:E5:04:DC:C4:E1:2C:F9:50:22:BD:52:D2:AF:79:76:62:39:13:C1:04',
                 ],
