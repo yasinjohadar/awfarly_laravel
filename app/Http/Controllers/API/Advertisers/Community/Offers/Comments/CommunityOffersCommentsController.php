@@ -132,7 +132,13 @@ class CommunityOffersCommentsController extends Controller
             'userType' => 'advertiser',
         ];
         $isOfferOwner = ($offer->advertiser->id == Auth::guard('advertiser-api')->id());
-        if (!$isOfferOwner) {
+        //a reply to the owner's own comment already sends them the more specific
+        //"replied to your comment" below — don't also send "commented on your offer"
+        $parentComment = $data['comment_id'] ? OffersComments::find($data['comment_id']) : null;
+        $repliesToOwner = $parentComment && $parentComment->user
+            && $parentComment->user->user_type === 'advertiser'
+            && $parentComment->user->id == $offer->advertiser->id;
+        if (!$isOfferOwner && !$repliesToOwner) {
             Notifications::sendForCommunity($offer->advertiser, 'offers.comments', 'offers.comment_add', 'add', $customProperties);
         }
 

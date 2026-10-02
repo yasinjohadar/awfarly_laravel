@@ -160,7 +160,13 @@ class CommunityCommentsController extends Controller
         Notifications::sendForCommunity($posts_subscriptions, 'posts.comments', 'posts.comment_add_subscription', 'add', $customProperties, true);
 
         $isPostOwner = ($post->user && $post->user->user_type === 'customer' && $post->user->id == Auth::guard('customer-api')->id());
-        if (!$isPostOwner && !$post->advertisement_id) {
+        //a reply to the owner's own comment already sends them the more specific
+        //"replied to your comment" below — don't also send "commented on your post"
+        $parentComment = $data['comment_id'] ? PostComments::find($data['comment_id']) : null;
+        $repliesToOwner = $parentComment && $parentComment->user && $post->user
+            && $parentComment->user->user_type === $post->user->user_type
+            && $parentComment->user->id == $post->user->id;
+        if (!$isPostOwner && !$post->advertisement_id && !$repliesToOwner) {
             Notifications::sendForCommunity($post->user, 'posts.comments', 'posts.comment_add', 'add', $customProperties);
         }
 

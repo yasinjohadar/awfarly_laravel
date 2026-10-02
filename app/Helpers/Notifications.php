@@ -72,10 +72,10 @@ class Notifications
                         'error' => $e->getMessage(),
                     ]);
                 } finally {
-                    if (!$skipPush && !$item->is_online && $item->fcm_token && $type !== 'chats') {
+                    if (!$skipPush && (!$item->is_online || self::alwaysPushes($message)) && $item->fcm_token && $type !== 'chats') {
                         $fcmData = self::buildFcmMessage($item, $type, $message, $customProperties);
 
-                        FcmHelper::sendFcmNotification($fcmData, [$item->fcm_token], $customProperties);
+                        FcmHelper::sendFcmNotification($fcmData, [$item->fcm_token], self::withType($customProperties, $type));
                     }
                 }
             }
@@ -107,13 +107,33 @@ class Notifications
                     'error' => $e->getMessage(),
                 ]);
             } finally {
-                if (!$skipPush && !$user->is_online && $user->fcm_token && $type !== 'chats') {
+                if (!$skipPush && (!$user->is_online || self::alwaysPushes($message)) && $user->fcm_token && $type !== 'chats') {
                     $fcmData = self::buildFcmMessage($user, $type, $message, $customProperties);
 
-                    FcmHelper::sendFcmNotification($fcmData, [$user->fcm_token], $customProperties);
+                    FcmHelper::sendFcmNotification($fcmData, [$user->fcm_token], self::withType($customProperties, $type));
                 }
             }
         }
+    }
+
+    /**
+     * Someone commenting directly on your post/offer is a personal interaction
+     * worth a push even while you're "online" — is_online is only cleared by a
+     * 10-minute cron, so gating on it silently dropped most of these pushes.
+     */
+    private static function alwaysPushes(string $message): bool
+    {
+        return in_array($message, ['posts.comment_add', 'offers.comment_add'], true);
+    }
+
+    /**
+     * FcmHelper only forwards `type` to the device when customProperties has it,
+     * and most callers don't set it — so a tapped push had no type to route on
+     * and fell back to the notifications tab instead of the post/offer.
+     */
+    private static function withType(?array $customProperties, string $type): array
+    {
+        return ($customProperties ?? []) + ['type' => $type];
     }
 
     /**
@@ -275,7 +295,7 @@ class Notifications
                     'body' => $message,
                     'body_en' => $bodyEn,
                     'image' => $image,
-                ], [$user->fcm_token], $customProperties, $pushError);
+                ], [$user->fcm_token], self::withType($customProperties, $type), $pushError);
 
                 if ($delivered) {
                     $pushDelivered++;

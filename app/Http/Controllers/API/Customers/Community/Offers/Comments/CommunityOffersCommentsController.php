@@ -136,7 +136,15 @@ class CommunityOffersCommentsController extends Controller
             'userType' => 'customer',
         ];
 
-        Notifications::sendForCommunity($offer->advertiser, 'offers.comments', 'offers.comment_add', 'add', $customProperties);
+        //a reply to the owner's own comment already sends them the more specific
+        //"replied to your comment" below — don't also send "commented on your offer"
+        $parentComment = $data['comment_id'] ? OffersComments::find($data['comment_id']) : null;
+        $repliesToOwner = $parentComment && $parentComment->user
+            && $parentComment->user->user_type === 'advertiser'
+            && $parentComment->user->id == $offer->advertiser->id;
+        if (!$repliesToOwner) {
+            Notifications::sendForCommunity($offer->advertiser, 'offers.comments', 'offers.comment_add', 'add', $customProperties);
+        }
 
         //a reply to someone's own comment is a real, personal interaction, so it
         //always pushes (even if the recipient is online) — same as commenting
@@ -467,6 +475,23 @@ class CommunityOffersCommentsController extends Controller
             return $this->apiExceptionResponse(__('api/customers/community/offers/comments/comments.something-wrong'));
         }
         DB::commit();
+
+        if ($isLiked && !($comment->user->user_type === 'customer' && $comment->user_id == Auth::guard('customer-api')->id())) {
+            $customProperties = [
+                'offerId' => $comment->offer->id,
+                'commentId' => $comment->id,
+                'userId' => Auth::guard('customer-api')->id(),
+                'userType' => 'customer',
+            ];
+
+            $comment->user->notifications()
+                ->whereJsonContains('data->customProperties->offerId', $comment->offer->id)
+                ->whereJsonContains('data->customProperties->commentId', $comment->id)
+                ->whereJsonContains('data->action', 'like')
+                ->delete();
+
+            Notifications::sendForCommunity($comment->user, 'offers.comments', 'offers.comment_like', 'like', $customProperties);
+        }
         return $this->apiResponse([
             'message' => __('api/customers/community/offers/comments/comments.like-toggle', ['toggle' => $type]),
             'data' => [

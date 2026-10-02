@@ -427,7 +427,7 @@ class ChatController extends Controller
             ]);
 
 
-            if ($request->hasFile('media')) {
+            if ($request->hasFile('media.file')) {
                 //get file mime type
                 $mime_type = $media->mime_type;
 
@@ -486,7 +486,10 @@ class ChatController extends Controller
             ];
 
             Notifications::sendForCommunity($other_user, 'chats', 'chats.message_received', 'add', $customProperties);
-            if ($other_user->fcm_token && !$other_user->is_online) {
+            // Always push chat messages: is_online is only cleared by a 10-minute cron,
+            // so it stayed true long after the user left the app and silenced the push.
+            // The app itself hides the banner when that conversation is already open.
+            if ($other_user->fcm_token) {
                 $senderName = Str::limit(Auth::guard('customer-api')->user()->name, 20);
                 FcmHelper::sendFcmNotification([
                     'title' => trans('api/customers/chat/chats.fcm.title', ['name' => $senderName], 'ar'),
