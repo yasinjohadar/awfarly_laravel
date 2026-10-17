@@ -242,9 +242,10 @@ class Notifications
      * @param string $message
      * @param string $action
      * @param array|null $customProperties
+     * @param bool $respectPushOptOut skip the device push for users who turned notifications off
      * @return array{notified: int, push_attempted: int, push_delivered: int, push_error_sample: string|null}
      */
-    public static function sendFromAdmin($users, string $type, string $message, string $action, array $customProperties = null): array
+    public static function sendFromAdmin($users, string $type, string $message, string $action, array $customProperties = null, bool $respectPushOptOut = false): array
     {
         $notifiedCount = 0;
         $pushAttempted = 0;
@@ -286,7 +287,9 @@ class Notifications
                 ]);
             }
 
-            if ($user->fcm_token) {
+            //admin broadcasts honour the user's "receive notifications" switch for the device push;
+            //the in-app notification above is still stored so it shows in their list
+            if ($user->fcm_token && (!$respectPushOptOut || $user->is_accepted_send_notifications)) {
                 $pushAttempted++;
                 $pushError = null;
                 $delivered = FcmHelper::sendFcmNotification([

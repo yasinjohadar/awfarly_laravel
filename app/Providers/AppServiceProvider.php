@@ -10,6 +10,11 @@ use App\Models\Languages\Language;
 use App\Models\Offers\Offer;
 use App\Models\Pages\Page;
 use App\Models\Posts\Post;
+use App\Models\Offers\Comments\OffersComments;
+use App\Models\Posts\Comments\PostComments;
+use App\Models\Reports\Report;
+use App\Models\Requests\ContactForms;
+use App\Observers\AdminWhatsAppAlertObserver;
 use App\Observers\CategoryObserver;
 use App\Observers\CityObserver;
 use App\Observers\GovernorateObserver;
@@ -60,6 +65,12 @@ class AppServiceProvider extends ServiceProvider
         //notify the owning advertiser when an admin approves/declines their post or offer
         Post::observe(PostObserver::class);
         Offer::observe(OfferObserver::class);
+
+        //WhatsApp alert to the admin's number whenever users add offers, posts,
+        //comments, reports or contact-us messages (see AdminWhatsAppNotifier)
+        foreach ([Offer::class, Post::class, OffersComments::class, PostComments::class, Report::class, ContactForms::class] as $alertModel) {
+            $alertModel::observe(AdminWhatsAppAlertObserver::class);
+        }
 
         //interest filtering answers from cached copies of the category and
         //governorate/city hierarchies, so any write to either has to invalidate

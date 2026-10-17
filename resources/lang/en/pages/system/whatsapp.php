@@ -30,6 +30,17 @@ return [
             'rotation_pool_hint' => ':count number(s) currently in the automatic rotation pool.',
             'rotation_pool_link' => 'Manage numbers',
             'save' => 'Save',
+            'admin_notifications' => [
+                'title' => 'Admin WhatsApp Alerts',
+                'description' => 'A WhatsApp message is sent to the admin number when users add an offer, post, comment, report or contact message.',
+                'enabled' => 'Enable admin alerts',
+                'phone' => 'Admin recipient number',
+                'phone_hint' => 'International format without + (e.g. 9639XXXXXXXX). Leave blank to use the primary connected number: :phone',
+                'test' => 'Send test message',
+                'test_message' => '✅ Test message: admin WhatsApp alerts are working.',
+                'test_success' => 'Test message sent.',
+                'test_failure' => 'Sending failed — make sure alerts are enabled and a number is connected, then check the whatsapp log.',
+            ],
             'test_connection' => [
                 'action' => 'Test Connection',
                 'testing' => 'Testing...',

@@ -41,6 +41,39 @@
                     <small class="form-text text-muted">{{__('pages/system/whatsapp.content.settings.default_instance_hint')}}</small>
                 </div>
 
+                <hr>
+                <h6 class="font-weight-semibold">{{__('pages/system/whatsapp.content.settings.admin_notifications.title')}}</h6>
+                <p class="text-muted">{{__('pages/system/whatsapp.content.settings.admin_notifications.description')}}</p>
+
+                <div class="form-group">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="admin_notifications_enabled" wire:model.defer="admin_notifications_enabled">
+                        <label class="custom-control-label" for="admin_notifications_enabled">{{__('pages/system/whatsapp.content.settings.admin_notifications.enabled')}}</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="admin_notifications_phone">{{__('pages/system/whatsapp.content.settings.admin_notifications.phone')}}</label>
+                    <input type="text" id="admin_notifications_phone" wire:model.defer="admin_notifications_phone"
+                           class="form-control @error('admin_notifications_phone') is-invalid @enderror"
+                           placeholder="{{ $default_instance_phone ?: '9639XXXXXXXX' }}"
+                           dir="ltr" autocomplete="off">
+                    @error('admin_notifications_phone')
+                        <span class="invalid-feedback" role="alert"><strong>{{$message}}</strong></span>
+                    @enderror
+                    <small class="form-text text-muted">
+                        {{__('pages/system/whatsapp.content.settings.admin_notifications.phone_hint', ['phone' => $default_instance_phone ?: '-'])}}
+                    </small>
+                </div>
+
+                <div class="mb-3">
+                    <button type="button" wire:click="sendAdminTest" wire:loading.attr="disabled" wire:target="sendAdminTest"
+                            class="btn btn-outline-success btn-sm">
+                        <span wire:loading.remove wire:target="sendAdminTest">{{__('pages/system/whatsapp.content.settings.admin_notifications.test')}}</span>
+                        <span wire:loading wire:target="sendAdminTest"><i class="spinner-border spinner-border-sm mr-1"></i> {{__('pages/system/whatsapp.content.settings.test_connection.testing')}}</span>
+                    </button>
+                </div>
+
                 @if($rotationPoolCount > 0)
                     <div class="alert alert-info">
                         {{__('pages/system/whatsapp.content.settings.rotation_pool_hint', ['count' => $rotationPoolCount])}}
