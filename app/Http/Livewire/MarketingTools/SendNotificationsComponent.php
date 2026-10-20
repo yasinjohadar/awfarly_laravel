@@ -8,6 +8,7 @@ use App\Helpers\Notifications;
 use App\Models\Categories\Category;
 use App\Models\Countries\Governorates\Governorate;
 use App\Models\Users\Advertisers\AdvertiserUser;
+use App\Models\Users\Advertisers\BusinessTypes\AdvertiserBusinessType;
 use App\Models\Users\Advertisers\Categories\AdvertiserInterests;
 use App\Models\Users\Advertisers\Locations\AdvertiserPreferredCity;
 use App\Models\Users\Advertisers\Locations\AdvertiserPreferredGovernorate;
@@ -15,6 +16,7 @@ use App\Models\Users\Customers\Categories\CustomerCategories;
 use App\Models\Users\Customers\CustomerUser;
 use App\Models\Users\Customers\Locations\CustomerPreferredCity;
 use App\Models\Users\Customers\Locations\CustomerPreferredGovernorate;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
@@ -27,16 +29,28 @@ class SendNotificationsComponent extends Component
 {
     use LivewireAlert;
 
-    public const RECIPIENT_TYPES = ['all_users', 'all_advertisers', 'all_customers', 'specific_advertisers', 'specific_customers', 'interested'];
-    public const AUDIENCES = ['both', 'advertisers', 'customers'];
+    // "filtered" builds the audience from optional, freely combinable filters (none = everyone);
+    // the "specific_*" modes pick accounts by name.
+    public const RECIPIENT_TYPES = ['filtered', 'specific_advertisers', 'specific_customers'];
+    public const LOGIN_FILTERS = ['active', 'inactive', 'never'];
 
-    public string $recipients_type = 'all_users';
-    // who an "interested" send reaches: advertisers, customers or both
-    public string $audience = 'both';
+    public string $recipients_type = 'filtered';
     public ?array $recipients = null;
+
+    // filters of the "filtered" mode — every one of them is optional
+    public bool $include_customers = true;
+    public bool $include_advertisers = true;
+    public ?array $business_types = null;
     public ?array $categories = null;
     public ?array $governorates = null;
     public ?array $cities = null;
+    public bool $push_only = false;
+    public ?string $registered_from = null;
+    public ?string $registered_to = null;
+    public ?string $login_filter = null;
+    // untyped: the number input sends "" while it is being cleared
+    public $login_days = 30;
+
     public ?string $subject = null;
     public ?string $subject_en = null;
     public ?string $notify_link = null;
@@ -50,6 +64,24 @@ class SendNotificationsComponent extends Component
         // a list of advertiser ids must never be read as customer ids (or vice versa)
         $this->recipients = null;
         $this->resetValidation('recipients');
+        // the filter selects are re-rendered empty, so their values must not survive either
+        $this->resetFilterSelections();
+    }
+
+    public function updatedIncludeAdvertisers(bool $value): void
+    {
+        // the business-type select disappears with the advertisers group
+        if (!$value) {
+            $this->business_types = null;
+        }
+    }
+
+    private function resetFilterSelections(): void
+    {
+        $this->business_types = null;
+        $this->categories = null;
+        $this->governorates = null;
+        $this->cities = null;
     }
 
     public function render()
@@ -71,7 +103,10 @@ class SendNotificationsComponent extends Component
         // silently overwriting any same-named view data with the (usually null) property value.
         $all_categories = collect();
         $all_governorates = collect();
-        if ($this->recipients_type === 'interested') {
+        $all_business_types = collect();
+        if ($this->recipients_type === 'filtered') {
+            $all_business_types = $this->businessTypeNames();
+
             $all_categories = Category::whereNull('parent_category_id')
                 ->orderBy('order')
                 ->with('childCategories')
@@ -103,8 +138,25 @@ class SendNotificationsComponent extends Component
             'all_customers' => $all_customers,
             'all_categories' => $all_categories,
             'all_governorates' => $all_governorates,
+            'all_business_types' => $all_business_types,
             'preview' => $this->preview(),
         ]);
+    }
+
+    /**
+     * Business types are admin-managed rows (شركة، مصنع، متسوق…), so types added later on
+     * the live site show up here without a code change.
+     *
+     * @return Collection<int, string> id => localized name
+     */
+    private function businessTypeNames(): Collection
+    {
+        $name_column = App::currentLocale() === 'ar' ? 'name_ar' : 'name_en';
+
+        return AdvertiserBusinessType::where('is_active', true)
+            ->orderBy('order')
+            ->orderBy('id')
+            ->pluck($name_column, 'id');
     }
 
     /**
@@ -120,9 +172,28 @@ class SendNotificationsComponent extends Component
             ? (clone $q)->whereNotNull('fcm_token')->where('is_accepted_send_notifications', true)->count()
             : 0;
 
+        $advertisers = $count($resolved['advertisers']);
+        $customers = $count($resolved['customers']);
+
+        // advertisers split by business type, so the admin sees e.g. "شركة 9، مصنع 6"
+        $byBusinessType = collect();
+        if ($advertisers > 0) {
+            $names = $this->businessTypeNames();
+            $byBusinessType = (clone $resolved['advertisers'])
+                ->reorder()
+                ->selectRaw('business_type, count(*) as total')
+                ->groupBy('business_type')
+                ->pluck('total', 'business_type')
+                ->mapWithKeys(fn ($total, $type) => [
+                    ($names[$type] ?? __('pages/marketing-tools/notifications.content.no_business_type')) => $total,
+                ]);
+        }
+
         return [
-            'advertisers' => $count($resolved['advertisers']),
-            'customers' => $count($resolved['customers']),
+            'total' => $advertisers + $customers,
+            'advertisers' => $advertisers,
+            'customers' => $customers,
+            'by_business_type' => $byBusinessType,
             'push' => $pushable($resolved['advertisers']) + $pushable($resolved['customers']),
             'needs_selection' => $resolved['needs_selection'],
         ];
@@ -152,24 +223,22 @@ class SendNotificationsComponent extends Component
         $ids = array_filter((array) $this->recipients);
 
         switch ($this->recipients_type) {
-            case 'all_users':
-                return ['advertisers' => $advertisers, 'customers' => $customers, 'needs_selection' => false];
-
-            case 'all_advertisers':
-                return ['advertisers' => $advertisers, 'customers' => null, 'needs_selection' => false];
-
-            case 'all_customers':
-                return ['advertisers' => null, 'customers' => $customers, 'needs_selection' => false];
-
             case 'specific_advertisers':
                 return ['advertisers' => $advertisers->whereIn('id', $ids), 'customers' => null, 'needs_selection' => empty($ids)];
 
             case 'specific_customers':
                 return ['advertisers' => null, 'customers' => $customers->whereIn('id', $ids), 'needs_selection' => empty($ids)];
 
-            case 'interested':
-                if (empty($this->categories) && empty($this->governorates) && empty($this->cities)) {
+            case 'filtered':
+                // Every filter is optional and they combine with AND; with none set the
+                // send reaches every active account of the chosen groups.
+                if (!$this->include_advertisers && !$this->include_customers) {
                     return ['advertisers' => null, 'customers' => null, 'needs_selection' => true];
+                }
+
+                $businessTypes = array_map('intval', array_filter((array) $this->business_types));
+                if (!empty($businessTypes)) {
+                    $advertisers->whereIn('business_type', $businessTypes);
                 }
 
                 if (!empty($this->categories)) {
@@ -181,14 +250,61 @@ class SendNotificationsComponent extends Component
                 $this->applyLocationFilter($advertisers, 'advertisers_users', AdvertiserPreferredGovernorate::class, AdvertiserPreferredCity::class, 'advertiser_id');
                 $this->applyLocationFilter($customers, 'customers_users', CustomerPreferredGovernorate::class, CustomerPreferredCity::class, 'customer_id');
 
+                $this->applyActivityFilters($advertisers);
+                $this->applyActivityFilters($customers);
+
                 return [
-                    'advertisers' => $this->audience === 'customers' ? null : $advertisers,
-                    'customers' => $this->audience === 'advertisers' ? null : $customers,
+                    'advertisers' => $this->include_advertisers ? $advertisers : null,
+                    'customers' => $this->include_customers ? $customers : null,
                     'needs_selection' => false,
                 ];
         }
 
         return ['advertisers' => null, 'customers' => null, 'needs_selection' => true];
+    }
+
+    /**
+     * Push capability, registration date and last login — the same columns exist on both
+     * the advertisers and the customers table. Incomplete input (e.g. no day count yet) is
+     * ignored rather than matching nobody, so the preview never flickers to zero mid-typing.
+     */
+    private function applyActivityFilters(Builder $query): void
+    {
+        if ($this->push_only) {
+            $query->whereNotNull('fcm_token')->where('is_accepted_send_notifications', true);
+        }
+
+        if ($from = $this->parseDate($this->registered_from)) {
+            $query->where('created_at', '>=', $from->startOfDay());
+        }
+        if ($to = $this->parseDate($this->registered_to)) {
+            $query->where('created_at', '<=', $to->endOfDay());
+        }
+
+        if ($this->login_filter === 'never') {
+            $query->whereNull('last_login_at');
+        } elseif (in_array($this->login_filter, ['active', 'inactive'], true) && (int) $this->login_days > 0) {
+            $since = now()->subDays((int) $this->login_days);
+            if ($this->login_filter === 'active') {
+                $query->where('last_login_at', '>=', $since);
+            } else {
+                // never logged in counts as inactive too
+                $query->where(fn (Builder $q) => $q->whereNull('last_login_at')->orWhere('last_login_at', '<', $since));
+            }
+        }
+    }
+
+    private function parseDate(?string $value): ?Carbon
+    {
+        if (!$value) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value);
+        } catch (Throwable $e) {
+            return null;
+        }
     }
 
     /**
@@ -241,11 +357,19 @@ class SendNotificationsComponent extends Component
     {
         $this->validate([
             'recipients_type'   => ['required', 'in:' . implode(',', self::RECIPIENT_TYPES)],
-            'audience'          => ['required', 'in:' . implode(',', self::AUDIENCES)],
             'recipients'        => ['nullable', 'array', 'required_if:recipients_type,specific_advertisers,specific_customers'],
+            'include_customers' => ['boolean'],
+            'include_advertisers' => ['boolean'],
+            'business_types'    => ['nullable', 'array'],
+            'business_types.*'  => ['integer', 'exists:advertisers_business_types,id'],
             'categories'        => ['nullable', 'array'],
             'governorates'      => ['nullable', 'array'],
             'cities'            => ['nullable', 'array'],
+            'push_only'         => ['boolean'],
+            'registered_from'   => ['nullable', 'date'],
+            'registered_to'     => ['nullable', 'date', 'after_or_equal:registered_from'],
+            'login_filter'      => ['nullable', 'in:' . implode(',', self::LOGIN_FILTERS)],
+            'login_days'        => ['nullable', 'integer', 'min:1', 'required_if:login_filter,active,inactive'],
             'subject'           => ['required', 'string'],
             'subject_en'        => ['required', 'string'],
             'body'              => ['required', 'string'],
@@ -355,7 +479,13 @@ class SendNotificationsComponent extends Component
 
         $this->reset([
             'recipients_type',
-            'audience',
+            'include_customers',
+            'include_advertisers',
+            'push_only',
+            'registered_from',
+            'registered_to',
+            'login_filter',
+            'login_days',
             'subject',
             'subject_en',
             'body',
@@ -366,9 +496,7 @@ class SendNotificationsComponent extends Component
         ]);
         $this->resetValidation();
         $this->recipients = null;
-        $this->categories = null;
-        $this->governorates = null;
-        $this->cities = null;
+        $this->resetFilterSelections();
         $this->dispatchBrowserEvent('clear-select');
     }
 }
